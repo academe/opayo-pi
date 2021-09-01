@@ -1,6 +1,6 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Response;
+namespace Academe\Opayo\Pi\Response;
 
 /**
  * Value object holding the merchant session key returned by SagePay.
@@ -9,7 +9,7 @@ namespace Academe\SagePay\Psr7\Response;
 
 use DateTime;
 use Psr\Http\Message\ResponseInterface;
-use Academe\SagePay\Psr7\Helper;
+use Academe\Opayo\Pi\Helper;
 
 class SessionKey extends AbstractResponse
 {

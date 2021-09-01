@@ -1,6 +1,6 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Request;
+namespace Academe\Opayo\Pi\Request;
 
 /**
  * Request for linking a security code to a saved cardIdentifier.
@@ -9,10 +9,10 @@ namespace Academe\SagePay\Psr7\Request;
  * away.
  */
 
-use Academe\SagePay\Psr7\Model\Auth;
-use Academe\SagePay\Psr7\Model\Endpoint;
-use Academe\SagePay\Psr7\Response\SessionKey as SessionKeyResponse;
-use Academe\SagePay\Psr7\Security\SensitiveValue;
+use Academe\Opayo\Pi\Model\Auth;
+use Academe\Opayo\Pi\Model\Endpoint;
+use Academe\Opayo\Pi\Response\SessionKey as SessionKeyResponse;
+use Academe\Opayo\Pi\Security\SensitiveValue;
 
 class LinkSecurityCode extends AbstractRequest
 {

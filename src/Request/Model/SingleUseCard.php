@@ -1,6 +1,6 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Request\Model;
+namespace Academe\Opayo\Pi\Request\Model;
 
 /**
  * Card object to be passed to SagePay for payment of a transaction.
@@ -10,7 +10,7 @@ namespace Academe\SagePay\Psr7\Request\Model;
  * 2. When reusing a card that has been linked to a CVV at the front end.
  */
 
-use Academe\SagePay\Psr7\Helper;
+use Academe\Opayo\Pi\Helper;
 
 class SingleUseCard extends AbstractCard
 {
@@ -24,8 +24,8 @@ class SingleUseCard extends AbstractCard
     /**
      * Card constructor.
      *
-     * @param Academe\SagePay\Psr7\Response\SessionKey|string $sessionKey
-     * @param Academe\SagePay\Psr7\Response\CardIdentifier|string $cardIdentifier
+     * @param Academe\Opayo\Pi\Response\SessionKey|string $sessionKey
+     * @param Academe\Opayo\Pi\Response\CardIdentifier|string $cardIdentifier
      * @param boolean $save True so (re)save this identifier as a card token for future use.
      */
     public function __construct($sessionKey, $cardIdentifier, $save = null)

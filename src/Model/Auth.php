@@ -1,11 +1,11 @@
-<?php namespace Academe\SagePay\Psr7\Model;
+<?php namespace Academe\Opayo\Pi\Model;
 
 /**
  * Value object given the account authentication details.
  * Provides the as needed, and the correct base URL.
  */
 
-use Academe\SagePay\Psr7\Security\SensitiveValue;
+use Academe\Opayo\Pi\Security\SensitiveValue;
 
 class Auth
 {

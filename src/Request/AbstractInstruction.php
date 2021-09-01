@@ -1,13 +1,13 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Request;
+namespace Academe\Opayo\Pi\Request;
 
 /**
  * Abstract for shared functionality across "instructions" requests.
  */
 
-use Academe\SagePay\Psr7\Model\Auth;
-use Academe\SagePay\Psr7\Model\Endpoint;
+use Academe\Opayo\Pi\Model\Auth;
+use Academe\Opayo\Pi\Model\Endpoint;
 
 abstract class AbstractInstruction extends AbstractRequest
 {

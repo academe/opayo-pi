@@ -1,4 +1,4 @@
-<?php namespace Academe\SagePay\Psr7\Response;
+<?php namespace Academe\Opayo\Pi\Response;
 
 /**
  * The 3D Secure response embedded within a Sage Pay transaction
@@ -7,7 +7,7 @@
  * result for the transaction.
  */
 
-use Academe\SagePay\Psr7\Helper;
+use Academe\Opayo\Pi\Helper;
 use Psr\Http\Message\ResponseInterface;
 
 class Secure3D extends AbstractResponse

@@ -1,6 +1,6 @@
 <?php
 
-namespace Academe\SagePay\Psr7;
+namespace Academe\Opayo\Pi;
 
 /**
  * Shared (Request and Response) abstract message.
@@ -8,7 +8,7 @@ namespace Academe\SagePay\Psr7;
 
 use ReflectionClass;
 use Psr\Http\Message\MessageInterface;
-use Academe\SagePay\Psr7\Helper;
+use Academe\Opayo\Pi\Helper;
 
 abstract class AbstractMessage
 {

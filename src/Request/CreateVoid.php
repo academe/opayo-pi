@@ -1,6 +1,6 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Request;
+namespace Academe\Opayo\Pi\Request;
 
 /**
  * The "void" instruction request.

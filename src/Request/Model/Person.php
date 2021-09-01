@@ -1,4 +1,4 @@
-<?php namespace Academe\SagePay\Psr7\Request\Model;
+<?php namespace Academe\Opayo\Pi\Request\Model;
 
 /**
  * Value object used to hold details about a person.

@@ -1,6 +1,6 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Request;
+namespace Academe\Opayo\Pi\Request;
 
 /**
  * The transaction value object to send a transaction to Sage Pay.
@@ -8,10 +8,13 @@ namespace Academe\SagePay\Psr7\Request;
  */
 
 use UnexpectedValueException;
-use Academe\SagePay\Psr7\Model\Endpoint;
-use Academe\SagePay\Psr7\Model\Auth;
-use Academe\SagePay\Psr7\PaymentMethod\PaymentMethodInterface;
-use Academe\SagePay\Psr7\Money\AmountInterface;
+use Academe\Opayo\Pi\Model\Auth;
+use Academe\Opayo\Pi\Model\Endpoint;
+use Academe\Opayo\Pi\Money\AmountInterface;
+use Academe\Opayo\Pi\Request\Model\PersonInterface;
+use Academe\Opayo\Pi\Request\Model\AddressInterface;
+use Academe\Opayo\Pi\Request\Model\PaymentMethodInterface;
+use Academe\Opayo\Pi\Request\Model\StrongCustomerAuthentication;
 
 class CreatePayment extends AbstractRequest
 {
@@ -52,6 +55,11 @@ class CreatePayment extends AbstractRequest
     protected $shippingAddressFieldPrefix = 'shipping';
 
     /**
+     * @var StrongCustomerAuthentication
+     */
+    protected $strongCustomerAuthentication;
+
+    /**
      * Valid values for enumerated input types.
      */
 
@@ -87,14 +95,14 @@ class CreatePayment extends AbstractRequest
     public function __construct(
         Endpoint $endpoint,
         Auth $auth,
-        Model\PaymentMethodInterface $paymentMethod,
+        PaymentMethodInterface $paymentMethod,
         $vendorTxCode,
         AmountInterface $amount,
         $description,
-        Model\AddressInterface $billingAddress,
-        Model\PersonInterface $customer,
-        Model\AddressInterface $shippingAddress = null,
-        Model\PersonInterface $shippingRecipient = null,
+        AddressInterface $billingAddress,
+        PersonInterface $customer,
+        AddressInterface $shippingAddress = null,
+        PersonInterface $shippingRecipient = null,
         array $options = []
     ) {
         // Access details.
@@ -162,6 +170,23 @@ class CreatePayment extends AbstractRequest
     public static function getEntryMethods()
     {
         return static::constantList('ENTRY_METHOD');
+    }
+
+    public function setStrongCustomerAuthentication(StrongCustomerAuthentication $strongCustomerAuthentication)
+    {
+        $this->strongCustomerAuthentication = $strongCustomerAuthentication;
+        return $this;
+    }
+
+    public function withStrongCustomerAuthentication(StrongCustomerAuthentication $strongCustomerAuthentication)
+    {
+        $copy = clone $this;
+        return $copy->setStrongCustomerAuthentication($strongCustomerAuthentication);
+    }
+
+    public function getStrongCustomerAuthentication()
+    {
+        return $this->strongCustomerAuthentication;
     }
 
     /**
@@ -333,6 +358,7 @@ class CreatePayment extends AbstractRequest
         // The mandatory fields.
         // The amount must be cast to an int. Sending an integer as a string will result in
         // a complaint from the remote gateway.
+
         $result = [
             'transactionType' => $this->transactionType,
             'paymentMethod' => $this->paymentMethod,
@@ -384,6 +410,10 @@ class CreatePayment extends AbstractRequest
 
         if (! empty($this->referrerId)) {
             $result['referrerId'] = $this->referrerId;
+        }
+
+        if (! empty($this->strongCustomerAuthentication)) {
+            $result['strongCustomerAuthentication'] = $this->strongCustomerAuthentication->jsonSerialize();
         }
 
         return $result;

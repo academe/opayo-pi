@@ -1,4 +1,4 @@
-<?php namespace Academe\SagePay\Psr7\Response;
+<?php namespace Academe\Opayo\Pi\Response;
 
 /**
  * At the moment (12-11-2015 BETA), this resource is the result of a
@@ -9,7 +9,7 @@
  * final (i.e. no more actions required).
  */
 
-use Academe\SagePay\Psr7\Helper;
+use Academe\Opayo\Pi\Helper;
 use Psr\Http\Message\ResponseInterface;
 
 class Repeat extends AbstractTransaction

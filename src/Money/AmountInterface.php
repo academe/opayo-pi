@@ -1,6 +1,6 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Money;
+namespace Academe\Opayo\Pi\Money;
 
 /**
  * Amount interface, for carrying an amount and its currency.

@@ -1,15 +1,15 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Response;
+namespace Academe\Opayo\Pi\Response;
 
 /**
  * Response to a Payment (and probably Authorise) requent when a
  * 3D Secure redirect is needed.
+ * 
+ * @deprecated 3D Secure v1 will end March 2022; use 3DS v2 with the Secure3Dv2Redirect
  */
 
-use Academe\SagePay\Psr7\Helper;
-use Psr\Http\Message\ResponseInterface;
-use Academe\SagePay\Psr7\Request\AbstractRequest;
+use Academe\Opayo\Pi\Helper;
 
 class Secure3DRedirect extends AbstractTransaction
 {
@@ -29,6 +29,7 @@ class Secure3DRedirect extends AbstractTransaction
         $this->setStatuses($data);
 
         $this->transactionId = Helper::dataGet($data, 'transactionId', null);
+        
         $this->acsUrl = Helper::dataGet($data, 'acsUrl', null);
         $this->paReq = Helper::dataGet($data, 'paReq', null);
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Request;
+namespace Academe\Opayo\Pi\Request;
 
 /**
  * The transaction value object to send a transaction to Sage Pay.
@@ -8,10 +8,10 @@ namespace Academe\SagePay\Psr7\Request;
  */
 
 use UnexpectedValueException;
-use Academe\SagePay\Psr7\Model\Endpoint;
-use Academe\SagePay\Psr7\Model\Auth;
-use Academe\SagePay\Psr7\PaymentMethod\PaymentMethodInterface;
-use Academe\SagePay\Psr7\Money\AmountInterface;
+use Academe\Opayo\Pi\Model\Endpoint;
+use Academe\Opayo\Pi\Model\Auth;
+use Academe\Opayo\Pi\PaymentMethod\PaymentMethodInterface;
+use Academe\Opayo\Pi\Money\AmountInterface;
 
 class CreateDeferred extends CreatePayment
 {

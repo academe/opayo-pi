@@ -1,15 +1,15 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Request;
+namespace Academe\Opayo\Pi\Request;
 
 /**
  * The "release" instruction request.
  * Release a deferred transaction so funds can be collected.
  */
 
-use Academe\SagePay\Psr7\Money\AmountInterface;
-use Academe\SagePay\Psr7\Model\Auth;
-use Academe\SagePay\Psr7\Model\Endpoint;
+use Academe\Opayo\Pi\Money\AmountInterface;
+use Academe\Opayo\Pi\Model\Auth;
+use Academe\Opayo\Pi\Model\Endpoint;
 
 class CreateRelease extends AbstractInstruction
 {

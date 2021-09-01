@@ -1,12 +1,12 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Response\Model;
+namespace Academe\Opayo\Pi\Response\Model;
 
 /**
  * Abstract Card details.
  */
 
-use Academe\SagePay\Psr7\Helper;
+use Academe\Opayo\Pi\Helper;
 use JsonSerializable;
 
 class Card implements JsonSerializable
@@ -19,7 +19,7 @@ class Card implements JsonSerializable
     /**
      * @var Flag indicates this is a reusable card identifier; it has been used before.
      */
-    protected $reusable;
+    protected $reusable = false;
 
     /**
      * @var Captured (safe) details for the card.

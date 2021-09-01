@@ -1,10 +1,12 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Factory;
+namespace Academe\Opayo\Pi\Factory;
 
 /**
  * Zend Diactoros Factory for creating PSR-7 objects.
  * Requires zendframework/zend-diactoros:~1.3
+ * 
+ * @deprecated 3.0.0 abandoned some time ago https://github.com/zendframework/zend-diactoros
  */
 
 use Psr\Http\Message\StreamInterface;
@@ -27,7 +29,7 @@ class DiactorosFactory implements RequestFactoryInterface
     public function jsonRequest($method, $uri, array $headers = [], $body = null, $protocolVersion = '1.1')
     {
         // If we are sending a JSON body, then the recipient needs to know.
-        $headers['Content-type'] = 'application/json';
+        $headers['Content-Type'] = 'application/json';
 
         // If the body is not already a stream or string of some sort, then JSON encode it for streaming.
         if (! is_string($body) && ! $body instanceof StreamInterface && gettype($body) != 'resource') {

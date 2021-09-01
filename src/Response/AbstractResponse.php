@@ -1,15 +1,15 @@
 <?php namespace
 
-Academe\SagePay\Psr7\Response;
+Academe\Opayo\Pi\Response;
 
 /**
  * Shared message abstract.
  */
 
-use Academe\SagePay\Psr7\Response\ErrorCollection;
-use Academe\SagePay\Psr7\AbstractMessage;
+use Academe\Opayo\Pi\Response\ErrorCollection;
+use Academe\Opayo\Pi\AbstractMessage;
 use Psr\Http\Message\ResponseInterface;
-use Academe\SagePay\Psr7\Helper;
+use Academe\Opayo\Pi\Helper;
 use JsonSerializable;
 
 // Teapot here provides HTTP response code constants.
@@ -23,6 +23,11 @@ abstract class AbstractResponse extends AbstractMessage implements Http, RFC4918
      * @var integer The HTTP response code.
      */
     protected $httpCode;
+
+    /**
+     * The remote status of the returned object.
+     */
+    protected $status = null;
 
     /**
      * Can initialise with a PSR7 message, an array, a value object or a JSON string.

@@ -1,15 +1,15 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Response;
+namespace Academe\Opayo\Pi\Response;
 
 /**
  * Shared transaction response abstract.
  */
 
-use Academe\SagePay\Psr7\Money\CurrencyInterface;
-use Academe\SagePay\Psr7\Money\Currency;
-use Academe\SagePay\Psr7\Money\Amount;
-use Academe\SagePay\Psr7\Helper;
+use Academe\Opayo\Pi\Money\CurrencyInterface;
+use Academe\Opayo\Pi\Money\Currency;
+use Academe\Opayo\Pi\Money\Amount;
+use Academe\Opayo\Pi\Helper;
 
 abstract class AbstractTransaction extends AbstractResponse
 {
@@ -218,7 +218,7 @@ abstract class AbstractTransaction extends AbstractResponse
 
     /**
      * Convenience methods dive into the amount object.
-     * @return Academe\SagePay\Psr7\Money\AmountInterface|null
+     * @return Academe\Opayo\Pi\Money\AmountInterface|null
      */
 
     public function getTotalAmount()

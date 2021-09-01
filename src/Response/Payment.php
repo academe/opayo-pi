@@ -1,6 +1,6 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Response;
+namespace Academe\Opayo\Pi\Response;
 
 /**
  * Result of a Payment request where payment is approved or declined.

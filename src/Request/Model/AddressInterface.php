@@ -1,4 +1,4 @@
-<?php namespace Academe\SagePay\Psr7\Request\Model;
+<?php namespace Academe\Opayo\Pi\Request\Model;
 
 /**
  * Value object used to define the customer's billing address

@@ -1,4 +1,4 @@
-<?php namespace Academe\SagePay\Psr7;
+<?php namespace Academe\Opayo\Pi;
 
 /**
  * Shared message abstract.

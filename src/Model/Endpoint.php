@@ -1,6 +1,6 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Model;
+namespace Academe\Opayo\Pi\Model;
 
 /**
  * The endpoint to use to access the Sage Pay API.

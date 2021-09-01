@@ -1,6 +1,6 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Request;
+namespace Academe\Opayo\Pi\Request;
 
 /**
  * The 3DSecure request sent to Sage Pay, after the user is returned
@@ -9,9 +9,9 @@ namespace Academe\SagePay\Psr7\Request;
  * See https://test.sagepay.com/documentation/#3-d-secure
  */
 
-use Academe\SagePay\Psr7\Model\Auth;
-use Academe\SagePay\Psr7\Model\Endpoint;
-use Academe\SagePay\Psr7\ServerRequest\Secure3DAcs;
+use Academe\Opayo\Pi\Model\Auth;
+use Academe\Opayo\Pi\Model\Endpoint;
+use Academe\Opayo\Pi\ServerRequest\Secure3DAcs;
 
 class CreateSecure3D extends AbstractRequest
 {

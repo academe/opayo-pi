@@ -1,13 +1,13 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Response;
+namespace Academe\Opayo\Pi\Response;
 
 /**
  * A a collection of instructions.
  */
 
-use Academe\SagePay\Psr7\Factory\ResponseFactory;
-use Academe\SagePay\Psr7\Helper;
+use Academe\Opayo\Pi\Factory\ResponseFactory;
+use Academe\Opayo\Pi\Helper;
 
 class InstructionCollection extends AbstractCollection
 {

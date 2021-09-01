@@ -1,4 +1,4 @@
-<?php namespace Academe\SagePay\Psr7\Response;
+<?php namespace Academe\Opayo\Pi\Response;
 
 /**
  * A collection of errors, normally validation errors.
@@ -7,7 +7,7 @@
  */
 
 use Psr\Http\Message\ResponseInterface;
-use Academe\SagePay\Psr7\Helper;
+use Academe\Opayo\Pi\Helper;
 
 class ErrorCollection extends AbstractCollection
 {

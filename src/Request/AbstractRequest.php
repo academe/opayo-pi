@@ -1,24 +1,29 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Request;
+namespace Academe\Opayo\Pi\Request;
 
 /**
  * Shared message abstract.
  * Contains base methods that request messages will use.
  */
 
-use Academe\SagePay\Psr7\AbstractMessage;
-use Academe\SagePay\Psr7\Model\Endpoint;
-use Academe\SagePay\Psr7\Model\Auth;
-use Academe\SagePay\Psr7\Factory\FactoryInterface;
-use Academe\SagePay\Psr7\Factory\DiactorosFactory;
-use Academe\SagePay\Psr7\Factory\GuzzleFactory;
+use Academe\Opayo\Pi\AbstractMessage;
+use Academe\Opayo\Pi\Model\Endpoint;
+use Academe\Opayo\Pi\Model\Auth;
+use Academe\Opayo\Pi\Factory\FactoryInterface;
+use Academe\Opayo\Pi\Factory\DiactorosFactory;
+use Academe\Opayo\Pi\Factory\GuzzleFactory;
+use Academe\Opayo\Pi\Factory\RequestFactoryInterface;
 use UnexpectedValueException;
 use JsonSerializable;
 use Exception;
+// use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\RequestInterface;
 
-abstract class AbstractRequest extends AbstractMessage implements JsonSerializable
+abstract class AbstractRequest extends AbstractMessage implements JsonSerializable, RequestInterface
 {
+    use RequestPsr7Trait;
+
     // Transaction types.
     const TRANSACTION_TYPE_PAYMENT  = 'Payment';
     const TRANSACTION_TYPE_REPEAT   = 'Repeat';
@@ -36,7 +41,7 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
     protected $resource_path = [];
 
     /**
-     * @var string Most messages are sent as POST requests, so this is the default
+     * @var string Most messages are sent with the POST method, so this is the default
      */
     protected $method = 'POST';
 
@@ -122,7 +127,7 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
     }
 
     /**
-     * @returns string The full URL of this resource
+     * @returns string The fully qualified URL of this resource
      */
     public function getUrl()
     {
@@ -130,39 +135,26 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
     }
 
     /**
-     * Use this if your transport tool does not do "Basic Auth" out of the box.
-     * @returns array Headers for the request, usually the authentication headers.
-     */
-    public function getHeaders()
-    {
-        return $this->getBasicAuthHeaders();
-    }
-
-    /**
-     * @returns string The HTTP method that the request will use.
-     */
-    public function getMethod()
-    {
-        return $this->method;
-    }
-
-    /**
      * The HTTP Basic Auth header, as an array.
      * Use this if your transport tool does not do "Basic Auth" out of the box.
+     * 
      * @return array
      */
-    protected function getBasicAuthHeaders()
+    protected function getAuthHeaders()
     {
         return [
-            'Authorization' => 'Basic '
+            'Authorization' => ['Basic '
                 . base64_encode(
                     $this->getAuth()->getIntegrationKey()
                     . ':' . $this->getAuth()->getIntegrationPassword()
-                ),
+                )],
         ];
     }
 
     /**
+     * TODO: can we use the PSR-17 Psr\Http\Message\RequestFactoryInterface
+     * instead of our custom factory?
+     * 
      * @param RequestFactoryInterface $factory
      * @return $this
      */
@@ -185,11 +177,12 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
     /**
      * Get the PSR-7 factory.
      * Create a factory if none supplied and relevant libraries are installed.
+     * 
      * @param bool $exception
-     * @return DiactorosFactory|GuzzleFactory
+     * @return RequestFactoryInterface for example DiactorosFactory or GuzzleFactory
      * @throws Exception
      */
-    public function getFactory($exception = false)
+    public function getFactory($exception = false): RequestFactoryInterface
     {
         if (!isset($this->factory) && GuzzleFactory::isSupported()) {
             // If the GuzzleFactory is supported (relevant Guzzle package is
@@ -218,37 +211,20 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
 
     /**
      * Return as a PSR-7 request message.
+     * TODO: Use a PSR-17 factory to create the basic request, then add the
+     * headers and body to that.
+     * 
      * @return \Psr\Http\Message\RequestInterface
      * @throws Exception
      */
-    public function createHttpRequest()
+    public function createHttpRequest(): RequestInterface
     {
-        // If the data is protected from accidental serialisation, then
-        // pull it out through the protected method.
-        if (method_exists($this, 'jsonSerializePeek')) {
-            $body = json_encode($this->jsonSerializePeek());
-        } else {
-            $body = json_encode($this);
-        }
-
-        return $this->getFactory(true)->JsonRequest(
-            $this->getMethod(),
-            $this->getUrl(),
-            $this->getHeaders(),
-            $body
-        );
-    }
-
-    /**
-     * @deprecated Use more appropriately named createHttpRequest()
-     */
-    public function message()
-    {
-        return $this->createHttpRequest();
+        return $this; // The requests now are now native PSR-7 requests.
     }
 
     /**
      * Set various flags - anything with a setFoo() method.
+     * 
      * @param array $options
      * @return $this
      */
@@ -270,6 +246,7 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
 
     /**
      * Set various flags - anything with a setFoo() method.
+     * 
      * @param array $options
      * @return AbstractRequest
      */

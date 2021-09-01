@@ -1,17 +1,17 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Response\Model;
+namespace Academe\Opayo\Pi\Response\Model;
 
 /**
  * Amount in a transaction response.
  * This is split into multiple elements: totalAmount, saleAmount and surchargeAmount.
  */
 
-use Academe\SagePay\Psr7\Money\Amount as AmountValue;
-use Academe\SagePay\Psr7\Money\CurrencyInterface;
-use Academe\SagePay\Psr7\Money\AmountInterface;
-use Academe\SagePay\Psr7\Money\Currency;
-use Academe\SagePay\Psr7\Helper;
+use Academe\Opayo\Pi\Money\Amount as AmountValue;
+use Academe\Opayo\Pi\Money\CurrencyInterface;
+use Academe\Opayo\Pi\Money\AmountInterface;
+use Academe\Opayo\Pi\Money\Currency;
+use Academe\Opayo\Pi\Helper;
 use JsonSerializable;
 
 class Amount implements JsonSerializable

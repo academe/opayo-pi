@@ -1,4 +1,4 @@
-<?php namespace Academe\SagePay\Psr7\Request;
+<?php namespace Academe\Opayo\Pi\Request;
 
 /**
  * The repeat payment value object to send a transaction to Sage Pay.
@@ -9,11 +9,11 @@
  */
 
 use UnexpectedValueException;
-use Academe\SagePay\Psr7\Model\Endpoint;
-use Academe\SagePay\Psr7\Model\Auth;
-use Academe\SagePay\Psr7\Money\AmountInterface;
-use Academe\SagePay\Psr7\Model\AddressInterface;
-use Academe\SagePay\Psr7\Model\PersonInterface;
+use Academe\Opayo\Pi\Model\Endpoint;
+use Academe\Opayo\Pi\Model\Auth;
+use Academe\Opayo\Pi\Money\AmountInterface;
+use Academe\Opayo\Pi\Model\AddressInterface;
+use Academe\Opayo\Pi\Model\PersonInterface;
 
 class CreateRepeatPayment extends AbstractRequest
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Money;
+namespace Academe\Opayo\Pi\Money;
 
 /**
  * Currency interface, for defining a currency instance.

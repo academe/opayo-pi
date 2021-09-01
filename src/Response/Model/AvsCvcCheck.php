@@ -1,12 +1,12 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Response\Model;
+namespace Academe\Opayo\Pi\Response\Model;
 
 /**
  * The results of AVS CVS Checks in a transaction response.
  */
 
-use Academe\SagePay\Psr7\Helper;
+use Academe\Opayo\Pi\Helper;
 use JsonSerializable;
 
 class AvsCvcCheck implements JsonSerializable

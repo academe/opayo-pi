@@ -1,6 +1,6 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Factory;
+namespace Academe\Opayo\Pi\Factory;
 
 /**
  * Factory interface for creating PSR-7 request objects.

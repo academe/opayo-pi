@@ -1,6 +1,6 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Factory;
+namespace Academe\Opayo\Pi\Factory;
 
 /**
  * @deprecated Use RequestFactoryInterface instead.

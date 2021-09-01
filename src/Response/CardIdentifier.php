@@ -1,6 +1,6 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Response;
+namespace Academe\Opayo\Pi\Response;
 
 /**
  * Value object to hold the card identifier, returned by Sage Pay.
@@ -11,7 +11,7 @@ namespace Academe\SagePay\Psr7\Response;
 use DateTime;
 use Exception;
 use Psr\Http\Message\ResponseInterface;
-use Academe\SagePay\Psr7\Helper;
+use Academe\Opayo\Pi\Helper;
 
 class CardIdentifier extends AbstractResponse
 {

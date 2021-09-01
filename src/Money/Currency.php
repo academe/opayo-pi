@@ -1,6 +1,6 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Money;
+namespace Academe\Opayo\Pi\Money;
 
 /**
  * Defines a currency.
@@ -8,7 +8,7 @@ namespace Academe\SagePay\Psr7\Money;
  * TODO: create a CurrencyInterface for this.
  */
 
-//use Academe\SagePay\Psr7\Iso4217\Currencies;
+//use Academe\Opayo\Pi\Iso4217\Currencies;
 use UnexpectedValueException;
 use Alcohol\ISO4217;
 
@@ -21,7 +21,7 @@ class Currency implements CurrencyInterface
 
     /**
      * Object holding all currencies, initialised on instantiation.
-     * @var Academe\SagePay\Psr7\Iso4217\Currencies
+     * @var Academe\Opayo\Pi\Iso4217\Currencies
      */
     protected $all_currencies;
 

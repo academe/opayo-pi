@@ -1,6 +1,6 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Response\Model;
+namespace Academe\Opayo\Pi\Response\Model;
 
 /**
  * Value object to hold an error, returned by SagePay when posting a transaction.
@@ -20,7 +20,7 @@ namespace Academe\SagePay\Psr7\Response\Model;
  */
 
 use JsonSerializable;
-use Academe\SagePay\Psr7\Helper;
+use Academe\Opayo\Pi\Helper;
 
 class Error implements JsonSerializable
 {

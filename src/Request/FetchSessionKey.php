@@ -1,14 +1,14 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Request;
+namespace Academe\Opayo\Pi\Request;
 
 /**
  * The request for fetching a copy of a session key, to check its validity.
  * The response will be a SessionKeyResponse message.
  */
 
-use Academe\SagePay\Psr7\Model\Endpoint;
-use Academe\SagePay\Psr7\Response\SessionKey as SessionKeyResponse;
+use Academe\Opayo\Pi\Model\Endpoint;
+use Academe\Opayo\Pi\Response\SessionKey as SessionKeyResponse;
 
 class FetchSessionKey extends AbstractRequest
 {

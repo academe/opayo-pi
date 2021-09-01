@@ -1,6 +1,6 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Request\Model;
+namespace Academe\Opayo\Pi\Request\Model;
 
 //use PHPUnit\Framework\TestCase;
 

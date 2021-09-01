@@ -9,20 +9,23 @@
 
 use Academe\Opayo\Pi\Helper;
 use Academe\Opayo\Pi\ServerRequest\AbstractServerRequest;
+use Psr\Http\Message\ServerRequestInterface;
 
-class Secure3DAcs extends AbstractServerRequest
+class Secure3Dv2Notification extends AbstractServerRequest
 {
-    protected $PaRes;
-    protected $MD;
+    protected $cRes;
+    protected $threeDSSessionData;
 
     /**
-     * @param array|object $data The 3DSecure resource callback from Sage Pay; $_POST will work here.
-     * @return $this
+     * Set from payload data.
+     *
+     * @param array|object $data
+     * @return void
      */
     protected function setData($data)
     {
-        $this->PaRes = Helper::dataGet($data, 'PaRes', null);
-        $this->MD = Helper::dataGet($data, 'MD', null);
+        $this->cRes = Helper::dataGet($data, 'cres', null);
+        $this->threeDSSessionData = Helper::dataGet($data, 'threeDSSessionData', null);
         
         return $this;
     }
@@ -34,36 +37,32 @@ class Secure3DAcs extends AbstractServerRequest
     public function jsonSerialize()
     {
         return [
-            'PaRes' => $this->getPaRes(),
-            'MD' => $this->getMD(),
+            'cRes' => $this->getCRes(),
+            'threeDSSessionData' => $this->getThreeDSSessionData(),
         ];
     }
 
-    /**
-     * @return string The optional Merchant Data (MD) to identify the transaction.
-     */
-    public function getMD()
+    public function getCRes()
     {
-        return $this->MD;
+        return $this->cRes;
+    }
+
+    public function getThreeDSSessionData()
+    {
+        return $this->threeDSSessionData;
     }
 
     /**
-     * @return string The encrypted 3DSecure result (PaRes) to pass on to Sage Pay for validation.
-     */
-    public function getPaRes()
-    {
-        return $this->PaRes;
-    }
-
-    /**
-     * Determine if this message is a valid 3D Secure ACS server request.
+     * Determine if this message is a valid 3D Secure v2 ACS server request.
+     * 
      * @return boolean
      */
     public function isValid()
     {
-        // If paRes is set, then this is [likely to be] the user returning from
-        // the bank's 3D Secure password entry.
-        return ! empty($this->getPaRes());
+        // If cRes is set, then this is [likely to be] the user returning from
+        // the bank's 3D Secure challenge.
+
+        return ! empty($this->getCRes());
     }
 
     /**
@@ -74,6 +73,6 @@ class Secure3DAcs extends AbstractServerRequest
      */
     public static function isRequest($data)
     {
-        return ! empty(Helper::dataGet($data, 'PaRes'));
+        return ! empty(Helper::dataGet($data, 'cres'));
     }
 }

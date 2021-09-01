@@ -1,14 +1,14 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Request;
+namespace Academe\Opayo\Pi\Request;
 
 /**
  * Request the result of a transaction, stored on Sage Pay servers.
  * See "Retrieve and Transaction" https://test.sagepay.com/documentation/#transactions
  */
 
-use Academe\SagePay\Psr7\Model\Auth;
-use Academe\SagePay\Psr7\Model\Endpoint;
+use Academe\Opayo\Pi\Model\Auth;
+use Academe\Opayo\Pi\Model\Endpoint;
 
 class FetchTransaction extends AbstractRequest
 {

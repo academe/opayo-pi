@@ -1,8 +1,8 @@
 {
-    "name": "academe/sagepaymsg",
+    "name": "academe/opayo-pi",
     "license": "MIT",
     "type": "library",
-    "description": "A library to handle the message content and structure for the Sage Pay Integration service",
+    "description": "A library to handle the message content and structure for the Opayo Pi (was Sage Pay Integration) payment gateway",
     "keywords": [
         "gateway",
         "merchant",
@@ -19,10 +19,10 @@
         }
     ],
     "require": {
-        "php": "^7.4|^8.0",
+        "php": "^7.3|^8.0",
         "shrikeh/teapot": "^1.0|^2.0",
         "psr/http-message": "^1.0",
-        "alcohol/iso4217": "^4.0"
+        "alcohol/iso4217": "^3.0|^4.0"
     },
     "suggest": {
         "moneyphp/money": "^3.0",
@@ -34,7 +34,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Academe\\SagePay\\Psr7\\": "src/"
+            "Academe\\Opayo\\Pi\\": "src/"
         }
     }
 }

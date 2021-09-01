@@ -1,6 +1,6 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Response;
+namespace Academe\Opayo\Pi\Response;
 
 /**
  * Value object to hold the void instruction response.
@@ -9,7 +9,7 @@ namespace Academe\SagePay\Psr7\Response;
  */
 
 use Psr\Http\Message\ResponseInterface;
-use Academe\SagePay\Psr7\Helper;
+use Academe\Opayo\Pi\Helper;
 
 abstract class AbstractInstruction extends AbstractResponse
 {

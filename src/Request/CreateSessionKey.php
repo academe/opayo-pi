@@ -1,14 +1,14 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Request;
+namespace Academe\Opayo\Pi\Request;
 
 /**
  * The request for a session key.
  * See https://test.sagepay.com/documentation/#merchant-session-keys
  */
 
-use Academe\SagePay\Psr7\Model\Auth;
-use Academe\SagePay\Psr7\Model\Endpoint;
+use Academe\Opayo\Pi\Model\Auth;
+use Academe\Opayo\Pi\Model\Endpoint;
 
 class CreateSessionKey extends AbstractRequest
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Academe\SagePay\Psr7\Security;
+namespace Academe\Opayo\Pi\Security;
 
 use Exception;
 use Serializable;
