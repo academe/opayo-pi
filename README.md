@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/academe/SagePay-Integration.svg?branch=PSR-7)](https://travis-ci.org/academe/SagePay-Integration)
-[![Latest Stable Version](http://poser.pugx.org/academe/sagepaymsg/v)](https://packagist.org/packages/academe/sagepaymsg) [![Total Downloads](http://poser.pugx.org/academe/sagepaymsg/downloads)](https://packagist.org/packages/academe/sagepaymsg) [![Latest Unstable Version](http://poser.pugx.org/academe/sagepaymsg/v/unstable)](https://packagist.org/packages/academe/sagepaymsg) [![License](http://poser.pugx.org/academe/sagepaymsg/license)](https://packagist.org/packages/academe/sagepaymsg)
+[![Build Status](https://travis-ci.org/academe/opayo-pi.svg?branch=PSR-7)](https://travis-ci.org/academe/opayo-pi)
+[![Latest Stable Version](http://poser.pugx.org/academe/opayo-pi/v)](https://packagist.org/packages/academe/opayo-pi) [![Total Downloads](http://poser.pugx.org/academe/opayo-pi/downloads)](https://packagist.org/packages/academe/opayo-pi) [![Latest Unstable Version](http://poser.pugx.org/academe/opayo-pi/v/unstable)](https://packagist.org/packages/academe/opayo-pi) [![License](http://poser.pugx.org/academe/opayo-pi/license)](https://packagist.org/packages/academe/opayo-pi)
 
 <!-- TOC -->
 
@@ -24,6 +24,15 @@
     - [Payment Methods](#payment-methods)
 
 <!-- /TOC -->
+
+---
+**Note**
+
+This package is forked from
+[academe/SagePay-Integration](https://github.com/academe/SagePay-Integration/tree/opayo)
+in a new repository due to the change in the composer package name.
+
+---
 
 # Opayo Pi PSR-7 Message REST API Library
 
