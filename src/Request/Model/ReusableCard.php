@@ -24,10 +24,6 @@ class ReusableCard extends AbstractCard
     public function __construct($cardIdentifier)
     {
         $this->cardIdentifier = (string)$cardIdentifier;
-
-        if (isset($save)) {
-            $this->save = (bool)$save;
-        }
     }
 
     /**
