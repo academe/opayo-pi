@@ -782,14 +782,13 @@ with Opayo (not available in Sandboxes).
 
 You will also need to provide a credential type with your requests.
 
-
 ```php
 
 if ($merchantPlacingOrderOnCustomersBehalf) {
     $card = new ReusableCard($savedToken);
 } else {
-    // customer placing order themselves, requires CVV
-    $card = new ReusableCvvCard($sessionKey, $savedToken);
+    // customer placing order themselves, requires CVV submitted through JS
+    $card = new ReusableCvvCard($sessionKey, $cardIdentifier);
 }
 
 $paymentRequest = new CreatePayment(
