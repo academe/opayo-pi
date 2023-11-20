@@ -76,6 +76,7 @@ class CreatePayment extends AbstractRequest
     const APPLY_3D_SECURE_USEMSPSETTING             = 'UseMSPSetting'; // 0
     const APPLY_3D_SECURE_FORCE                     = 'Force'; // 1
     const APPLY_3D_SECURE_DISABLE                   = 'Disable'; // 2
+    // @deprecated removed from the API spec 2023-10-26
     const APPLY_3D_SECURE_FORCEIGNORINGRULES        = 'ForceIgnoringRules'; // 3
 
     /**
@@ -291,7 +292,7 @@ class CreatePayment extends AbstractRequest
      * @param ShippingAddress $shippingAddress
      * @return Transaction
      */
-    public function withShippingAddress(ShippingAddress $shippingAddress)
+    public function withShippingAddress(AddressInterface $shippingAddress)
     {
         $copy = clone $this;
         $copy->shippingAddress = $shippingAddress;
@@ -302,7 +303,7 @@ class CreatePayment extends AbstractRequest
      * @param ShippingRecipient $shippingRecipient
      * @return Transaction
      */
-    public function withShippingRecipient(ShippingRecipient $shippingRecipient)
+    public function withShippingRecipient(PersonInterface $shippingRecipient)
     {
         $copy = clone $this;
         $copy->shippingRecipient = $shippingRecipient;

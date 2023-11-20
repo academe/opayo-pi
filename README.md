@@ -44,13 +44,14 @@ for example Guzzle (7+ or 6+HTTPlug adapter), curl or another PSR-7 library.
 You can use this library as a PSR-7 message generator/consumer, or go a level down and handle all the
 data through arrays - both are supported.
 
-This library is fairly old, so a bit kludgy in places, but should improve over time.
+> This package has been updated to use the new Elavon URLs, that will be mandatory from March 2024.
 
 ## Package Development
 
-The Sage Pay Integration payment gateway is a RESTful API run by by [Sage Pay](https://sagepay.com/).
-You can [apply for an account here](https://www.opayo.co.uk/apply?partner_id=3F7A4119-8671-464F-A091-9E59EB47B80C)
-(my partner link).
+The Opayo Pi payment gateway is a RESTful API run by by [Elavon](https://developer.elavon.com/products/opayo/v1/api-reference).
+
+> You can [apply for an account here](https://www.opayo.co.uk/apply?partner_id=3F7A4119-8671-464F-A091-9E59EB47B80C)
+(partner link).
 
 From v3.0.0 this package is being rebranded for Opayo, gets a new composer name, and a new base namespace.
 
@@ -184,7 +185,7 @@ use Academe\Opayo\Pi\Request\CreateCardIdentifier;
 
 // Create a card indentifier on the API.
 // Note the MMYY order is most often used for GB gateways like Sage Pay. Many European
-// gateways tend to go MSN first, i.e. YYMM.
+// gateways tend to go most significant number (MSN) first, i.e. YYMM.
 // $endpoint, $auth and $session_key from before:
 
 $cardIdentifierRequest = new CreateCardIdentifier(
