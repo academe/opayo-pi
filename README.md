@@ -50,7 +50,7 @@ data through arrays - both are supported.
 
 The Opayo Pi payment gateway is a RESTful API run by by [Elavon](https://developer.elavon.com/products/opayo/v1/api-reference).
 
-> You can [apply for an account here](https://www.opayo.co.uk/apply?partner_id=3F7A4119-8671-464F-A091-9E59EB47B80C)
+> You can [apply for an account here](https://referrals.elavon.co.uk/?partner_id=0014H00004E0iYw)
 (partner link).
 
 From v3.0.0 this package is being rebranded for Opayo, gets a new composer name, and a new base namespace.
