@@ -76,6 +76,11 @@ abstract class Helper
                 // Use a default UTC timezone for any relative dates without a timezone that
                 // Sage Pay may send. From the "02-09-2016 v1" API all dates will use
                 // ISO 8601 format, e.g. "2016-09-26T15:34:37.761000+01:00"
+                $parts = explode('.', $date);
+                if (count($parts) > 1) {
+                    $parts[1] = substr($parts[1], 0, 3) . "Z";
+                    $date = $parts[0] . "." . $parts[1];
+                }
 
                 $datetime = new DateTime($date, new DateTimeZone('UTC'));
             } elseif ($date instanceof DateTime) {
