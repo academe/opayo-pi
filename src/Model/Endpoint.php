@@ -36,8 +36,8 @@ class Endpoint
      * @var array The endpoint URL templates, one for each mode.
      */
     protected $urls_templates = [
-        1 => 'https://live.opayo.eu.elavon.com/api/{version}/{resource}',
-        2 => 'https://sandbox.opayo.eu.elavon.com/api/{version}/{resource}',
+        1 => 'https://live.opayo.eu.elavon.com/api/{version}{resource}',
+        2 => 'https://sandbox.opayo.eu.elavon.com/api/{version}{resource}',
     ];
 
     /**
