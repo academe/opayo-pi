@@ -76,6 +76,10 @@ abstract class Helper
                 // Use a default UTC timezone for any relative dates without a timezone that
                 // Sage Pay may send. From the "02-09-2016 v1" API all dates will use
                 // ISO 8601 format, e.g. "2016-09-26T15:34:37.761000+01:00"
+
+                // NOTE: Unfortunately as of 2024-03-01 the time format returned is no longer exactly ISO 8601
+                // as it contains more decimal places than DateTime can handle:
+                // e.g. "2024-03-01T04:29:31.501675271Z"
                 $parts = explode('.', $date);
                 if (count($parts) > 1) {
                     $parts[1] = substr($parts[1], 0, 3) . "Z";
@@ -93,7 +97,7 @@ abstract class Helper
                 throw new UnexpectedValueException('Unexpected datatype for datetime');
             }
         } catch (Exception $e) {
-            throw new UnexpectedValueException('Unexpected time format', $e->getCode(), $e);
+            throw new UnexpectedValueException('Unexpected time format "'. $date . '"', $e->getCode(), $e);
         }
 
         return $datetime;
