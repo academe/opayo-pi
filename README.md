@@ -21,6 +21,7 @@
             - [SCA: Strong Customer Authentication](#sca-strong-customer-authentication)
             - [3D Secure Version 2 Redirect](#3d-secure-version-2-redirect)
             - [3D Secure Version 2 Notification Handling](#3d-secure-version-2-notification-handling)
+        - [Saving and Reusing Cards](#saving-and-reusing-cards)
     - [Payment Methods](#payment-methods)
 
 <!-- /TOC -->
@@ -292,6 +293,7 @@ $amount = new MoneyAmount(MoneyPhp::GBP(999));
 $card = new SingleUseCard($session_key, $card_identifier);
 
 // If you want the card to be reusable, then set its "save" flag:
+// You will also need to force 3D secure and set a credential type (see below)
 
 $card = $card->withSave();
 
@@ -714,6 +716,104 @@ Finally use that result to get the transaction authorisation result.
 
     $response = $client->sendRequest($request);
     $transaction = ResponseFactory::fromHttpResponse($response);
+```
+
+### Saving and Reusing Cards
+
+[See the Opayo documentation for reusable tokens](https://developer-eu.elavon.com/docs/opayo/tokens-reusable-identifiers).
+
+A previous transaction can be used as a base for a repeat payment.
+This must be set correctly in your initial request:
+
+```php
+...
+
+if ($saveCard) {
+    $card = $card->withSave();
+}
+
+$paymentRequest = new CreatePayment(
+    $endpoint,
+    $auth,
+    $card,
+    'MyVendorTxCode-' . rand(10000000, 99999999),
+    $amount,
+    'My Purchase Description',
+    $billingAddress,
+    $customer
+);
+
+if ($saveCard) {
+    // A credential type must be applied. There are convienence static creators to simplify this
+    // @see https://developer-eu.elavon.com/docs/opayo/credential-file-0
+     
+    $paymentRequest->setCredentialType(CredentialType::createForNewReusableCard());
+
+    // Saving a token for reuse is only possible when 3D secure is applied (the cardholder must be present)
+
+    $paymentRequest->withApply3DSecure(CreatePayment::APPLY_3D_SECURE_FORCE);
+}
+
+$paymentResponse = $client->sendRequest($paymentRequest);
+```
+
+After the 3D secure response you can save the card details returned:
+
+```php
+    $request = new CreateSecure3Dv2Challenge(...);
+    $response = $client->sendRequest($request);
+    $response = ResponseFactory::fromHttpResponse($response);
+
+    $card = $response->getPaymentMethod();
+
+    if ($card instanceof Card && $card->isReusable()) {
+        // store this info against your customer for future use
+        $serialisedCard = json_encode($card);
+    
+        // or individual attributes of the card if you want it normalised
+        $savedToken = $card->getCardIdentifier();
+        $lastFourDigits = $card->getLastFourDigits();
+        $expiryDate = $card->getExpiryDate();
+    }   
+```
+
+In future requests you can then reuse the token.
+You can amend the shipping details and the amount (with no limit)
+but not the payee details or address.
+
+Merchants / admin users can place orders on a customers behalf using their saved cards.
+They can bypass the need for a CVC entirely, but you need a telephone/MOTO facility enabled
+with Opayo (not available in Sandboxes).
+
+You will also need to provide a credential type with your requests.
+
+```php
+
+if ($merchantPlacingOrderOnCustomersBehalf) {
+    $card = new ReusableCard($savedToken);
+} else {
+    // customer placing order themselves, requires CVV submitted through JS
+    $card = new ReusableCvvCard($sessionKey, $cardIdentifier);
+}
+
+$paymentRequest = new CreatePayment(
+    $endpoint,
+    $auth,
+    $card,
+    'MyVendorTxCode-' . rand(10000000, 99999999),
+    $amount,
+    'My Purchase Description',
+    $billingAddress,
+    $customer
+);
+
+if ($merchantPlacingOrderOnCustomersBehalf) {
+    $paymentRequest->setEntryMethod(CreatePayment::ENTRY_METHOD_TELEPHONEORDER);
+    $paymentRequest->withApplyAvsCvcCheck(CreatePayment::APPLY_AVS_CVC_CHECK_DISABLE);
+    $paymentRequest->setCredentialType(CredentialType::createForMerchantReusingCard());
+} else {
+    $paymentRequest->setCredentialType(CredentialType::createForCustomerReusingCard());
+}
 ```
 
 ## Payment Methods

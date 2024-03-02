@@ -80,6 +80,15 @@ abstract class Helper
                 // and microseconds "2024-03-01T04:29:31.501675271Z".
                 // It's all a bit random, but we need to be able to parse any of them.
 
+                // NOTE: Unfortunately as of 2024-03-01 the time format returned is no longer exactly ISO 8601
+                // as it contains more decimal places than DateTime can handle:
+                // e.g. "2024-03-01T04:29:31.501675271Z"
+                $parts = explode('.', $date);
+                if (count($parts) > 1) {
+                    $parts[1] = substr($parts[1], 0, 3) . "Z";
+                    $date = $parts[0] . "." . $parts[1];
+                }
+
                 $datetime = new DateTime($date, new DateTimeZone('UTC'));
             } elseif ($date instanceof DateTime) {
                 $datetime = $date;
@@ -91,7 +100,7 @@ abstract class Helper
                 throw new UnexpectedValueException('Unexpected datatype for datetime');
             }
         } catch (Exception $e) {
-            throw new UnexpectedValueException('Unexpected time format', $e->getCode(), $e);
+            throw new UnexpectedValueException('Unexpected time format "'. $date . '"', $e->getCode(), $e);
         }
 
         return $datetime;
