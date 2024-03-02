@@ -672,6 +672,10 @@ If a redirect is needed, then it is done through a `POST` like 3DS v1.
 // and will be returned with the result to help match up the user with their
 // payment request.
 
+// Note: do NOT pass the transactionId in as the threeDSSessionData. If you do
+// this, Opayo will reject the 3DS redirect challenge. It's not known why, but
+// has been observed. The vendorTxCode can be used with no issues at this time.
+
 if ($transactionResponse->isRedirect()) {
     echo '<form method="post" action="'.$payment->getAcsUrl().'">';
     foreach($transactionResponse->getPaRequestFields($threeDSSessionData) as $name => $value) {

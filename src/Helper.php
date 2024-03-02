@@ -76,6 +76,9 @@ abstract class Helper
                 // Use a default UTC timezone for any relative dates without a timezone that
                 // Sage Pay may send. From the "02-09-2016 v1" API all dates will use
                 // ISO 8601 format, e.g. "2016-09-26T15:34:37.761000+01:00"
+                // In 2024.03 we also get dates of format "2024-03-02T16:08:56.050Z"
+                // and microseconds "2024-03-01T04:29:31.501675271Z".
+                // It's all a bit random, but we need to be able to parse any of them.
 
                 $datetime = new DateTime($date, new DateTimeZone('UTC'));
             } elseif ($date instanceof DateTime) {
