@@ -11,6 +11,7 @@ use UnexpectedValueException;
 use Academe\Opayo\Pi\Model\Auth;
 use Academe\Opayo\Pi\Model\Endpoint;
 use Academe\Opayo\Pi\Money\AmountInterface;
+use Academe\Opayo\Pi\Request\Model\CredentialType;
 use Academe\Opayo\Pi\Request\Model\PersonInterface;
 use Academe\Opayo\Pi\Request\Model\AddressInterface;
 use Academe\Opayo\Pi\Request\Model\PaymentMethodInterface;
@@ -58,6 +59,11 @@ class CreatePayment extends AbstractRequest
      * @var StrongCustomerAuthentication
      */
     protected $strongCustomerAuthentication;
+
+    /**
+     * @var CredentialType
+     */
+    protected $credentialType;
 
     /**
      * Valid values for enumerated input types.
@@ -350,6 +356,18 @@ class CreatePayment extends AbstractRequest
         return $copy->setReferrerId($referrerId);
     }
 
+    public function setCredentialType(CredentialType $credentialType)
+    {
+        $this->credentialType = $credentialType;
+        return $this;
+    }
+
+    public function withCredentialType(CredentialType $credentialType)
+    {
+        $copy = clone $this;
+        return $copy->setCredentialType($credentialType);
+    }
+
     /**
      * Get the message body data for serializing.
      * @return array
@@ -415,6 +433,10 @@ class CreatePayment extends AbstractRequest
 
         if (! empty($this->strongCustomerAuthentication)) {
             $result['strongCustomerAuthentication'] = $this->strongCustomerAuthentication->jsonSerialize();
+        }
+
+        if (! empty($this->credentialType)) {
+            $result['credentialType'] = $this->credentialType->jsonSerialize();
         }
 
         return $result;
