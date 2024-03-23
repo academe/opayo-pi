@@ -679,8 +679,10 @@ If a redirect is needed, then it is done through a `POST` like 3DS v1.
 // has been observed. The vendorTxCode can be used with no issues at this time.
 
 if ($transactionResponse->isRedirect()) {
+    $encThreeDSSessionData = base64_encode($threeDSSessionData);
+
     echo '<form method="post" action="'.$payment->getAcsUrl().'">';
-    foreach($transactionResponse->getPaRequestFields($threeDSSessionData) as $name => $value) {
+    foreach($transactionResponse->getPaRequestFields($encThreeDSSessionData) as $name => $value) {
         echo '<input type="hidden" name="'.$name.'" value="'.$value.'" />';
     }
     echo '<button type="submit">Click here if not redirected in five seconds</button>';
@@ -701,11 +703,13 @@ if (Secure3Dv2Notification::isRequest($_POST)) {
     ...
     // If you need the sent session data, it can be found here:
 
-    $threeDSSessionData = $secure3Dv2Notification->getThreeDSSessionData();
+    $encThreeDSSessionData = $secure3Dv2Notification->getThreeDSSessionData();
+    $threeDSSessionData = base64_decode($encThreeDSSessionData);
+
 }
 ```
 
-Finally use that result to get the transaction authorisation result.
+Finally use that result to get the transaction authorisation result. The `$transactionId` should be the returned value from the original `CreatePayment` request.
 
 ```php
     use Academe\Opayo\Pi\Request\CreateSecure3Dv2Challenge;
