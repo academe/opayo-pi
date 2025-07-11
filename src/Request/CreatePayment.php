@@ -405,7 +405,7 @@ class CreatePayment extends AbstractRequest
         }
 
         // If there are shipping details, then merge it in:
-        if (! empty($shippingAddress)) {
+        if (! empty($shippingDetails)) {
             $result['shippingDetails'] = $shippingDetails;
         }
 
