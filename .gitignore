@@ -35,3 +35,11 @@ atlassian-ide-plugin.xml
 com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
+
+/vendor
+/.env
+.env.*.local
+.phpunit.result.cache
+.php_cs.cache
+.php-cs-fixer.cache
+/composer.lock
