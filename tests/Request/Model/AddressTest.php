@@ -2,9 +2,9 @@
 
 namespace Academe\Opayo\Pi\Request\Model;
 
-//use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\TestCase;
 
-class AddressTest extends \PHPUnit_Framework_TestCase
+class AddressTest extends TestCase
 {
     protected $simpleGB = [
         'address1' => 'Address1',
@@ -96,81 +96,65 @@ class AddressTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    /**
-     * @expectedException UnexpectedValueException
-     */
     public function testMissingAddress1()
     {
+        $this->expectException(\UnexpectedValueException::class);
         $data = $this->simpleUS;
         unset($data['address1']);
         $address = Address::fromData($data);
     }
 
-    /**
-     * @expectedException UnexpectedValueException
-     */
     public function testMissingCity()
     {
+        $this->expectException(\UnexpectedValueException::class);
         $data = $this->simpleUS;
         unset($data['city']);
         $address = Address::fromData($data);
     }
 
-    /**
-     * @expectedException UnexpectedValueException
-     */
     public function testMissingCountry()
     {
+        $this->expectException(\UnexpectedValueException::class);
         $data = $this->simpleUS;
         unset($data['country']);
         $address = Address::fromData($data);
     }
 
-    /**
-     * @expectedException UnexpectedValueException
-     */
     public function testMissingState()
     {
+        $this->expectException(\UnexpectedValueException::class);
         $data = $this->simpleUS;
         unset($data['state']);
         $address = Address::fromData($data);
     }
 
-    /**
-     * @expectedException UnexpectedValueException
-     */
     public function testInvalidState()
     {
+        $this->expectException(\UnexpectedValueException::class);
         $data = $this->simpleUS;
         $data['state'] = 'XX';
         $address = Address::fromData($data);
     }
 
-    /**
-     * @expectedException UnexpectedValueException
-     */
     public function testInvalidCountry()
     {
+        $this->expectException(\UnexpectedValueException::class);
         $data = $this->simpleUS;
         $data['country'] = 'XX';
         $address = Address::fromData($data);
     }
 
-    /**
-     * @expectedException UnexpectedValueException
-     */
     public function testUnexpectedState()
     {
+        $this->expectException(\UnexpectedValueException::class);
         $data = $this->simpleGB;
         $data['state'] = 'AL';
         $address = Address::fromData($data);
     }
 
-    /**
-     * @expectedException UnexpectedValueException
-     */
     public function testMissingPostalCode()
     {
+        $this->expectException(\UnexpectedValueException::class);
         $data = $this->simpleUS;
         unset($data['postalCode']);
         $address = Address::fromData($data);
