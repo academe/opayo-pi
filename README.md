@@ -90,6 +90,9 @@ This library does provide support for the front end though, and this is noted wh
 
 ### Installation
 
+**Requirements:**
+- PHP 8.1 or higher (supports PHP 8.1, 8.2, and 8.3)
+
 Get the latest release:
 
     composer.phar require academe/opayo-pi
