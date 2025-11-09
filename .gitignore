@@ -35,3 +35,9 @@ atlassian-ide-plugin.xml
 com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
+
+# Composer
+/vendor/
+
+# PHPUnit
+.phpunit.result.cache
