@@ -38,6 +38,7 @@ crashlytics-build.properties
 
 # Composer
 /vendor/
+composer.lock
 
 # PHPUnit
 .phpunit.result.cache
