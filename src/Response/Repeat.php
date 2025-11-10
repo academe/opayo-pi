@@ -1,4 +1,8 @@
-<?php namespace Academe\Opayo\Pi\Response;
+<?php
+
+declare(strict_types=1);
+
+namespace Academe\Opayo\Pi\Response;
 
 /**
  * At the moment (12-11-2015 BETA), this resource is the result of a

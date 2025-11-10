@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Request;
 
 /**
@@ -14,34 +16,32 @@ use Academe\Opayo\Pi\ServerRequest\Secure3Dv2Notification;
 
 class CreateSecure3Dv2Challenge extends AbstractRequest
 {
-    protected $cRes;
-    protected $transactionId;
-
-    protected $resource_path = ['transactions', '{transactionId}', '3d-secure-challenge'];
+    protected array $resource_path = ['transactions', '{transactionId}', '3d-secure-challenge'];
+    private readonly string $cRes;
 
     /**
      * @param Endpoint $endpoint
      * @param Auth $auth
-     * @param string|Secure3Dv2Notification $cRes The  Result returned by the user's bank (or their agent)
+     * @param string|Secure3Dv2Notification $cRes The Result returned by the user's bank (or their agent)
      * @param string $transactionId The ID that Sage Pay gave to the transaction in its intial response
      */
-    public function __construct(Endpoint $endpoint, Auth $auth, $cRes, $transactionId)
-    {
+    public function __construct(
+        Endpoint $endpoint,
+        Auth $auth,
+        string|Secure3Dv2Notification $cRes,
+        protected readonly string $transactionId
+    ) {
         $this->setEndpoint($endpoint);
         $this->setAuth($auth);
 
-        if ($cRes instanceof Secure3Dv2Notification) {
-            $this->cRes = $cRes->getCRes();
-        } else {
-            $this->cRes = $cRes;
-        }
-
-        $this->transactionId = $transactionId;
+        $this->cRes = $cRes instanceof Secure3Dv2Notification
+            ? $cRes->getCRes()
+            : $cRes;
     }
 
     /**
      * Get the message body data for serializing.
-     * 
+     *
      * @return array
      */
     public function jsonSerialize(): mixed
@@ -52,19 +52,19 @@ class CreateSecure3Dv2Challenge extends AbstractRequest
     }
 
     /**
-     * @return Secure3Dv2Notification|string
+     * @return string
      */
-    public function getCRes()
+    public function getCRes(): string
     {
         return $this->cRes;
     }
 
     /**
      * Used to construct the URL.
-     * 
+     *
      * @return string
      */
-    public function getTransactionId()
+    public function getTransactionId(): string
     {
         return $this->transactionId;
     }
