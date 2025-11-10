@@ -1,4 +1,8 @@
-<?php namespace Academe\Opayo\Pi\Request\Model;
+<?php
+
+declare(strict_types=1);
+
+namespace Academe\Opayo\Pi\Request\Model;
 
 /**
  * Value object used to hold details about a person.
@@ -9,18 +13,7 @@ use UnexpectedValueException;
 
 class Person implements PersonInterface
 {
-    /**
-     * @var
-     */
-    protected $firstName;
-    protected $lastName;
-    protected $email;
-    protected $phone;
-
-    /**
-     * @var string The current field prefix
-     */
-    protected $fieldPrefix = '';
+    protected string $fieldPrefix = '';
 
     /**
      * @param string $firstName The first name of the person
@@ -28,58 +21,41 @@ class Person implements PersonInterface
      * @param string|null $email The email address for the person
      * @param string|null $phone The phone number for the person
      */
-    public function __construct($firstName, $lastName, $email = null, $phone = null)
-    {
+    public function __construct(
+        protected readonly string $firstName,
+        protected readonly string $lastName,
+        protected readonly ?string $email = null,
+        protected readonly ?string $phone = null
+    ) {
         // These fields are always mandatory.
-        foreach (['firstName', 'lastName'] as $field_name) {
-            if (empty($$field_name)) {
-                throw new UnexpectedValueException(sprintf('Empty field "%s" is mandatory.', $field_name));
+        foreach (['firstName', 'lastName'] as $fieldName) {
+            if (empty($$fieldName)) {
+                throw new UnexpectedValueException(sprintf('Empty field "%s" is mandatory.', $fieldName));
             }
         }
-
-        $this->firstName = $firstName;
-        $this->lastName = $lastName;
-
-        $this->email = $email;
-        $this->phone = $phone;
     }
 
-    /**
-     * @return string The first name for the person
-     */
-    public function getFirstName()
+    public function getFirstName(): string
     {
         return $this->firstName;
     }
 
-    /**
-     * @return string The last name for the person
-     */
-    public function getLastName()
+    public function getLastName(): string
     {
         return $this->lastName;
     }
 
-    /**
-     * @return string The email address for the person
-     */
-    public function getEmail()
+    public function getEmail(): ?string
     {
         return $this->email;
     }
 
-    /**
-     * @return string The phone number for the person
-     */
-    public function getPhone()
+    public function getPhone(): ?string
     {
         return $this->phone;
     }
 
-    /**
-     * @return array The Person returned as an array for the API, requiring conversion to JSON
-     */
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         // First/last name is always required.
         $return = $this->getNamesBody();
@@ -96,10 +72,7 @@ class Person implements PersonInterface
         return $return;
     }
 
-    /**
-     * @return array
-     */
-    public function getNamesBody()
+    public function getNamesBody(): array
     {
         // Name is mandatory.
         return [
@@ -108,12 +81,7 @@ class Person implements PersonInterface
         ];
     }
 
-    /**
-     * @param string $field The field name without a prefix
-     *
-     * @return string The field name with the current prefix added and camel capitalisation
-     */
-    protected function addFieldPrefix($field)
+    protected function addFieldPrefix(string $field): string
     {
         if (! $this->fieldPrefix) {
             return $field;
@@ -122,15 +90,11 @@ class Person implements PersonInterface
         return $this->fieldPrefix . ucfirst($field);
     }
 
-    /**
-     * @param string $fieldPrefix The field prefix used when returning the object as an array
-     *
-     * @return Person Clone of $this with the prefix set.
-     */
-    public function withFieldPrefix($fieldPrefix)
+    public function withFieldPrefix(string $fieldPrefix): self
     {
         $copy = clone $this;
         $copy->fieldPrefix = $fieldPrefix;
         return $copy;
     }
 }
+

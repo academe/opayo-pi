@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Money;
 
 /**
@@ -12,19 +14,16 @@ use Exception;
 
 class Amount implements AmountInterface
 {
-    /**
-     * @var Integer value in the smallest units
-     */
-    protected $amount;
-    protected $currency;
+    protected int $amount;
 
     /**
-     * @param Academe\Opayo\Pi\Money\Currency|Currency $currency
-     * @param int $amount Minor unit total amount, with no decimal part
+     * @param CurrencyInterface $currency
+     * @param int|string $amount Minor unit total amount, with no decimal part
      */
-    public function __construct(CurrencyInterface $currency, $amount = 0)
-    {
-        $this->currency = $currency;
+    public function __construct(
+        protected readonly CurrencyInterface $currency,
+        int|string $amount = 0
+    ) {
         $this->setMinorUnit($amount);
     }
 
@@ -34,44 +33,40 @@ class Amount implements AmountInterface
      *
      * @param float|string|int $amount Total amount as major units and fractions of major units
      *
-     * @return Amount Clone of $this with a newamount set
+     * @return self Clone of $this with a new amount set
      */
-    public function withMajorUnit($amount)
+    public function withMajorUnit(float|string|int $amount): self
     {
         if (is_int($amount) || is_float($amount) || (is_string($amount) && preg_match('/^[0-9]*\.[0-9]*$/', $amount))) {
-            $amount = (float)$amount * pow(10, $this->currency->getDigits());
+            $calculatedAmount = (float)$amount * pow(10, $this->currency->getDigits());
 
-            if (floor($amount) != round($amount, 6)) {
+            if (floor($calculatedAmount) != round($calculatedAmount, 6)) {
                 // Too many decimal digits for the currency.
                 throw new UnexpectedValueException(sprintf(
                     'Amount has too many decimal places. Calculated minor unit %f should be an integer.',
-                    $amount
+                    $calculatedAmount
                 ));
             }
 
             $clone = clone $this;
-            $clone->setMinorUnit((int)$amount);
+            $clone->setMinorUnit((int)$calculatedAmount);
             return $clone;
-        } else {
-            throw new UnexpectedValueException(sprintf(
-                'Major Unit must be a number.'
-            ));
         }
+
+        throw new UnexpectedValueException('Major Unit must be a number.');
     }
 
     /**
-     * Set the minot unit.
+     * Set the minor unit.
      *
      * @param int|string $amount An amount in minor units, with no decimal part
      */
-    protected function setMinorUnit($amount)
+    protected function setMinorUnit(int|string $amount): void
     {
         if (is_int($amount) || (is_string($amount) && preg_match('/^[0-9]+$/', $amount))) {
             $this->amount = (int)$amount;
         } else {
-            throw new UnexpectedValueException(sprintf(
-                'Amount is an unexpected data type.'
-            ));
+            throw new UnexpectedValueException('Amount is an unexpected data type.');
         }
     }
 
@@ -80,9 +75,8 @@ class Amount implements AmountInterface
      * as an integer or a string.
      *
      * @param int|string $amount An amount in minor units, with no decimal part
-     * @return Amount
      */
-    public function withMinorUnit($amount)
+    public function withMinorUnit(int|string $amount): self
     {
         $clone = clone $this;
         $clone->setMinorUnit($amount);
@@ -96,51 +90,39 @@ class Amount implements AmountInterface
      * @param string $name The three-letter ISO currency code
      * @param array $arguments [0] = required amount
      *
-     * @return static New instance of an Amount
-     *
      * @throws Exception
      */
-    public static function __callStatic($name, array $arguments)
+    public static function __callStatic(string $name, array $arguments): static
     {
         try {
             $currency = new Currency($name);
         } catch (UnexpectedValueException $e) {
             $trace = debug_backtrace();
             throw new Exception(sprintf(
-                'Call to undefined method $class::%s() in %s on line %d',
+                'Call to undefined method %s::%s() in %s on line %d',
                 get_called_class(),
+                $name,
                 $trace[0]['file'],
                 $trace[0]['line']
             ));
         }
 
-        if (isset($arguments[0])) {
-            return new static($currency, $arguments[0]);
-        } else {
-            return new static($currency);
-        }
+        return isset($arguments[0])
+            ? new static($currency, $arguments[0])
+            : new static($currency);
     }
 
-    /**
-     * @return int The amount, in minot units
-     */
-    public function getAmount()
+    public function getAmount(): int
     {
         return $this->amount;
     }
 
-    /**
-     * @return Currency The currency object
-     */
-    public function getCurrency()
+    public function getCurrency(): CurrencyInterface
     {
         return $this->currency;
     }
 
-    /**
-     * @return string The currency three-character ISO code
-     */
-    public function getCurrencyCode()
+    public function getCurrencyCode(): string
     {
         return $this->currency->getCode();
     }
