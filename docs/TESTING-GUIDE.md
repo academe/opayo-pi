@@ -459,10 +459,12 @@ script:
 
 **Problem**: Integration tests fail with HTTP client error
 
-**Solution**: Install Guzzle or another PSR-18 client:
+**Solution**: Guzzle 7 is included in `require-dev` and should be installed automatically when running `composer install`. If you still get this error, ensure dev dependencies are installed:
 ```bash
-composer require --dev guzzlehttp/guzzle:^7.0
+composer install --dev
 ```
+
+Note: Library users can choose any PSR-18 client they want. Guzzle is only required for running integration tests during development.
 
 ### Tests Are Slow
 
