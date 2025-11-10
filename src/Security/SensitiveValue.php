@@ -1,27 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Security;
 
 use Exception;
-use Serializable;
 use JsonSerializable;
 
-final class SensitiveValue implements Serializable, JsonSerializable
+final class SensitiveValue implements JsonSerializable
 {
-    private $value;
-
     /**
      * @param mixed $value
      */
-    final public function __construct($value)
-    {
-        $this->value = $value;
+    final public function __construct(
+        private mixed $value
+    ) {
     }
 
     /**
      * @return mixed
      */
-    public function peek()
+    public function peek(): mixed
     {
         return $this->value;
     }
@@ -29,7 +28,7 @@ final class SensitiveValue implements Serializable, JsonSerializable
     /**
      * @return mixed
      */
-    public function get()
+    public function get(): mixed
     {
         $value = $this->value;
 
@@ -38,26 +37,23 @@ final class SensitiveValue implements Serializable, JsonSerializable
         return $value;
     }
 
-    /**
-     *
-     */
-    public function erase()
+    public function erase(): void
     {
         $this->value = null;
     }
 
     /**
-     * {@inheritDoc}
+     * Serialize the object (returns empty array to avoid serializing sensitive data)
      */
-    public function serialize()
+    public function __serialize(): array
     {
-        return;
+        return [];
     }
 
     /**
-     * {@inheritDoc}
+     * Unserialize the object (no-op, as sensitive data is not persisted)
      */
-    public function unserialize($serialized)
+    public function __unserialize(array $data): void
     {
     }
 
@@ -72,7 +68,7 @@ final class SensitiveValue implements Serializable, JsonSerializable
     /**
      * {@inheritDoc}
      */
-    public function __toString()
+    public function __toString(): string
     {
         return '';
     }
@@ -80,17 +76,17 @@ final class SensitiveValue implements Serializable, JsonSerializable
     /**
      * {@inheritDoc}
      */
-    public function __clone()
+    public function __clone(): void
     {
         throw new Exception('It is not permitted to clone this object.');
     }
 
     /**
-     * var_dump or print_r (works only for PHP5.6+)
+     * var_dump or print_r
      *
-     * @return null for now
+     * @return array
      */
-    public function __debugInfo()
+    public function __debugInfo(): array
     {
         return ['value' => gettype($this->value)];
     }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Request;
 
 /**
@@ -9,5 +11,5 @@ namespace Academe\Opayo\Pi\Request;
 
 class CreateVoid extends AbstractInstruction
 {
-    protected $instructionType = AbstractRequest::INSTRUCTION_TYPE_VOID;
+    protected string $instructionType = AbstractRequest::INSTRUCTION_TYPE_VOID;
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Request;
 
 /**
@@ -15,5 +17,5 @@ use Academe\Opayo\Pi\Money\AmountInterface;
 
 class CreateDeferred extends CreatePayment
 {
-    protected $transactionType = AbstractRequest::TRANSACTION_TYPE_DEFERRED;
+    protected string $transactionType = AbstractRequest::TRANSACTION_TYPE_DEFERRED;
 }

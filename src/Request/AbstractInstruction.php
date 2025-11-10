@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Request;
 
 /**
@@ -11,28 +13,18 @@ use Academe\Opayo\Pi\Model\Endpoint;
 
 abstract class AbstractInstruction extends AbstractRequest
 {
-    protected $transactionId;
-    protected $instructionType;
+    protected string $instructionType;
+    protected array $resource_path = ['transactions', '{transactionId}', 'instructions'];
 
-    protected $resource_path = ['transactions', '{transactionId}', 'instructions'];
-
-    /**
-     * @param Endpoint $endpoint
-     * @param Auth $auth
-     * @param string $transactionId The ID of the transaction to void
-     */
-    public function __construct(Endpoint $endpoint, Auth $auth, $transactionId)
-    {
+    public function __construct(
+        Endpoint $endpoint,
+        Auth $auth,
+        protected readonly string $transactionId
+    ) {
         $this->setEndpoint($endpoint);
         $this->setAuth($auth);
-
-        $this->transactionId = $transactionId;
     }
 
-    /**
-     * Get the message body data for serializing.
-     * @return array
-     */
     public function jsonSerialize(): mixed
     {
         $body = [];
@@ -44,16 +36,12 @@ abstract class AbstractInstruction extends AbstractRequest
         return $body;
     }
 
-    public function getInstructionType()
+    public function getInstructionType(): ?string
     {
-        return $this->instructionType;
+        return $this->instructionType ?? null;
     }
 
-    /**
-     * Getter used to construct the URL.
-     * @return string
-     */
-    public function getTransactionId()
+    public function getTransactionId(): string
     {
         return $this->transactionId;
     }
