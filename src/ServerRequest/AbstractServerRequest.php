@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\ServerRequest;
 
 /**
@@ -13,27 +15,20 @@ use Psr\Http\Message\ServerRequestInterface;
 abstract class AbstractServerRequest extends AbstractRequest
 {
     /**
-     * @param ServerRequestInterface $message The 3DSecure resource callback from Sage Pay.
+     * The 3DSecure resource callback from Sage Pay.
      */
-    public function __construct(ServerRequestInterface $message = null)
+    public function __construct(?ServerRequestInterface $message = null)
     {
         if (isset($message)) {
             $this->setData($this->parseBody($message));
         }
     }
 
-    /**
-     * @param $data
-     * @return mixed
-     */
-    public static function fromData($data)
+    public static function fromData(mixed $data): static
     {
         $instance = new static();
         return $instance->setData($data);
     }
 
-    /**
-     * @param $data
-     */
-    abstract protected function setData($data);
+    abstract protected function setData(mixed $data): mixed;
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Money;
 
 /**
@@ -14,29 +16,16 @@ use Money\Money;
 
 class MoneyAmount implements AmountInterface
 {
-    protected $money;
-
-    /**
-     * MoneyAmount constructor.
-     * @param Money $money
-     */
-    public function __construct(Money $money)
+    public function __construct(protected readonly Money $money)
     {
-        $this->money = $money;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getAmount()
+    public function getAmount(): string
     {
         return $this->money->getAmount();
     }
 
-    /**
-     * @return mixed
-     */
-    public function getCurrencyCode()
+    public function getCurrencyCode(): string
     {
         $currency = $this->money->getCurrency();
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Request;
 
 /**
@@ -19,97 +21,77 @@ use Academe\Opayo\Pi\Request\Model\StrongCustomerAuthentication;
 
 class CreatePayment extends AbstractRequest
 {
-    protected $resource_path = ['transactions'];
+    protected array $resource_path = ['transactions'];
 
-    protected $transactionType = AbstractRequest::TRANSACTION_TYPE_PAYMENT;
+    protected string $transactionType = AbstractRequest::TRANSACTION_TYPE_PAYMENT;
 
     // Minimum mandatory data (constructor).
-    protected $paymentMethod;
-    protected $vendorTxCode;
-    protected $amount;
-    protected $description;
-    protected $billingAddress;
-    protected $customer;
+    protected PaymentMethodInterface $paymentMethod;
+    protected string $vendorTxCode;
+    protected AmountInterface $amount;
+    protected string $description;
+    protected AddressInterface $billingAddress;
+    protected PersonInterface $customer;
 
     // Optional or overridable data.
-    protected $entryMethod;
-    protected $giftAid = false;
-    protected $applyAvsCvcCheck;
-    protected $apply3DSecure;
-    protected $shippingAddress;
-    protected $shippingRecipient;
-    protected $referrerId = '3F7A4119-8671-464F-A091-9E59EB47B80C';
+    protected ?string $entryMethod = null;
+    protected bool $giftAid = false;
+    protected ?string $applyAvsCvcCheck = null;
+    protected ?string $apply3DSecure = null;
+    protected ?AddressInterface $shippingAddress = null;
+    protected ?PersonInterface $shippingRecipient = null;
+    protected string $referrerId = '3F7A4119-8671-464F-A091-9E59EB47B80C';
 
     /**
-     * @var string The prefix is added to the name fields of the customer.
+     * The prefix is added to the name fields of the customer.
      */
-    protected $customerFieldsPrefix = 'customer';
+    protected string $customerFieldsPrefix = 'customer';
 
     /**
-     * @var string The prefix is added to the name fields when sending to Sage Pay
+     * The prefix is added to the name fields when sending to Sage Pay
      */
-    protected $shippingNameFieldPrefix = 'recipient';
+    protected string $shippingNameFieldPrefix = 'recipient';
 
     /**
-     * @var string The prefix added to address name fields
+     * The prefix added to address name fields
      */
-    protected $shippingAddressFieldPrefix = 'shipping';
+    protected string $shippingAddressFieldPrefix = 'shipping';
 
-    /**
-     * @var StrongCustomerAuthentication
-     */
-    protected $strongCustomerAuthentication;
+    protected ?StrongCustomerAuthentication $strongCustomerAuthentication = null;
 
-    /**
-     * @var CredentialType
-     */
-    protected $credentialType;
+    protected ?CredentialType $credentialType = null;
 
     /**
      * Valid values for enumerated input types.
      */
 
-    const ENTRY_METHOD_ECOMMERCE                    = 'Ecommerce';
-    const ENTRY_METHOD_MAILORDER                    = 'MailOrder';
-    const ENTRY_METHOD_TELEPHONEORDER               = 'TelephoneOrder';
+    public const ENTRY_METHOD_ECOMMERCE                    = 'Ecommerce';
+    public const ENTRY_METHOD_MAILORDER                    = 'MailOrder';
+    public const ENTRY_METHOD_TELEPHONEORDER               = 'TelephoneOrder';
 
-    const APPLY_AVS_CVC_CHECK_USEMSPSETTING         = 'UseMSPSetting';
-    const APPLY_AVS_CVC_CHECK_FORCE                 = 'Force';
-    const APPLY_AVS_CVC_CHECK_DISABLE               = 'Disable';
-    const APPLY_AVS_CVC_CHECK_FORCEIGNORINGRULES    = 'ForceIgnoringRules';
+    public const APPLY_AVS_CVC_CHECK_USEMSPSETTING         = 'UseMSPSetting';
+    public const APPLY_AVS_CVC_CHECK_FORCE                 = 'Force';
+    public const APPLY_AVS_CVC_CHECK_DISABLE               = 'Disable';
+    public const APPLY_AVS_CVC_CHECK_FORCEIGNORINGRULES    = 'ForceIgnoringRules';
 
     // The numeric values are the Sage Pay Direct equivalents.
-    const APPLY_3D_SECURE_USEMSPSETTING             = 'UseMSPSetting'; // 0
-    const APPLY_3D_SECURE_FORCE                     = 'Force'; // 1
-    const APPLY_3D_SECURE_DISABLE                   = 'Disable'; // 2
+    public const APPLY_3D_SECURE_USEMSPSETTING             = 'UseMSPSetting'; // 0
+    public const APPLY_3D_SECURE_FORCE                     = 'Force'; // 1
+    public const APPLY_3D_SECURE_DISABLE                   = 'Disable'; // 2
     // @deprecated removed from the API spec 2023-10-26
-    const APPLY_3D_SECURE_FORCEIGNORINGRULES        = 'ForceIgnoringRules'; // 3
+    public const APPLY_3D_SECURE_FORCEIGNORINGRULES        = 'ForceIgnoringRules'; // 3
 
-    /**
-     * Transaction constructor.
-     * @param Endpoint $endpoint
-     * @param Auth $auth
-     * @param PaymentMethodInterface $paymentMethod
-     * @param string $vendorTxCode
-     * @param AmountInterface $amount
-     * @param string $description
-     * @param AddressInterface $billingAddress
-     * @param PersonInterface $customer
-     * @param AddressInterface|null $shippingAddress
-     * @param PersonInterface|null $shippingRecipient
-     * @param array $options Optional transaction options
-     */
     public function __construct(
         Endpoint $endpoint,
         Auth $auth,
         PaymentMethodInterface $paymentMethod,
-        $vendorTxCode,
+        string $vendorTxCode,
         AmountInterface $amount,
-        $description,
+        string $description,
         AddressInterface $billingAddress,
         PersonInterface $customer,
-        AddressInterface $shippingAddress = null,
-        PersonInterface $shippingRecipient = null,
+        ?AddressInterface $shippingAddress = null,
+        ?PersonInterface $shippingRecipient = null,
         array $options = []
     ) {
         // Access details.
@@ -140,11 +122,7 @@ class CreatePayment extends AbstractRequest
         $this->setOptions($options);
     }
 
-    /**
-     * @param $entryMethod
-     * @return $this
-     */
-    public function setEntryMethod($entryMethod)
+    public function setEntryMethod(string $entryMethod): static
     {
         // Get the value from the class constants.
         $value = $this->constantValue('ENTRY_METHOD', $entryMethod);
@@ -161,66 +139,47 @@ class CreatePayment extends AbstractRequest
         return $this;
     }
 
-    /**
-     * @param $entryMethod
-     * @return Transaction
-     */
-    public function withEntryMethod($entryMethod)
+    public function withEntryMethod(string $entryMethod): static
     {
         $copy = clone $this;
         return $copy->setEntryMethod($entryMethod);
     }
 
-    /**
-     * @return array
-     */
-    public static function getEntryMethods()
+    public static function getEntryMethods(): array
     {
         return static::constantList('ENTRY_METHOD');
     }
 
-    public function setStrongCustomerAuthentication(StrongCustomerAuthentication $strongCustomerAuthentication)
+    public function setStrongCustomerAuthentication(StrongCustomerAuthentication $strongCustomerAuthentication): static
     {
         $this->strongCustomerAuthentication = $strongCustomerAuthentication;
         return $this;
     }
 
-    public function withStrongCustomerAuthentication(StrongCustomerAuthentication $strongCustomerAuthentication)
+    public function withStrongCustomerAuthentication(StrongCustomerAuthentication $strongCustomerAuthentication): static
     {
         $copy = clone $this;
         return $copy->setStrongCustomerAuthentication($strongCustomerAuthentication);
     }
 
-    public function getStrongCustomerAuthentication()
+    public function getStrongCustomerAuthentication(): ?StrongCustomerAuthentication
     {
         return $this->strongCustomerAuthentication;
     }
 
-    /**
-     * @param $giftAid
-     * @return $this
-     */
-    protected function setGiftAid($giftAid)
+    protected function setGiftAid(bool $giftAid): static
     {
         $this->giftAid = ! empty($giftAid);
         return $this;
     }
 
-    /**
-     * @param $giftAid
-     * @return Transaction
-     */
-    public function withGiftAid($giftAid)
+    public function withGiftAid(bool $giftAid): static
     {
         $copy = clone $this;
         return $copy->setGiftAid($giftAid);
     }
 
-    /**
-     * @param $applyAvsCvcCheck
-     * @return $this
-     */
-    protected function setApplyAvsCvcCheck($applyAvsCvcCheck)
+    protected function setApplyAvsCvcCheck(string $applyAvsCvcCheck): static
     {
         // Get the value from the class constants.
         $value = $this->constantValue('APPLY_AVS_CVC_CHECK', $applyAvsCvcCheck);
@@ -237,29 +196,18 @@ class CreatePayment extends AbstractRequest
         return $this;
     }
 
-    /**
-     * @param $applyAvsCvcCheck
-     * @return Transaction
-     */
-    public function withApplyAvsCvcCheck($applyAvsCvcCheck)
+    public function withApplyAvsCvcCheck(string $applyAvsCvcCheck): static
     {
         $copy = clone $this;
         return $copy->setApplyAvsCvcCheck($applyAvsCvcCheck);
     }
 
-    /**
-     * @return array
-     */
-    public static function getApplyAvsCvcChecks()
+    public static function getApplyAvsCvcChecks(): array
     {
         return static::constantList('APPLY_AVS_CVC_CHECK');
     }
 
-    /**
-     * @param $apply3DSecure
-     * @return $this
-     */
-    protected function setApply3DSecure($apply3DSecure)
+    protected function setApply3DSecure(string $apply3DSecure): static
     {
         // Get the value from the class constants.
         $value = $this->constantValue('APPLY_3D_SECURE', $apply3DSecure);
@@ -276,93 +224,62 @@ class CreatePayment extends AbstractRequest
         return $this;
     }
 
-    /**
-     * @param $apply3DSecure
-     * @return Transaction
-     */
-    public function withApply3DSecure($apply3DSecure)
+    public function withApply3DSecure(string $apply3DSecure): static
     {
         $copy = clone $this;
         return $copy->setApply3DSecure($apply3DSecure);
     }
 
-    /**
-     * @return array
-     */
-    public static function getApply3DSecures()
+    public static function getApply3DSecures(): array
     {
         return static::constantList('APPLY_3D_SECURE');
     }
 
-    /**
-     * @param ShippingAddress $shippingAddress
-     * @return Transaction
-     */
-    public function withShippingAddress(AddressInterface $shippingAddress)
+    public function withShippingAddress(AddressInterface $shippingAddress): static
     {
         $copy = clone $this;
         $copy->shippingAddress = $shippingAddress;
         return $copy;
     }
 
-    /**
-     * @param ShippingRecipient $shippingRecipient
-     * @return Transaction
-     */
-    public function withShippingRecipient(PersonInterface $shippingRecipient)
+    public function withShippingRecipient(PersonInterface $shippingRecipient): static
     {
         $copy = clone $this;
         $copy->shippingRecipient = $shippingRecipient;
         return $copy;
     }
 
-    /**
-     * @param $description
-     * @return $this
-     */
-    protected function setDescription($description)
+    protected function setDescription(string $description): static
     {
         $this->description = $description;
         return $this;
     }
 
-    /**
-     * @param $description
-     * @return Transaction
-     */
-    public function withDescription($description)
+    public function withDescription(string $description): static
     {
         $copy = clone $this;
         return $copy->setDescription($description);
     }
 
-    /**
-     * @param $referrerId
-     * @return $this
-     */
-    protected function setReferrerId($referrerId)
+    protected function setReferrerId(string $referrerId): static
     {
         $this->referrerId = $referrerId;
         return $this;
     }
 
-    /**
-     * @param $referrerId
-     * @return Transaction
-     */
-    public function withReferrerId($referrerId)
+    public function withReferrerId(string $referrerId): static
     {
         $copy = clone $this;
         return $copy->setReferrerId($referrerId);
     }
 
-    public function setCredentialType(CredentialType $credentialType)
+    public function setCredentialType(CredentialType $credentialType): static
     {
         $this->credentialType = $credentialType;
         return $this;
     }
 
-    public function withCredentialType(CredentialType $credentialType)
+    public function withCredentialType(CredentialType $credentialType): static
     {
         $copy = clone $this;
         return $copy->setCredentialType($credentialType);
@@ -370,7 +287,6 @@ class CreatePayment extends AbstractRequest
 
     /**
      * Get the message body data for serializing.
-     * @return array
      */
     public function jsonSerialize(): mixed
     {
