@@ -1,4 +1,8 @@
-<?php namespace Academe\Opayo\Pi\Response;
+<?php
+
+declare(strict_types=1);
+
+namespace Academe\Opayo\Pi\Response;
 
 /**
  * A collection of errors, normally validation errors.
@@ -14,13 +18,14 @@ class ErrorCollection extends AbstractCollection
     /**
      * The class type that can be added to this collection.
      */
-    protected $permittedClass = Model\Error::class;
+    protected string $permittedClass = Model\Error::class;
 
     /**
-     * @param $data
-     * @return $this
+     * @param mixed $data
+     * @param int|string|null $httpCode
+     * @return self
      */
-    protected function setData($data, $httpCode = null)
+    protected function setData(mixed $data, int|string|null $httpCode = null): self
     {
         if ($httpCode) {
             $this->setHttpCode($httpCode);
@@ -49,7 +54,7 @@ class ErrorCollection extends AbstractCollection
      *
      * @inheritdoc
      */
-    public static function fromHttpResponse(ResponseInterface $response)
+    public static function fromHttpResponse(ResponseInterface $response): static
     {
         return new static($response);
     }
@@ -59,11 +64,11 @@ class ErrorCollection extends AbstractCollection
      * Use null to return errors without a property reference.
      * Returns ErrorCollection
      *
-     * @param null|string $property_name The property name or null to get errors without a property name
+     * @param string|null $property_name The property name or null to get errors without a property name
      *
      * @return static A collection of zero or more Error objects
      */
-    public function byProperty($property_name = null)
+    public function byProperty(?string $property_name = null): static
     {
         $result = new static();
 
@@ -79,9 +84,9 @@ class ErrorCollection extends AbstractCollection
     /**
      * @return array Array of all properties the errors in this collection report on
      */
-    public function getProperties()
+    public function getProperties(): array
     {
-        $result = array();
+        $result = [];
 
         foreach ($this as $error) {
             if (! in_array($error->getProperty(), $result)) {
@@ -95,7 +100,7 @@ class ErrorCollection extends AbstractCollection
     /**
      * @return bool True if there are any errors in the collection, otherwise False
      */
-    public function hasErrors()
+    public function hasErrors(): bool
     {
         return $this->count() > 0;
     }
@@ -103,7 +108,7 @@ class ErrorCollection extends AbstractCollection
     /**
      * @inheritdoc
      */
-    public static function isResponse($data)
+    public static function isResponse(mixed $data): bool
     {
         return is_array(Helper::dataGet($data, 'errors'))
             || Helper::dataGet($data, 'status') == 'Error'
@@ -114,7 +119,7 @@ class ErrorCollection extends AbstractCollection
     /**
      * @inheritdoc
      */
-    public function isError()
+    public function isError(): bool
     {
         return true;
     }

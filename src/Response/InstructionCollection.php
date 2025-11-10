@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Response;
 
 /**
@@ -14,12 +16,14 @@ class InstructionCollection extends AbstractCollection
     /**
      * The class type that can be added to this collection.
      */
-    protected $permittedClass = AbstractInstruction::class;
+    protected string $permittedClass = AbstractInstruction::class;
 
     /**
-     *
+     * @param mixed $data
+     * @param int|string|null $httpCode
+     * @return void
      */
-    public function setData($data, $httpCode = null)
+    public function setData(mixed $data, int|string|null $httpCode = null): void
     {
         if ($httpCode) {
             $this->setHttpCode($httpCode);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Response;
 
 /**
@@ -15,9 +17,9 @@ use Academe\Opayo\Pi\Helper;
 
 class CardIdentifier extends AbstractResponse
 {
-    protected $cardIdentifier;
-    protected $expiry;
-    protected $cardType;
+    protected ?string $cardIdentifier = null;
+    protected ?DateTime $expiry = null;
+    protected ?string $cardType = null;
 
     /**
      * This can be set from either a direct response from Sage Pay, or fields
@@ -27,9 +29,9 @@ class CardIdentifier extends AbstractResponse
      * essentially card details returned from Sage Pay?
      *
      * @param array|object $data The parsed data returned by Sage Pay.
-     * @return $this
+     * @return self
      */
-    protected function setData($data)
+    protected function setData(array|object $data): self
     {
         $this->cardIdentifier = Helper::dataGet(
             $data,
@@ -47,9 +49,9 @@ class CardIdentifier extends AbstractResponse
     }
 
     /**
-     * @return mixed
+     * @return string|null
      */
-    public function getCardIdentifier()
+    public function getCardIdentifier(): ?string
     {
         return $this->cardIdentifier;
     }
@@ -59,24 +61,24 @@ class CardIdentifier extends AbstractResponse
      * object: the card identifier string.
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         return (string)$this->getCardIdentifier();
     }
 
     /**
      * The expiry timestamp of the card identifier resource, not the expiry date of the card.
-     * @return mixed
+     * @return DateTime|null
      */
-    public function getExpiry()
+    public function getExpiry(): ?DateTime
     {
         return $this->expiry;
     }
 
     /**
-     * @return mixed
+     * @return string|null
      */
-    public function getCardType()
+    public function getCardType(): ?string
     {
         return $this->cardType;
     }
@@ -84,7 +86,7 @@ class CardIdentifier extends AbstractResponse
     /**
      * @return bool
      */
-    public function isExpired()
+    public function isExpired(): bool
     {
         // Use the default system timezone; the DateTime comparison
         // operation will handle any timezone conversions.
