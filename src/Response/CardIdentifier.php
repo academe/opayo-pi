@@ -103,7 +103,7 @@ class CardIdentifier extends AbstractResponse
      * Reduce the object to an array so it can be serialised and stored between pages.
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return [
             'cardIdentifier' => $this->getCardIdentifier(),

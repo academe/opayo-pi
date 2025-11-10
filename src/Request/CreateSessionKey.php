@@ -27,7 +27,7 @@ class CreateSessionKey extends AbstractRequest
     /**
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return [
             'vendorName' => $this->getAuth()->getVendorName(),

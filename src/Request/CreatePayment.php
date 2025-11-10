@@ -372,7 +372,7 @@ class CreatePayment extends AbstractRequest
      * Get the message body data for serializing.
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         // The mandatory fields.
         // The amount must be cast to an int. Sending an integer as a string will result in

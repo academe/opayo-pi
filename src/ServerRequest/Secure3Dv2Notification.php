@@ -34,7 +34,7 @@ class Secure3Dv2Notification extends AbstractServerRequest
      * Only needed for debugging or logging.
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return [
             'cRes' => $this->getCRes(),

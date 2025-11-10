@@ -44,7 +44,7 @@ abstract class AbstractInstruction extends AbstractResponse
     /**
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return [
             'instructionType' => $this->getInstructionType(),

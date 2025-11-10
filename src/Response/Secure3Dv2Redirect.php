@@ -103,7 +103,7 @@ class Secure3Dv2Redirect extends AbstractTransaction
      * 
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         $return = parent::jsonSerialize();
 

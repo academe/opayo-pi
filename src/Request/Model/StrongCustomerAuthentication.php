@@ -245,7 +245,7 @@ class StrongCustomerAuthentication implements JsonSerializable
     /**
      * @return array The Person returned as an array for the API, requiring conversion to JSON
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         $attributes = [
             'notificationURL' => $this->notificationUrl,

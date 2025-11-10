@@ -44,7 +44,7 @@ class CreateSecure3Dv2Challenge extends AbstractRequest
      * 
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return [
             'cRes' => $this->getCRes(),

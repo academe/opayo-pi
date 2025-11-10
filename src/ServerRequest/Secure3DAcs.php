@@ -31,7 +31,7 @@ class Secure3DAcs extends AbstractServerRequest
      * Only needed for debugging or logging.
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return [
             'PaRes' => $this->getPaRes(),

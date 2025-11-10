@@ -124,7 +124,7 @@ class Address implements AddressInterface
      *
      * @return array Data for passing to the API, requiring JSON conversion first.
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         $return = [
             $this->addFieldPrefix('address1') => $this->address1,

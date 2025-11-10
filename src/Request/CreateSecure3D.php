@@ -44,7 +44,7 @@ class CreateSecure3D extends AbstractRequest
      * Get the message body data for serializing.
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return [
             'paRes' => $this->getPaRes(),

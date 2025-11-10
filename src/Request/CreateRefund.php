@@ -115,7 +115,7 @@ class CreateRefund extends AbstractRequest
      * Get the message body data for serializing.
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         // The mandatory fields.
         $result = [

@@ -112,7 +112,7 @@ class Amount implements JsonSerializable
      * Serialisation for storage/logging/debug.
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return $this->getData();
     }

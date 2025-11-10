@@ -50,8 +50,9 @@ class FetchSessionKey extends AbstractRequest
     /**
      * This message has no body.
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
+        return null;
     }
 
     /**

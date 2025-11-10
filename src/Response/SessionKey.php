@@ -122,7 +122,7 @@ class SessionKey extends AbstractResponse
      * Reduce the object to an array so it can be serialised.
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return [
             'merchantSessionKey' => $this->getMerchantSessionKey(),

@@ -128,7 +128,7 @@ class Card implements JsonSerializable
      * Serialisation for storage.
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return $this->getData();
     }

@@ -15,7 +15,7 @@ class FetchInstructions extends AbstractInstruction
      * Get the message body data for serializing.
      * There is no body data for this message.
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
     }
 }

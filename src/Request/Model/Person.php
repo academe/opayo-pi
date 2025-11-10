@@ -55,7 +55,7 @@ class Person implements PersonInterface
         return $this->phone;
     }
 
-    public function jsonSerialize(): array
+    public function jsonSerialize(): mixed
     {
         // First/last name is always required.
         $return = $this->getNamesBody();

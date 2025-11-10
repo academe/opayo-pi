@@ -42,7 +42,7 @@ class InstructionCollection extends AbstractCollection
     /**
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return [
             'instructions' => $this->items,

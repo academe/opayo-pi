@@ -123,7 +123,7 @@ class ErrorCollection extends AbstractCollection
      * Reduce the object to an array so it can be serialised.
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         $return = [
             'httpCode' => $this->getHttpCode(),

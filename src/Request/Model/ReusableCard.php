@@ -51,7 +51,7 @@ class ReusableCard extends AbstractCard
      * Return the complete object data for serialized storage.
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         $message = [
             'card' => [

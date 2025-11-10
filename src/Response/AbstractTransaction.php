@@ -294,7 +294,7 @@ abstract class AbstractTransaction extends AbstractResponse
      *
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         $return = [];
 
