@@ -822,6 +822,96 @@ if ($merchantPlacingOrderOnCustomersBehalf) {
 }
 ```
 
+## Working with Transaction Status
+
+Opayo Pi returns transaction statuses that indicate the result of payment operations. This library provides both modern enum-based access (recommended) and backwards-compatible string access.
+
+### Using Transaction Status Enums (Recommended)
+
+The `TransactionStatus` enum provides type-safe status handling with built-in helper methods:
+
+```php
+use Academe\Opayo\Pi\Response\TransactionStatus;
+
+// Process a transaction response
+$transactionResponse = ResponseFactory::fromHttpResponse(
+    $client->sendRequest($paymentRequest)
+);
+
+// NEW: Get status as enum (type-safe, full IDE support)
+$status = $transactionResponse->getStatusEnum();
+
+// Use strict comparison with enum
+if ($status === TransactionStatus::OK) {
+    // Payment successful
+    echo "Payment approved!";
+}
+
+// Or use convenient helper methods
+if ($transactionResponse->isSuccessful()) {
+    // Payment was successful
+    processOrder($transactionResponse->getTransactionId());
+} elseif ($transactionResponse->requires3DSecure()) {
+    // Redirect to 3D Secure authentication
+    redirectTo3DSecure($transactionResponse->get3DSecure());
+} elseif ($transactionResponse->hasError()) {
+    // Handle payment error
+    $errorMessage = $transactionResponse->getStatusDetail();
+    displayError($errorMessage);
+}
+```
+
+### Enum Helper Methods
+
+The `TransactionStatus` enum provides these helper methods:
+
+```php
+// Check specific conditions
+$status->isSuccess();                  // true if OK
+$status->requiresAuthentication();      // true if 3DAuth
+$status->isError();                     // true if error state
+$status->isFinal();                     // false if pending authentication
+
+// Get metadata
+$status->description();                 // Human-readable description
+$status->severity();                    // "success", "info", "warning", "error"
+```
+
+### All Transaction Statuses
+
+```php
+TransactionStatus::OK;          // Transaction successful
+TransactionStatus::NOT_AUTHED;  // Transaction not authenticated
+TransactionStatus::REJECTED;    // Transaction rejected by bank
+TransactionStatus::THREE_D_AUTH;// 3D Secure authentication required
+TransactionStatus::MALFORMED;   // Malformed request
+TransactionStatus::INVALID;     // Invalid request
+TransactionStatus::ERROR;       // Transaction error
+```
+
+### Backwards Compatible String Access
+
+Existing code using string comparisons continues to work:
+
+```php
+use Academe\Opayo\Pi\Response\AbstractTransaction;
+
+// OLD: String-based status access (still supported)
+$statusString = $transactionResponse->getStatus();
+
+if ($statusString === AbstractTransaction::STATUS_OK) {
+    // Payment successful (constants still work)
+}
+
+// Direct string comparison also works
+if ($statusString === "Ok") {
+    // Payment successful
+}
+```
+
+**Migration Recommendation**: For new code, use `getStatusEnum()` and the enum directly for type safety and IDE support. Existing code using `getStatus()` (returns string) and constants continues to work without changes.
+
+
 ## Payment Methods
 
 Opayo Pi supports multiple payment methods including traditional cards and modern digital wallets.

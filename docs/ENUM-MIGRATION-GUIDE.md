@@ -435,26 +435,33 @@ enum ChallengeWindowSize: string
 ### Migration Path for Consumers
 
 ```php
-// OLD: Using string constants (still works)
+// OLD: Using string constants (still works - getStatus() returns string)
 if ($transaction->getStatus() === AbstractTransaction::STATUS_OK) {
     // Handle success
 }
 
-// TRANSITIONAL: Using enum values via constants (still works)
-if ($transaction->getStatus() === TransactionStatus::OK->value) {
+// OLD: Direct string comparison (still works)
+if ($transaction->getStatus() === 'Ok') {
     // Handle success
 }
 
-// NEW: Using enum directly (recommended)
+// NEW: Using enum directly (recommended - use getStatusEnum())
 if ($transaction->getStatusEnum() === TransactionStatus::OK) {
     // Handle success
 }
 
-// EVEN BETTER: Using enum helper methods
+// BEST: Using convenience helper methods
 if ($transaction->isSuccessful()) {
-    // Handle success
+    // Handle success - most readable!
 }
 ```
+
+**Key API Methods:**
+- `getStatus()` - Returns `?string` (backwards compatible)
+- `getStatusEnum()` - Returns `?TransactionStatus` (new, type-safe)
+- `isSuccessful()` - Returns `bool` (convenience helper)
+- `requires3DSecure()` - Returns `bool` (convenience helper)
+- `hasError()` - Returns `bool` (convenience helper)
 
 ---
 
