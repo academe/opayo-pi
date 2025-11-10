@@ -19,10 +19,10 @@ class SessionKey extends AbstractResponse
     protected ?DateTime $expiry = null;
 
     /**
-     * @param array|object $data
-     * @return $this
+     * @param mixed $data
+     * @return mixed
      */
-    protected function setData($data)
+    protected function setData(mixed $data): mixed
     {
         $this->merchantSessionKey = Helper::dataGet($data, 'merchantSessionKey');
 
