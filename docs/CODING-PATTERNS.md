@@ -204,6 +204,116 @@ protected const INTERNAL_FLAG = 'internal';
 const OLD_STYLE = 'value';
 ```
 
+### Enums for Fixed Value Sets ⚡ PREFER FOR NEW CODE
+
+**IMPORTANT:** Use PHP 8.1+ enums for representing fixed sets of values (status codes, types, modes, etc.). Enums provide type safety, autocomplete, and encapsulate domain logic.
+
+```php
+// ✅ EXCELLENT: Backed enum with helper methods
+enum TransactionStatus: string
+{
+    case OK = 'Ok';
+    case NOT_AUTHED = 'NotAuthed';
+    case REJECTED = 'Rejected';
+    case THREE_D_AUTH = '3DAuth';
+    case ERROR = 'Error';
+
+    public function isSuccess(): bool
+    {
+        return $this === self::OK;
+    }
+
+    public function requiresAuthentication(): bool
+    {
+        return $this === self::THREE_D_AUTH;
+    }
+
+    public function description(): string
+    {
+        return match ($this) {
+            self::OK => 'Transaction successful',
+            self::NOT_AUTHED => 'Transaction not authenticated',
+            self::REJECTED => 'Transaction rejected by bank',
+            self::THREE_D_AUTH => '3D Secure authentication required',
+            self::ERROR => 'Transaction error',
+        };
+    }
+}
+
+// ✅ GOOD: Using enum in classes
+class Transaction
+{
+    public function __construct(
+        protected TransactionStatus $status
+    ) {
+    }
+
+    public function getStatus(): TransactionStatus
+    {
+        return $this->status;
+    }
+
+    public function isSuccessful(): bool
+    {
+        return $this->status->isSuccess();
+    }
+}
+```
+
+**Backwards Compatibility Pattern:**
+
+When migrating from constants to enums, maintain backwards compatibility:
+
+```php
+// Define enum first
+enum TransactionStatus: string
+{
+    case OK = 'Ok';
+    case NOT_AUTHED = 'NotAuthed';
+    // ... other cases
+}
+
+// Keep constants for BC, referencing enum values
+class AbstractTransaction
+{
+    /**
+     * @deprecated Use TransactionStatus enum instead
+     */
+    public const STATUS_OK = TransactionStatus::OK->value;
+    public const STATUS_NOTAUTHED = TransactionStatus::NOT_AUTHED->value;
+
+    // Store as enum internally
+    protected ?TransactionStatus $statusEnum = null;
+
+    // Getter returns enum (preferred)
+    public function getStatusEnum(): ?TransactionStatus
+    {
+        return $this->statusEnum;
+    }
+
+    // Getter returns string (backwards compatibility)
+    public function getStatusString(): ?string
+    {
+        return $this->statusEnum?->value;
+    }
+}
+```
+
+**When to use enums:**
+- ✅ **Fixed API values** - Transaction statuses, payment methods, etc.
+- ✅ **Configuration options** - Entry methods, challenge window sizes
+- ✅ **Internal types** - Instruction types, credential types
+- ✅ **Domain concepts** - When the set of values has business meaning
+
+**Benefits:**
+- 🎯 Type safety and IDE autocomplete
+- 🔍 Exhaustive match expression checking
+- 📚 Self-documenting code
+- 🛠️ Encapsulate domain logic in helper methods
+- ♻️ Easy refactoring across codebase
+
+See [ENUM-MIGRATION-GUIDE.md](ENUM-MIGRATION-GUIDE.md) for detailed examples and migration strategies.
+
 ---
 
 ## Architecture Patterns
@@ -832,6 +942,7 @@ When creating a new class, ensure:
 
 - [ ] `declare(strict_types=1);` at top
 - [ ] **⚡ Constructor uses property promotion** (unless complex initialization needed)
+- [ ] **⚡ Use enums for fixed value sets** (statuses, types, modes)
 - [ ] All properties have type declarations
 - [ ] All methods have return types
 - [ ] All constants have `public const` visibility
