@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Response;
 
 /**
@@ -12,9 +14,12 @@ class NoContent extends AbstractResponse
 {
     /**
      * No data to set (this is an empty messgae body).
+     * @param mixed $data
+     * @return mixed
      */
-    public function setData($data)
+    public function setData(mixed $data): mixed
     {
+        return $this;
     }
 
     /**
