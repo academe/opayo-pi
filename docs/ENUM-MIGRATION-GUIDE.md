@@ -23,10 +23,27 @@ The goal is to:
 ### Key Principles
 
 1. **Enums as Source of Truth**: Enum cases define the actual values
-2. **Constants Reference Enums**: Class constants point to enum values for BC
+2. **Constants for BC**: Class constants use string literals (PHP 8.1) or enum values (PHP 8.2+)
 3. **Flexible Type Hints**: Accept both enum and string in methods
 4. **Smart Conversion**: Helper methods convert between enum/string seamlessly
 5. **Internal Enum Usage**: Internally prefer enums, externally support both
+
+### PHP 8.1 vs 8.2 Difference
+
+**Important:** PHP 8.1 does not allow property access (`->value`) in constant expressions.
+
+```php
+// ❌ PHP 8.1: Does NOT work
+public const STATUS_OK = TransactionStatus::OK->value;
+
+// ✅ PHP 8.1: Use string literal
+public const STATUS_OK = 'Ok';
+
+// ✅ PHP 8.2+: Can use enum->value
+public const STATUS_OK = TransactionStatus::OK->value;
+```
+
+**This guide uses PHP 8.1 compatible patterns** (string literals) to maximize compatibility.
 
 ---
 
@@ -158,14 +175,17 @@ abstract class AbstractTransaction extends AbstractResponse
      *
      * @deprecated Use TransactionStatus enum instead. These constants will remain
      *             for backwards compatibility but new code should use the enum.
+     *
+     * Note: PHP 8.1 compatible - uses string literals (not enum->value).
+     *       Tests verify these match the enum values.
      */
-    public const STATUS_OK = TransactionStatus::OK->value;
-    public const STATUS_NOTAUTHED = TransactionStatus::NOT_AUTHED->value;
-    public const STATUS_REJECTED = TransactionStatus::REJECTED->value;
-    public const STATUS_3DAUTH = TransactionStatus::THREE_D_AUTH->value;
-    public const STATUS_MALFORMED = TransactionStatus::MALFORMED->value;
-    public const STATUS_INVALID = TransactionStatus::INVALID->value;
-    public const STATUS_ERROR = TransactionStatus::ERROR->value;
+    public const STATUS_OK = 'Ok';
+    public const STATUS_NOTAUTHED = 'NotAuthed';
+    public const STATUS_REJECTED = 'Rejected';
+    public const STATUS_3DAUTH = '3DAuth';
+    public const STATUS_MALFORMED = 'Malformed';
+    public const STATUS_INVALID = 'Invalid';
+    public const STATUS_ERROR = 'Error';
 
     /**
      * The status, statusCode and statusReason are used in all transaction responses.
@@ -284,20 +304,40 @@ When adding enums to an existing constant-based system:
 
 ### 2. Update the Class
 - [ ] Add `@deprecated` doc to existing constants
-- [ ] Change constants to reference enum values (`Enum::CASE->value`)
+- [ ] **For PHP 8.1:** Keep constants as string literals (cannot use `Enum::CASE->value`)
+- [ ] **For PHP 8.2+:** Optionally reference enum values (`Enum::CASE->value`)
 - [ ] Add new typed property for enum (`protected ?EnumType $propertyEnum = null`)
 - [ ] Keep old property for BC if needed, or convert it
 - [ ] Update setter to parse into enum
-- [ ] Update getter to return enum|string|null union type
-- [ ] Add dedicated `getXxxEnum(): ?EnumType` method
-- [ ] Add dedicated `getXxxString(): ?string` method
+- [ ] Add dedicated `getXxxEnum(): ?EnumType` method (returns enum)
+- [ ] Keep original getter returning string for BC
 - [ ] Add convenience boolean methods using enum logic
 
 ### 3. Maintain Backwards Compatibility
-- [ ] Constants still work (they reference enum values)
+- [ ] Constants still work (string literals matching enum values)
 - [ ] String comparisons still work (`$status === 'Ok'`)
-- [ ] String type hints still work (union types)
+- [ ] String type hints still work
 - [ ] Existing code doesn't break
+
+### 4. PHP Version Considerations
+
+**PHP 8.1 Limitation:**
+```php
+// ❌ Does NOT work in PHP 8.1 - property access in constant expressions
+public const STATUS_OK = TransactionStatus::OK->value;
+
+// ✅ Works in PHP 8.1 - string literal
+public const STATUS_OK = 'Ok';
+```
+
+**PHP 8.2+ Enhancement:**
+```php
+// ✅ Works in PHP 8.2+ - enum property access allowed in constants
+public const STATUS_OK = TransactionStatus::OK->value;
+```
+
+**Recommendation:** Use string literals for PHP 8.1 compatibility. The values
+must match the enum values exactly (verified by tests).
 
 ### 4. Update Tests
 - [ ] Test enum cases exist
@@ -342,26 +382,35 @@ enum EntryMethod: string
 Usage in `CreatePayment.php`:
 
 ```php
-// Constants for BC
-public const ENTRY_METHOD_ECOMMERCE = EntryMethod::ECOMMERCE->value;
-public const ENTRY_METHOD_MAILORDER = EntryMethod::MAIL_ORDER->value;
-public const ENTRY_METHOD_TELEPHONEORDER = EntryMethod::TELEPHONE_ORDER->value;
+// Constants for BC (PHP 8.1 compatible - string literals)
+/**
+ * @deprecated Use EntryMethod enum instead
+ */
+public const ENTRY_METHOD_ECOMMERCE = 'Ecommerce';
+public const ENTRY_METHOD_MAILORDER = 'MailOrder';
+public const ENTRY_METHOD_TELEPHONEORDER = 'TelephoneOrder';
 
-// Property
-protected ?EntryMethod $entryMethod = null;
+// Property - store as enum internally
+protected ?EntryMethod $entryMethodEnum = null;
 
-// Setter
+// Setter - accepts enum or string
 public function setEntryMethod(EntryMethod|string|null $value): void
 {
-    $this->entryMethod = is_string($value)
+    $this->entryMethodEnum = is_string($value)
         ? EntryMethod::tryFrom($value)
         : $value;
 }
 
-// Getter with union type
-public function getEntryMethod(): EntryMethod|string|null
+// Getter returning enum (preferred for new code)
+public function getEntryMethodEnum(): ?EntryMethod
 {
-    return $this->entryMethod ?? null;
+    return $this->entryMethodEnum;
+}
+
+// Getter returning string (backwards compatibility)
+public function getEntryMethod(): ?string
+{
+    return $this->entryMethodEnum?->value;
 }
 ```
 

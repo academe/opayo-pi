@@ -20,18 +20,21 @@ abstract class AbstractTransaction extends AbstractResponse
      * Transaction status constants (for backwards compatibility).
      *
      * @deprecated Since 3.1.0. Use TransactionStatus enum instead.
-     *             These constants reference enum values and will remain for
-     *             backwards compatibility, but new code should use the enum.
+     *             These constants are kept for backwards compatibility but
+     *             new code should use the TransactionStatus enum for type safety.
+     *
+     * Note: These constants use string literals (not enum->value) for PHP 8.1 compatibility.
+     *       Enum property access in constants requires PHP 8.2+.
      *
      * @see TransactionStatus
      */
-    public const STATUS_OK = TransactionStatus::OK->value;
-    public const STATUS_NOTAUTHED = TransactionStatus::NOT_AUTHED->value;
-    public const STATUS_REJECTED = TransactionStatus::REJECTED->value;
-    public const STATUS_3DAUTH = TransactionStatus::THREE_D_AUTH->value;
-    public const STATUS_MALFORMED = TransactionStatus::MALFORMED->value;
-    public const STATUS_INVALID = TransactionStatus::INVALID->value;
-    public const STATUS_ERROR = TransactionStatus::ERROR->value;
+    public const STATUS_OK = 'Ok';
+    public const STATUS_NOTAUTHED = 'NotAuthed';
+    public const STATUS_REJECTED = 'Rejected';
+    public const STATUS_3DAUTH = '3DAuth';
+    public const STATUS_MALFORMED = 'Malformed';
+    public const STATUS_INVALID = 'Invalid';
+    public const STATUS_ERROR = 'Error';
 
     /**
      * The status, statusCode and statusReason are used in all transaction responses.
