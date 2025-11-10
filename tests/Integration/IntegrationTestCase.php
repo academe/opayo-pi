@@ -53,13 +53,15 @@ abstract class IntegrationTestCase extends TestCase
     /**
      * Check if Opayo credentials are available in environment.
      *
-     * @return bool True if all required credentials are set
+     * @return bool True if all required credentials are set and non-empty
      */
     protected function hasCredentials(): bool
     {
-        return !empty($_ENV['OPAYO_VENDOR_NAME'])
-            && !empty($_ENV['OPAYO_INTEGRATION_KEY'])
-            && !empty($_ENV['OPAYO_INTEGRATION_PASSWORD']);
+        $vendorName = $_ENV['OPAYO_VENDOR_NAME'] ?? '';
+        $integrationKey = $_ENV['OPAYO_INTEGRATION_KEY'] ?? '';
+        $integrationPassword = $_ENV['OPAYO_INTEGRATION_PASSWORD'] ?? '';
+
+        return $vendorName !== '' && $integrationKey !== '' && $integrationPassword !== '';
     }
 
     /**
@@ -123,8 +125,8 @@ abstract class IntegrationTestCase extends TestCase
                 $key = trim($key);
                 $value = trim($value);
 
-                // Only set if not already in environment
-                if (!isset($_ENV[$key]) && $key !== '') {
+                // Only set if not already in environment or if current value is empty
+                if ($key !== '' && (!isset($_ENV[$key]) || $_ENV[$key] === '')) {
                     $_ENV[$key] = $value;
                     putenv("$key=$value");
                 }

@@ -17,12 +17,4 @@
       <directory>./tests/</directory>
     </testsuite>
   </testsuites>
-
-  <php>
-    <!-- Load environment variables from .env file if it exists -->
-    <env name="OPAYO_VENDOR_NAME" value=""/>
-    <env name="OPAYO_INTEGRATION_KEY" value=""/>
-    <env name="OPAYO_INTEGRATION_PASSWORD" value=""/>
-    <env name="OPAYO_ENVIRONMENT" value="test"/>
-  </php>
 </phpunit>
