@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Factory;
 
 /**
@@ -34,11 +36,11 @@ interface RequestFactoryInterface
         array $headers = [],
         $body = null,
         $protocolVersion = '1.1'
-    );
+    ): RequestInterface;
 
     /**
      * Check whether the required libraries are installed so this factory can be used.
-     * @return boolean True if the libraries are installed to support this PSR-7 implementation.
+     * @return bool True if the libraries are installed to support this PSR-7 implementation.
      */
-    public static function isSupported();
+    public static function isSupported(): bool;
 }

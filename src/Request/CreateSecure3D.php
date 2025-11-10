@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Request;
 
 /**
@@ -15,29 +17,27 @@ use Academe\Opayo\Pi\ServerRequest\Secure3DAcs;
 
 class CreateSecure3D extends AbstractRequest
 {
-    protected $paRes;
-    protected $transactionId;
-
-    protected $resource_path = ['transactions', '{transactionId}', '3d-secure'];
+    protected array $resource_path = ['transactions', '{transactionId}', '3d-secure'];
+    private readonly string $paRes;
 
     /**
      * @param Endpoint $endpoint
      * @param Auth $auth
-     * @param string|Secure3DAcsResponse $paRes The PA Result returned by the user's bank (or their agent)
+     * @param string|Secure3DAcs $paRes The PA Result returned by the user's bank (or their agent)
      * @param string $transactionId The ID that Sage Pay gave to the transaction in its intial response
      */
-    public function __construct(Endpoint $endpoint, Auth $auth, $paRes, $transactionId)
-    {
+    public function __construct(
+        Endpoint $endpoint,
+        Auth $auth,
+        string|Secure3DAcs $paRes,
+        protected readonly string $transactionId
+    ) {
         $this->setEndpoint($endpoint);
         $this->setAuth($auth);
 
-        if ($paRes instanceof Secure3DAcs) {
-            $this->paRes = $paRes->getPaRes();
-        } else {
-            $this->paRes = $paRes;
-        }
-
-        $this->transactionId = $transactionId;
+        $this->paRes = $paRes instanceof Secure3DAcs
+            ? $paRes->getPaRes()
+            : $paRes;
     }
 
     /**
@@ -52,9 +52,9 @@ class CreateSecure3D extends AbstractRequest
     }
 
     /**
-     * @return Secure3DAcsResponse|string
+     * @return string
      */
-    public function getPaRes()
+    public function getPaRes(): string
     {
         return $this->paRes;
     }
@@ -63,7 +63,7 @@ class CreateSecure3D extends AbstractRequest
      * Getter used to construct the URL.
      * @return string
      */
-    public function getTransactionId()
+    public function getTransactionId(): string
     {
         return $this->transactionId;
     }
