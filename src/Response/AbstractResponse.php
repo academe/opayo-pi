@@ -13,7 +13,6 @@ use Academe\Opayo\Pi\AbstractMessage;
 use Psr\Http\Message\ResponseInterface;
 use Academe\Opayo\Pi\Helper;
 use JsonSerializable;
-
 // Teapot here provides HTTP response code constants.
 // Not sure why RFC4918 is not included in Http; it contains some responses we expect to get.
 use Teapot\StatusCode\RFC\RFC4918;

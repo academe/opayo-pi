@@ -107,8 +107,7 @@ class StrongCustomerAuthentication implements JsonSerializable
         protected readonly string $challengeWindowSize,
         protected readonly string $transType,
         array $additionalOptions = []
-    )
-    {
+    ) {
         foreach ($additionalOptions as $name => $value) {
             $method = 'set' . ucfirst($name);
 
@@ -222,7 +221,7 @@ class StrongCustomerAuthentication implements JsonSerializable
     {
         $clone = clone $this;
         return $clone->setBrowserTz($browserTz);
-    } 
+    }
 
     /**
      * @return array The Person returned as an array for the API, requiring conversion to JSON
@@ -257,7 +256,7 @@ class StrongCustomerAuthentication implements JsonSerializable
         if ($this->browserScreenWidth !== null) {
             $attributes['browserScreenWidth'] = $this->browserScreenWidth;
         }
-        
+
         if ($this->browserTz !== null) {
             $attributes['browserTZ'] = $this->browserTz;
         }

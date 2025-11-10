@@ -14,7 +14,6 @@ use Exception;
 use UnexpectedValueException;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ServerRequestInterface;
-
 use DateTime;
 use DateTimeZone;
 
@@ -101,7 +100,7 @@ abstract class Helper
                 throw new UnexpectedValueException('Unexpected datatype for datetime');
             }
         } catch (Exception $e) {
-            throw new UnexpectedValueException('Unexpected time format "'. $date . '"', $e->getCode(), $e);
+            throw new UnexpectedValueException('Unexpected time format "' . $date . '"', $e->getCode(), $e);
         }
 
         return $datetime;

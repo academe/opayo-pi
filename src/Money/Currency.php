@@ -66,4 +66,3 @@ class Currency implements CurrencyInterface
         return $this->allCurrencies->getByAlpha3($this->code)['name'];
     }
 }
-

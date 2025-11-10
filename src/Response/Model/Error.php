@@ -56,8 +56,7 @@ class Error implements JsonSerializable
         ?string $description = null,
         ?string $property = null,
         ?string $clientMessage = null
-    )
-    {
+    ) {
         $this->httpCode = $httpCode;
 
         $this->code = $code;

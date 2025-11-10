@@ -45,4 +45,3 @@ class Auth
         return $this->integrationPassword?->peek();
     }
 }
-

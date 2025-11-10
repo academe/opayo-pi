@@ -101,9 +101,11 @@ class ResponseFactory
         // Just dump it into a Payment to access isSucess().
 
         if (Helper::dataGet($data, 'transactionId')) {
-            if (Helper::dataGet($data, 'paymentMethod')
+            if (
+                Helper::dataGet($data, 'paymentMethod')
                 && Helper::dataGet($data, 'amount')
-                && Helper::dataGet($data, 'transactionType') === null) {
+                && Helper::dataGet($data, 'transactionType') === null
+            ) {
                 return Response\Payment::fromData($data, $httpCode);
             }
         }

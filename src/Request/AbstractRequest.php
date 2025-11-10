@@ -179,7 +179,7 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
     /**
      * Get the PSR-7 factory.
      * Create a factory if none supplied and relevant libraries are installed.
-     * 
+     *
      * @param bool $exception
      * @return RequestFactoryInterface for example DiactorosFactory or GuzzleFactory
      * @throws Exception
@@ -215,7 +215,7 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
      * Return as a PSR-7 request message.
      * TODO: Use a PSR-17 factory to create the basic request, then add the
      * headers and body to that.
-     * 
+     *
      * @return \Psr\Http\Message\RequestInterface
      * @throws Exception
      */

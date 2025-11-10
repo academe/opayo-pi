@@ -40,8 +40,7 @@ class Address implements AddressInterface
         ?string $postalCode,
         ?string $country,
         ?string $state = null
-    )
-    {
+    ) {
         // These fields are always mandatory.
         foreach (array('address1', 'city', 'country') as $field_name) {
             if (empty($$field_name)) {
