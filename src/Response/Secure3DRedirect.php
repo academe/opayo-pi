@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Response;
 
 /**
  * Response to a Payment (and probably Authorise) requent when a
  * 3D Secure redirect is needed.
- * 
+ *
  * @deprecated 3D Secure v1 will end March 2022; use 3DS v2 with the Secure3Dv2Redirect
  */
 
@@ -15,21 +17,16 @@ class Secure3DRedirect extends AbstractTransaction
 {
     /**
      * The acsUrl and paReq should not be stored in the database.
-     * @var
      */
-    protected $acsUrl;
-    protected $paReq;
+    protected ?string $acsUrl = null;
+    protected ?string $paReq = null;
 
-    /**
-     * @param $data
-     * @return $this
-     */
-    protected function setData($data)
+    protected function setData(mixed $data): mixed
     {
         $this->setStatuses($data);
 
         $this->transactionId = Helper::dataGet($data, 'transactionId', null);
-        
+
         $this->acsUrl = Helper::dataGet($data, 'acsUrl', null);
         $this->paReq = Helper::dataGet($data, 'paReq', null);
 
@@ -37,17 +34,17 @@ class Secure3DRedirect extends AbstractTransaction
     }
 
     /**
-     * @return string The 3DSecure ACS URL, to send users to
+     * The 3DSecure ACS URL, to send users to
      */
-    public function getAcsUrl()
+    public function getAcsUrl(): ?string
     {
         return $this->acsUrl;
     }
 
     /**
-     * @return string The 3DSecure PA REQ, the token to send along to the ACS URL
+     * The 3DSecure PA REQ, the token to send along to the ACS URL
      */
-    public function getPaReq()
+    public function getPaReq(): ?string
     {
         return $this->paReq;
     }
@@ -62,9 +59,8 @@ class Secure3DRedirect extends AbstractTransaction
      * @param string|null $termUrl The callback URL, if known at this point
      * @param string|null $md The Merchant Data, if known at this point
      * @return array List of parameter fields and values to go into the PA Req POST
-     * @internal param string $merchantData The MD key to identify the transaction in the callback
      */
-    public function getPaRequestFields($termUrl = null, $md = null)
+    public function getPaRequestFields(?string $termUrl = null, ?string $md = null): array
     {
         $fields = [
             'PaReq' => $this->getPaReq(),
@@ -83,7 +79,6 @@ class Secure3DRedirect extends AbstractTransaction
 
     /**
      * Convenient serialisation for logging and debugging.
-     * @return array
      */
     public function jsonSerialize(): mixed
     {
@@ -97,9 +92,9 @@ class Secure3DRedirect extends AbstractTransaction
     }
 
     /**
-     * @inheritdoc This is a 3D Secure redirect.
+     * This is a 3D Secure redirect.
      */
-    public function isRedirect()
+    public function isRedirect(): bool
     {
         return true;
     }
