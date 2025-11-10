@@ -40,7 +40,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Academe\\Opayo\\Pi\\Tests\\": "tests/"
+            "Academe\\Opayo\\Pi\\Integration\\": "tests/Integration/"
         }
     }
 }

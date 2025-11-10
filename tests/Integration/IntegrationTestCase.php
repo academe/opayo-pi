@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Academe\Opayo\Pi\Tests\Integration;
+namespace Academe\Opayo\Pi\Integration;
 
 use PHPUnit\Framework\TestCase;
 use Academe\Opayo\Pi\Model\Auth;
