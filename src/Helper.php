@@ -9,7 +9,7 @@ use Exception;
 use UnexpectedValueException;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ServerRequestInterface;
-
+use Closure;
 use DateTime;
 use DateTimeZone;
 
