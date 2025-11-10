@@ -170,9 +170,11 @@ class AddressTest extends TestCase
 
         // Valid with a postalCode (no exceptions).
         $address1 = Address::fromData($data);
+        $this->assertInstanceOf(Address::class, $address1);
 
         // Valid without a postalCode (no exceptions).
         unset($data['postalCode']);
         $address2 = Address::fromData($data);
+        $this->assertInstanceOf(Address::class, $address2);
     }
 }
