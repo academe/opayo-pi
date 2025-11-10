@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Response;
 
+use Academe\Opayo\Pi\Factory\ResponseFactory;
+use Academe\Opayo\Pi\Helper;
+
 /**
  * A a collection of instructions.
  */
-
-use Academe\Opayo\Pi\Factory\ResponseFactory;
-use Academe\Opayo\Pi\Helper;
 
 class InstructionCollection extends AbstractCollection
 {

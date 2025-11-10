@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Request;
 
-/**
- * Shared message abstract.
- * Contains base methods that request messages will use.
- */
-
 use Academe\Opayo\Pi\AbstractMessage;
 use Academe\Opayo\Pi\Model\Endpoint;
 use Academe\Opayo\Pi\Model\Auth;
@@ -21,6 +16,11 @@ use JsonSerializable;
 use Exception;
 // use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\RequestInterface;
+
+/**
+ * Shared message abstract.
+ * Contains base methods that request messages will use.
+ */
 
 abstract class AbstractRequest extends AbstractMessage implements JsonSerializable, RequestInterface
 {

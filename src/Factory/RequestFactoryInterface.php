@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Factory;
 
+use Psr\Http\Message\RequestInterface;
+
 /**
  * Factory interface for creating PSR-7 request objects.
  * The implementation will often be Guzzle (GuzzleFactory), but the interface
@@ -15,8 +17,6 @@ namespace Academe\Opayo\Pi\Factory;
  * A client and client factory may be a PSR recommendation at some point, and we will
  * support that when it happens.
  */
-
-use Psr\Http\Message\RequestInterface;
 
 interface RequestFactoryInterface
 {

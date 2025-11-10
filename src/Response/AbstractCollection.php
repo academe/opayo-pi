@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Response;
 
-/**
- * A a collection of instructions.
- */
-
 use ArrayIterator;
 use InvalidArgumentException;
 use Traversable;
+
+/**
+ * A a collection of instructions.
+ */
 
 abstract class AbstractCollection extends AbstractResponse implements \IteratorAggregate
 {

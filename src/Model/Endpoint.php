@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Model;
 
+//use Exception;
+use UnexpectedValueException;
+
 /**
  * The endpoint to use to access the Sage Pay API.
  * TODO: support PSR-7 Url objects as well as strings.
@@ -11,9 +14,6 @@ namespace Academe\Opayo\Pi\Model;
  * mess around constructing a path from strings and handling encoding, so maybe just
  * bypass the UriInterface.
  */
-
-//use Exception;
-use UnexpectedValueException;
 
 class Endpoint
 {

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Response\Model;
 
+use Academe\Opayo\Pi\Helper;
+use JsonSerializable;
+
 /**
  * The results of AVS CVS Checks in a transaction response.
  */
-
-use Academe\Opayo\Pi\Helper;
-use JsonSerializable;
 
 class AvsCvcCheck implements JsonSerializable
 {

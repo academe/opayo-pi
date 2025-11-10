@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Response;
 
+use Psr\Http\Message\ResponseInterface;
+use Academe\Opayo\Pi\Helper;
+
 /**
  * A collection of errors, normally validation errors.
  * Once we have  validation errors collected in here, we can sort them into
  * property names (fields), error types etc.
  */
-
-use Psr\Http\Message\ResponseInterface;
-use Academe\Opayo\Pi\Helper;
 
 class ErrorCollection extends AbstractCollection
 {

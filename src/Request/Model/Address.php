@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Request\Model;
 
-/**
- * Value object used to define the customer's billing address.
- * Reasonable validation is done at creation.
- */
-
 use UnexpectedValueException;
 use Academe\Opayo\Pi\Iso3166\Countries;
 use Academe\Opayo\Pi\Iso3166\States;
 use Academe\Opayo\Pi\Helper;
+
+/**
+ * Value object used to define the customer's billing address.
+ * Reasonable validation is done at creation.
+ */
 
 class Address implements AddressInterface
 {

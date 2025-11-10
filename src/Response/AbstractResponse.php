@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Response;
 
-/**
- * Shared message abstract.
- */
-
 use Academe\Opayo\Pi\Response\ErrorCollection;
 use Academe\Opayo\Pi\AbstractMessage;
 use Psr\Http\Message\ResponseInterface;
@@ -17,6 +13,10 @@ use JsonSerializable;
 // Not sure why RFC4918 is not included in Http; it contains some responses we expect to get.
 use Teapot\StatusCode\RFC\RFC4918;
 use Teapot\StatusCode\Http;
+
+/**
+ * Shared message abstract.
+ */
 
 abstract class AbstractResponse extends AbstractMessage implements Http, RFC4918, JsonSerializable
 {

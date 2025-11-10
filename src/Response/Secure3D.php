@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Response;
 
+use Academe\Opayo\Pi\Helper;
+use Psr\Http\Message\ResponseInterface;
+
 /**
  * The 3D Secure response embedded within a Sage Pay transaction
  * or in response to a Secure3DRequest message.
  * It only includes the status, which gives the final 3D Secure
  * result for the transaction.
  */
-
-use Academe\Opayo\Pi\Helper;
-use Psr\Http\Message\ResponseInterface;
 
 class Secure3D extends AbstractResponse
 {

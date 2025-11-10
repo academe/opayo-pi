@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Request;
 
+use Academe\Opayo\Pi\Model\Auth;
+use Academe\Opayo\Pi\Model\Endpoint;
+
 /**
  * Abstract for shared functionality across "instructions" requests.
  */
-
-use Academe\Opayo\Pi\Model\Auth;
-use Academe\Opayo\Pi\Model\Endpoint;
 
 abstract class AbstractInstruction extends AbstractRequest
 {

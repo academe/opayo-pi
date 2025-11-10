@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Request;
 
-/**
- * The transaction value object to send a transaction to Sage Pay.
- * See https://test.sagepay.com/documentation/#transactions
- */
-
 use UnexpectedValueException;
 use Academe\Opayo\Pi\Model\Auth;
 use Academe\Opayo\Pi\Model\Endpoint;
@@ -18,6 +13,11 @@ use Academe\Opayo\Pi\Request\Model\PersonInterface;
 use Academe\Opayo\Pi\Request\Model\AddressInterface;
 use Academe\Opayo\Pi\Request\Model\PaymentMethodInterface;
 use Academe\Opayo\Pi\Request\Model\StrongCustomerAuthentication;
+
+/**
+ * The transaction value object to send a transaction to Sage Pay.
+ * See https://test.sagepay.com/documentation/#transactions
+ */
 
 class CreatePayment extends AbstractRequest
 {

@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Request\Model;
 
+use Academe\Opayo\Pi\Helper;
+
 /**
  * Google Pay payment method for transactions.
  *
  * Google Pay tokens are obtained from the Google Pay API in the browser.
  * The token must be Base64 encoded before being sent to Opayo.
  */
-
-use Academe\Opayo\Pi\Helper;
 
 class GooglePayPayment implements PaymentMethodInterface
 {

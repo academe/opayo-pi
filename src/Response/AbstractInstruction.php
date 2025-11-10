@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Response;
 
+use DateTime;
+use Academe\Opayo\Pi\Helper;
+
 /**
  * Value object to hold the void instruction response.
  * Much of this will likely be moved to an abstract once further
  * instruction types are rolled out.
  */
-
-use DateTime;
-use Academe\Opayo\Pi\Helper;
 
 abstract class AbstractInstruction extends AbstractResponse
 {

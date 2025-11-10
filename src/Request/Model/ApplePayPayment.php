@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Request\Model;
 
+use Academe\Opayo\Pi\Helper;
+
 /**
  * Apple Pay payment method for transactions.
  *
@@ -14,8 +16,6 @@ namespace Academe\Opayo\Pi\Request\Model;
  * - Opayo-managed certificate: Requires sessionValidationToken
  * - Merchant-managed certificate: No sessionValidationToken needed
  */
-
-use Academe\Opayo\Pi\Helper;
 
 class ApplePayPayment implements PaymentMethodInterface
 {

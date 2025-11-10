@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Request\Model;
 
+use UnexpectedValueException;
+use JsonSerializable;
+
 /**
  * Use to provide strong customer authentication details for 3D Secure v2.
  */
-
-use UnexpectedValueException;
-use JsonSerializable;
 
 class StrongCustomerAuthentication implements JsonSerializable
 {

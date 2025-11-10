@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Request\Model;
 
+use Academe\Opayo\Pi\Helper;
+
 /**
  * PayPal payment method for transactions.
  *
@@ -14,8 +16,6 @@ namespace Academe\Opayo\Pi\Request\Model;
  *
  * PayPal tokens are obtained from the PayPal Checkout SDK.
  */
-
-use Academe\Opayo\Pi\Helper;
 
 class PayPalPayment implements PaymentMethodInterface
 {

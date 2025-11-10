@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Request;
 
+use Academe\Opayo\Pi\Model\Auth;
+use Academe\Opayo\Pi\Model\Endpoint;
+
 /**
  * Request the result of a transaction, stored on Sage Pay servers.
  * See "Retrieve and Transaction" https://test.sagepay.com/documentation/#transactions
  */
-
-use Academe\Opayo\Pi\Model\Auth;
-use Academe\Opayo\Pi\Model\Endpoint;
 
 class FetchTransaction extends AbstractRequest
 {

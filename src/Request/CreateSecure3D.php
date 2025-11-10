@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Request;
 
+use Academe\Opayo\Pi\Model\Auth;
+use Academe\Opayo\Pi\Model\Endpoint;
+use Academe\Opayo\Pi\ServerRequest\Secure3DAcs;
+
 /**
  * The 3DSecure request sent to Sage Pay, after the user is returned
  * from entering their 3D Secure authentication details.
  * Creates a 3D Secure object and returns the status.
  * See https://test.sagepay.com/documentation/#3-d-secure
  */
-
-use Academe\Opayo\Pi\Model\Auth;
-use Academe\Opayo\Pi\Model\Endpoint;
-use Academe\Opayo\Pi\ServerRequest\Secure3DAcs;
 
 class CreateSecure3D extends AbstractRequest
 {

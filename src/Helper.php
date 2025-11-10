@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi;
 
-/**
- * Shared message abstract.
- * Contains base methods that all messages will use.
- */
-
 use Closure;
 use Exception;
 use UnexpectedValueException;
@@ -16,6 +11,11 @@ use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use DateTime;
 use DateTimeZone;
+
+/**
+ * Shared message abstract.
+ * Contains base methods that all messages will use.
+ */
 
 abstract class Helper
 {

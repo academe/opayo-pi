@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Request;
 
+use Academe\Opayo\Pi\Model\Auth;
+use Academe\Opayo\Pi\Model\Endpoint;
+
 /**
  * The request for a session key.
  * See https://test.sagepay.com/documentation/#merchant-session-keys
  */
-
-use Academe\Opayo\Pi\Model\Auth;
-use Academe\Opayo\Pi\Model\Endpoint;
 
 class CreateSessionKey extends AbstractRequest
 {

@@ -4,14 +4,6 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Factory;
 
-/**
- * Factory to return the appropriate Response object given
- * the PSR-7 HTTP Response object. This handles a lot of logic,
- * such as checking for errors in a number of different places,
- * and knowing exactly which Response object to create, that the
- * application would otherwise have to deal with.
- */
-
 use Academe\Opayo\Pi\Response\AbstractTransaction;
 use Academe\Opayo\Pi\Request\AbstractRequest;
 use Psr\Http\Message\ResponseInterface;
@@ -19,6 +11,14 @@ use Academe\Opayo\Pi\Response;
 use Academe\Opayo\Pi\ServerRequest;
 use Academe\Opayo\Pi\Helper;
 use Teapot\StatusCode\Http;
+
+/**
+ * Factory to return the appropriate Response object given
+ * the PSR-7 HTTP Response object. This handles a lot of logic,
+ * such as checking for errors in a number of different places,
+ * and knowing exactly which Response object to create, that the
+ * application would otherwise have to deal with.
+ */
 
 class ResponseFactory
 {

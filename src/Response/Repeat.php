@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Response;
 
+use Academe\Opayo\Pi\Helper;
+use Psr\Http\Message\ResponseInterface;
+
 /**
  * At the moment (12-11-2015 BETA), this resource is the result of a
  * transaction request. It is *not* the details of the transaction
@@ -12,9 +15,6 @@ namespace Academe\Opayo\Pi\Response;
  * with this resource automatically so long as the 3D Secure process is
  * final (i.e. no more actions required).
  */
-
-use Academe\Opayo\Pi\Helper;
-use Psr\Http\Message\ResponseInterface;
 
 class Repeat extends AbstractTransaction
 {

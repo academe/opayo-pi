@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Request;
 
+use Academe\Opayo\Pi\Money\AmountInterface;
+use Academe\Opayo\Pi\Model\Auth;
+use Academe\Opayo\Pi\Model\Endpoint;
+
 /**
  * The "release" instruction request.
  * Release a deferred transaction so funds can be collected.
  */
-
-use Academe\Opayo\Pi\Money\AmountInterface;
-use Academe\Opayo\Pi\Model\Auth;
-use Academe\Opayo\Pi\Model\Endpoint;
 
 class CreateRelease extends AbstractInstruction
 {

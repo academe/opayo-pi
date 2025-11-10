@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Request;
 
+use Academe\Opayo\Pi\Model\Auth;
+use Academe\Opayo\Pi\Model\Endpoint;
+use Academe\Opayo\Pi\Response\SessionKey as SessionKeyResponse;
+use Academe\Opayo\Pi\Security\SensitiveValue;
+
 /**
  * Request for linking a security code to a saved cardIdentifier.
  * Allows a security code to be captured and linked to a saved card identifier
  * for just one transaction, for additional security. Sage Pay will then throw it
  * away.
  */
-
-use Academe\Opayo\Pi\Model\Auth;
-use Academe\Opayo\Pi\Model\Endpoint;
-use Academe\Opayo\Pi\Response\SessionKey as SessionKeyResponse;
-use Academe\Opayo\Pi\Security\SensitiveValue;
 
 class LinkSecurityCode extends AbstractRequest
 {

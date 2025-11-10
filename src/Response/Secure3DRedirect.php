@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Response;
 
+use Academe\Opayo\Pi\Helper;
+
 /**
  * Response to a Payment (and probably Authorise) requent when a
  * 3D Secure redirect is needed.
  *
  * @deprecated 3D Secure v1 will end March 2022; use 3DS v2 with the Secure3Dv2Redirect
  */
-
-use Academe\Opayo\Pi\Helper;
 
 class Secure3DRedirect extends AbstractTransaction
 {
