@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Factory;
 
 /**
  * Guzzle Factory for creating PSR-7 objects.
  * Requires guzzlehttp/guzzle:~6.0
- * 
+ *
  * @deprecated use any PSR-17 factory instead
  */
 
@@ -20,17 +22,17 @@ class GuzzleFactory implements RequestFactoryInterface
     /**
      * Return a new GuzzleHttp\Psr7\Request object.
      * The body is to be sent as a JSON request.
-     * 
-     * @param null|string $method
-     * @param UriInterface|null|string $uri
+     *
+     * @param string|null $method
+     * @param UriInterface|string|null $uri
      * @param array $headers
-     * @param null $body
+     * @param mixed $body
      * @param string $protocolVersion
      * @return Request
-     * 
+     *
      * @deprecated no longer used since the request classes are now native PSR-7 requests
      */
-    public function jsonRequest($method, $uri, array $headers = [], $body = null, $protocolVersion = '1.1')
+    public function jsonRequest(?string $method, UriInterface|string|null $uri, array $headers = [], mixed $body = null, string $protocolVersion = '1.1'): Request
     {
         // If we are sending a JSON body, then the recipient needs to know.
 
@@ -60,7 +62,7 @@ class GuzzleFactory implements RequestFactoryInterface
      * @param string $uri
      * @return Uri
      */
-    public function uri($uri)
+    public function uri(string $uri): Uri
     {
         return new Uri($uri);
     }
@@ -68,10 +70,10 @@ class GuzzleFactory implements RequestFactoryInterface
     /**
      * Create a PSR-7 stream from a string.
      *
-     * @param [type] $stringData
-     * @return void
+     * @param mixed $stringData
+     * @return StreamInterface
      */
-    public function stream($stringData): StreamInterface
+    public function stream(mixed $stringData): StreamInterface
     {
         return Utils::streamFor($stringData);
     }
@@ -79,11 +81,11 @@ class GuzzleFactory implements RequestFactoryInterface
     /**
      * Check whether Guzzle PSR-7 is installed so this factory can be used.
      * Note: Guzzle does not support everything (e.g. not ServerRequestInterface at this time).
-     * 
+     *
      * @return bool
      * @todo this needs looking at again
      */
-    public static function isSupported()
+    public static function isSupported(): bool
     {
         return class_exists(Request::class);
     }

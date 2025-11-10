@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Factory;
 
 /**
@@ -23,7 +25,7 @@ class ResponseFactory
     /**
      * Return a response instance from a PSR-7 Response message.
      */
-    public static function fromHttpResponse(ResponseInterface $response)
+    public static function fromHttpResponse(ResponseInterface $response): mixed
     {
         // Decode the body for the returned data.
         $data = Helper::parseBody($response);
@@ -39,7 +41,7 @@ class ResponseFactory
     /**
      * Return a response instance from response data.
      */
-    public static function fromData($data, $httpCode = null)
+    public static function fromData(mixed $data, ?int $httpCode = null): mixed
     {
         // An error or error collection.
 
