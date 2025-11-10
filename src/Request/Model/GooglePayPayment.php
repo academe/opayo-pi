@@ -15,26 +15,10 @@ use Academe\Opayo\Pi\Helper;
 
 class GooglePayPayment implements PaymentMethodInterface
 {
-    /**
-     * The client's IP address (IPv4 or IPv6).
-     */
-    protected string $clientIpAddress;
-
-    /**
-     * The Base64-encoded Google Pay payment token from Google Pay API.
-     */
-    protected string $payload;
-
-    /**
-     * @param string $clientIpAddress The customer's IP address
-     * @param string $payload Base64-encoded Google Pay token from Google
-     */
     public function __construct(
-        string $clientIpAddress,
-        string $payload
+        protected string $clientIpAddress,
+        protected string $payload
     ) {
-        $this->clientIpAddress = $clientIpAddress;
-        $this->payload = $payload;
     }
 
     /**
