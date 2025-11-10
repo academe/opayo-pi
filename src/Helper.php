@@ -9,7 +9,6 @@ namespace Academe\Opayo\Pi;
  * Contains base methods that all messages will use.
  */
 
-use Closure;
 use Exception;
 use UnexpectedValueException;
 use Psr\Http\Message\MessageInterface;
