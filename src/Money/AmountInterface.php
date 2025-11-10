@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Money;
 
 /**
@@ -14,7 +16,7 @@ interface AmountInterface
      *
      * @return int The amount, always in integer minor units
      */
-    public function getAmount();
+    public function getAmount(): int;
 
     /**
      * Return the currency ISO code.
@@ -22,5 +24,5 @@ interface AmountInterface
      *
      * @return string The ISO 4217 three-character currency code
      */
-    public function getCurrencyCode();
+    public function getCurrencyCode(): string;
 }

@@ -1,4 +1,8 @@
-<?php namespace Academe\Opayo\Pi\Request\Model;
+<?php
+
+declare(strict_types=1);
+
+namespace Academe\Opayo\Pi\Request\Model;
 
 /**
  * Value object used to define the customer's billing address
