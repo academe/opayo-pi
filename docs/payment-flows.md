@@ -9,6 +9,10 @@ This document illustrates the complete payment flows for Opayo Pi integration us
 3. [3D Secure Version 2 Flow (SCA)](#3d-secure-version-2-flow-sca)
 4. [Repeat Payment Flow](#repeat-payment-flow)
 5. [Saved Card Payment Flow](#saved-card-payment-flow)
+6. [Alternative Payment Methods](#alternative-payment-methods)
+   - [Apple Pay Flow](#apple-pay-flow)
+   - [Google Pay Flow](#google-pay-flow)
+   - [PayPal Flow](#paypal-flow)
 
 ---
 
@@ -223,6 +227,145 @@ sequenceDiagram
 
 ---
 
+## Alternative Payment Methods
+
+Modern payment gateways support various digital wallet and alternative payment methods beyond traditional cards.
+
+### Apple Pay Flow
+
+Apple Pay integration with Opayo Pi.
+
+```mermaid
+sequenceDiagram
+    participant Browser as User Browser
+    participant Merchant as Merchant Server
+    participant Apple as Apple Pay JS
+    participant Opayo as Opayo Gateway
+    participant Bank as Issuing Bank
+
+    Note over Browser,Apple: Step 1: Initialize Apple Pay
+    Browser->>+Merchant: Load payment page
+    Merchant-->>-Browser: Render Apple Pay button
+
+    Note over Browser,Opayo: Step 2: Request Session (Opayo-managed cert only)
+    Browser->>+Merchant: Request Apple Pay session
+    Merchant->>+Opayo: POST /apple-pay/session-validation<br/>(validationUrl)
+    Opayo-->>-Merchant: sessionValidationToken
+    Merchant-->>-Browser: sessionValidationToken
+
+    Note over Browser,Apple: Step 3: User Authorizes Payment
+    Browser->>+Apple: Request payment<br/>(amount, merchant info)
+    Apple->>Apple: User authenticates<br/>(Touch ID, Face ID, PIN)
+    Apple->>+Bank: Authorize payment
+    Bank-->>-Apple: Authorization
+    Apple-->>-Browser: Apple Pay token<br/>(encrypted payment data)
+
+    Note over Browser,Opayo: Step 4: Submit to Opayo
+    Browser->>+Merchant: POST payment data<br/>(Apple Pay token, address)
+    Merchant->>Merchant: Base64 encode token<br/>Build ApplePayPayment<br/>(clientIP, payload, sessionToken)
+    Merchant->>+Opayo: POST /transactions<br/>(paymentMethod: applePay)
+    Opayo->>+Bank: Process payment
+    Bank-->>-Opayo: Authorization result
+    Opayo-->>-Merchant: Payment Response<br/>(status: Ok, transactionId)
+    Merchant->>Merchant: Store transaction
+    Merchant-->>-Browser: Payment successful page
+```
+
+**Key Apple Pay Details:**
+- **Two Certificate Types**:
+  - Opayo-managed: Easier setup, requires `sessionValidationToken`
+  - Merchant-managed: Full control, requires Apple Developer account
+- **Token Structure**: Payment data encrypted by Apple, contains card PAN, cryptogram
+- **Base64 Encoding**: Apple Pay token must be Base64 encoded before sending to Opayo
+- **Client IP Required**: Must send customer's IP address with payment
+
+---
+
+### Google Pay Flow
+
+Google Pay integration with Opayo Pi.
+
+```mermaid
+sequenceDiagram
+    participant Browser as User Browser
+    participant Merchant as Merchant Server
+    participant Google as Google Pay API
+    participant Opayo as Opayo Gateway
+    participant Bank as Issuing Bank
+
+    Note over Browser,Google: Step 1: Initialize Google Pay
+    Browser->>+Merchant: Load payment page
+    Merchant-->>-Browser: Render Google Pay button<br/>with configuration
+
+    Note over Browser,Google: Step 2: User Selects Payment Method
+    Browser->>+Google: Request payment<br/>(amount, merchant info)
+    Google->>Google: User selects card<br/>or adds new card
+    Google->>+Bank: Tokenize payment
+    Bank-->>-Google: Payment token
+    Google-->>-Browser: Google Pay token<br/>(encrypted payment data)
+
+    Note over Browser,Opayo: Step 3: Submit to Opayo
+    Browser->>+Merchant: POST payment data<br/>(Google Pay token, address)
+    Merchant->>Merchant: Base64 encode token<br/>Build GooglePayPayment<br/>(clientIP, payload)
+    Merchant->>+Opayo: POST /transactions<br/>(paymentMethod: googlePay)
+    Opayo->>+Bank: Process payment
+    Bank-->>-Opayo: Authorization result
+    Opayo-->>-Merchant: Payment Response<br/>(status: Ok, transactionId)
+    Merchant->>Merchant: Store transaction
+    Merchant-->>-Browser: Payment successful page
+```
+
+**Key Google Pay Details:**
+- **Simpler Setup**: No certificate management required
+- **Token Structure**: Payment credentials encrypted by Google
+- **Base64 Encoding**: Google Pay token must be Base64 encoded before sending to Opayo
+- **Client IP Required**: Must send customer's IP address with payment
+- **Browser Support**: Works on Chrome, Safari (limited), and Android
+
+---
+
+### PayPal Flow
+
+PayPal integration with Opayo Pi (availability may vary).
+
+```mermaid
+sequenceDiagram
+    participant Browser as User Browser
+    participant Merchant as Merchant Server
+    participant PayPal as PayPal
+    participant Opayo as Opayo Gateway
+
+    Note over Browser,PayPal: Step 1: Initialize PayPal
+    Browser->>+Merchant: Load payment page
+    Merchant-->>-Browser: Render PayPal button
+
+    Note over Browser,PayPal: Step 2: User Authorizes via PayPal
+    Browser->>+PayPal: Click PayPal button
+    PayPal->>PayPal: User logs in to PayPal<br/>and authorizes payment
+    PayPal-->>-Browser: PayPal order ID<br/>(payer ID, token)
+
+    Note over Browser,Opayo: Step 3: Submit to Opayo
+    Browser->>+Merchant: POST payment data<br/>(PayPal order ID, payer ID)
+    Merchant->>Merchant: Build PayPalPayment<br/>(clientIP, orderId, payerId)
+    Merchant->>+Opayo: POST /transactions<br/>(paymentMethod: paypal)
+    Opayo->>+PayPal: Capture payment
+    PayPal-->>-Opayo: Payment result
+    Opayo-->>-Merchant: Payment Response<br/>(status: Ok, transactionId)
+    Merchant->>Merchant: Store transaction
+    Merchant-->>-Browser: Payment successful page
+```
+
+**Key PayPal Details:**
+- **Status**: PayPal Pi integration is being rolled out by Opayo
+- **Setup Required**: Must enable PayPal in MyOpayo dashboard
+- **No Card Details**: Customer never shares card info with merchant
+- **Redirect Experience**: User completes payment on PayPal's site
+- **Order ID**: PayPal provides order ID that must be captured via Opayo
+
+**Note:** PayPal support in Opayo Pi API is currently limited. Check with Opayo support for current availability.
+
+---
+
 ## Key Points & Notes
 
 ### Session Keys
@@ -260,6 +403,8 @@ sequenceDiagram
 
 ### Payment Method Types
 
+**Card Payment Methods:**
+
 1. **SingleUseCard**
    - First-time card use
    - Requires merchantSessionKey + cardIdentifier
@@ -274,6 +419,26 @@ sequenceDiagram
    - Previously saved card with fresh CVV
    - Requires merchantSessionKey + cardIdentifier + CVV link
    - For customer-initiated repeat transactions
+
+**Alternative Payment Methods:**
+
+4. **ApplePayPayment**
+   - Apple Pay digital wallet
+   - Requires clientIpAddress + Base64-encoded token
+   - Optional sessionValidationToken for Opayo-managed certificates
+   - Supports Touch ID, Face ID authentication
+
+5. **GooglePayPayment**
+   - Google Pay digital wallet
+   - Requires clientIpAddress + Base64-encoded token
+   - No certificate management needed
+   - Works on Chrome, Android devices
+
+6. **PayPalPayment**
+   - PayPal account payments
+   - Requires clientIpAddress + PayPal order ID
+   - Optional payer ID
+   - Note: Limited availability in Pi API (being rolled out)
 
 ### Error Handling
 
