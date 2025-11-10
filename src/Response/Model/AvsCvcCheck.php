@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Response\Model;
 
 /**
@@ -13,38 +15,18 @@ class AvsCvcCheck implements JsonSerializable
 {
     // The overall status.
 
-    const AVSCVCCHECK_STATUS_ALLMATCHED             = 'AllMatched';
-    const AVSCVCCHECK_STATUS_SECURITYCODEMATCHONLY  = 'SecurityCodeMatchOnly';
-    const AVSCVCCHECK_STATUS_ADDRESSMATCHONLY       = 'AddressMatchOnly';
-    const AVSCVCCHECK_STATUS_NOMATCHES              = 'NoMatches';
-    const AVSCVCCHECK_STATUS_NOTCHECKED             = 'NotChecked';
+    public const AVSCVCCHECK_STATUS_ALLMATCHED             = 'AllMatched';
+    public const AVSCVCCHECK_STATUS_SECURITYCODEMATCHONLY  = 'SecurityCodeMatchOnly';
+    public const AVSCVCCHECK_STATUS_ADDRESSMATCHONLY       = 'AddressMatchOnly';
+    public const AVSCVCCHECK_STATUS_NOMATCHES              = 'NoMatches';
+    public const AVSCVCCHECK_STATUS_NOTCHECKED             = 'NotChecked';
 
     // These results apply to address, postalCode and securityCode.
 
-    const AVSCVCCHECK_RESULT_MATCHED        = 'Matched';
-    const AVSCVCCHECK_RESULT_NOTPROVIDED    = 'NotProvided';
-    const AVSCVCCHECK_RESULT_NOTCHECKED     = 'NotChecked';
-    const AVSCVCCHECK_RESULT_NOTMATCHED     = 'NotMatched';
-
-    /**
-     * @var string|null The overall check result status.
-     */
-    protected $status;
-
-    /**
-     * @var string|null The result of the address check.
-     */
-    protected $address;
-
-    /**
-     * @var string|null The result of the postal code check.
-     */
-    protected $postalCode;
-
-    /**
-     * @var string|null The result of the security code check.
-     */
-    protected $securityCode;
+    public const AVSCVCCHECK_RESULT_MATCHED        = 'Matched';
+    public const AVSCVCCHECK_RESULT_NOTPROVIDED    = 'NotProvided';
+    public const AVSCVCCHECK_RESULT_NOTCHECKED     = 'NotChecked';
+    public const AVSCVCCHECK_RESULT_NOTMATCHED     = 'NotMatched';
 
     /**
      * AvsCvcCheck constructor.
@@ -54,21 +36,17 @@ class AvsCvcCheck implements JsonSerializable
      * @param string|null $securityCode The result of the security code check
      */
     public function __construct(
-        $status = null,
-        $address = null,
-        $postalCode = null,
-        $securityCode = null
+        protected readonly ?string $status = null,
+        protected readonly ?string $address = null,
+        protected readonly ?string $postalCode = null,
+        protected readonly ?string $securityCode = null
     ) {
-        $this->status = $status;
-        $this->address = $address;
-        $this->postalCode = $postalCode;
-        $this->securityCode = $securityCode;
     }
 
     /**
      * @return string|null The overall check result status
      */
-    public function getStatus()
+    public function getStatus(): ?string
     {
         return $this->status;
     }
@@ -76,7 +54,7 @@ class AvsCvcCheck implements JsonSerializable
     /**
      * @return string|null The result of the address check
      */
-    public function getAddress()
+    public function getAddress(): ?string
     {
         return $this->address;
     }
@@ -84,7 +62,7 @@ class AvsCvcCheck implements JsonSerializable
     /**
      * @return string|null The result of the postal code check
      */
-    public function getPostalCode()
+    public function getPostalCode(): ?string
     {
         return $this->postalCode;
     }
@@ -92,17 +70,17 @@ class AvsCvcCheck implements JsonSerializable
     /**
      * @return string|null The result of the security code check
      */
-    public function getSecurityCode()
+    public function getSecurityCode(): ?string
     {
         return $this->securityCode;
     }
 
     /**
      * Construct an instance from raw data.
-     * @param array|string $data
-     * @return AvsCvcCheck
+     * @param array|object|string $data
+     * @return static
      */
-    public static function fromData($data)
+    public static function fromData(array|object|string $data): static
     {
         // For convenience.
         if (is_string($data)) {
@@ -124,9 +102,9 @@ class AvsCvcCheck implements JsonSerializable
     }
 
     /**
-     * @return array
+     * @return array<string, array<string, string>>
      */
-    public function getData()
+    public function getData(): array
     {
         $avsCvcCheck = [];
 
