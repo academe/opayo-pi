@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Request;
 
 /**
@@ -25,31 +27,31 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
     use RequestPsr7Trait;
 
     // Transaction types.
-    const TRANSACTION_TYPE_PAYMENT  = 'Payment';
-    const TRANSACTION_TYPE_REPEAT   = 'Repeat';
-    const TRANSACTION_TYPE_REFUND   = 'Refund';
-    const TRANSACTION_TYPE_DEFERRED = 'Deferred';
+    public const TRANSACTION_TYPE_PAYMENT  = 'Payment';
+    public const TRANSACTION_TYPE_REPEAT   = 'Repeat';
+    public const TRANSACTION_TYPE_REFUND   = 'Refund';
+    public const TRANSACTION_TYPE_DEFERRED = 'Deferred';
 
     // Instruction types.
-    const INSTRUCTION_TYPE_VOID     = 'void';
-    const INSTRUCTION_TYPE_ABORT    = 'abort';
-    const INSTRUCTION_TYPE_RELEASE  = 'release';
+    public const INSTRUCTION_TYPE_VOID     = 'void';
+    public const INSTRUCTION_TYPE_ABORT    = 'abort';
+    public const INSTRUCTION_TYPE_RELEASE  = 'release';
 
-    protected $endpoint;
-    protected $auth;
-    protected $factory;
-    protected $resource_path = [];
+    protected ?Endpoint $endpoint = null;
+    protected ?Auth $auth = null;
+    protected ?RequestFactoryInterface $factory = null;
+    protected array $resource_path = [];
 
     /**
-     * @var string Most messages are sent with the POST method, so this is the default
+     * Most messages are sent with the POST method, so this is the default
      */
-    protected $method = 'POST';
+    protected string $method = 'POST';
 
     /**
      * @param Auth $auth
-     * @return $this
+     * @return self
      */
-    protected function setAuth(Auth $auth)
+    protected function setAuth(Auth $auth): self
     {
         $this->auth = $auth;
         return $this;
@@ -57,27 +59,27 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
 
     /**
      * @param Auth $auth
-     * @return AbstractRequest
+     * @return static
      */
-    protected function withAuth(Auth $auth)
+    protected function withAuth(Auth $auth): static
     {
         $clone = clone $this;
         return $clone->setAuth($auth);
     }
 
     /**
-     * @return mixed
+     * @return Auth|null
      */
-    public function getAuth()
+    public function getAuth(): ?Auth
     {
         return $this->auth;
     }
 
     /**
      * @param Endpoint $endpoint
-     * @return $this
+     * @return self
      */
-    protected function setEndpoint(Endpoint $endpoint)
+    protected function setEndpoint(Endpoint $endpoint): self
     {
         $this->endpoint = $endpoint;
         return $this;
@@ -85,9 +87,9 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
 
     /**
      * @param Endpoint $endpoint
-     * @return AbstractRequest
+     * @return static
      */
-    protected function withEndpoint(Endpoint $endpoint)
+    protected function withEndpoint(Endpoint $endpoint): static
     {
         $clone = clone $this;
         return $clone->setEndpoint($endpoint);
@@ -96,7 +98,7 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
     /**
      * @return Endpoint|null
      */
-    public function getEndpoint()
+    public function getEndpoint(): ?Endpoint
     {
         return $this->endpoint;
     }
@@ -104,9 +106,9 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
     /**
      * Support substitution strings; any {fooBar} mapped to $this->getFooBar()
      *
-     * @returns array The path of this resource, as an array of path segments
+     * @return array The path of this resource, as an array of path segments
      */
-    public function getResourcePath()
+    public function getResourcePath(): array
     {
         $path = $this->resource_path;
 
@@ -127,9 +129,9 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
     }
 
     /**
-     * @returns string The fully qualified URL of this resource
+     * @return string The fully qualified URL of this resource
      */
-    public function getUrl()
+    public function getUrl(): string
     {
         return $this->getEndpoint()->getUrl($this->getResourcePath());
     }
@@ -137,10 +139,10 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
     /**
      * The HTTP Basic Auth header, as an array.
      * Use this if your transport tool does not do "Basic Auth" out of the box.
-     * 
+     *
      * @return array
      */
-    protected function getAuthHeaders()
+    protected function getAuthHeaders(): array
     {
         return [
             'Authorization' => ['Basic '
@@ -154,11 +156,11 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
     /**
      * TODO: can we use the PSR-17 Psr\Http\Message\RequestFactoryInterface
      * instead of our custom factory?
-     * 
+     *
      * @param RequestFactoryInterface $factory
-     * @return $this
+     * @return self
      */
-    protected function setFactory(RequestFactoryInterface $factory)
+    protected function setFactory(RequestFactoryInterface $factory): self
     {
         $this->factory = $factory;
         return $this;
@@ -166,9 +168,9 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
 
     /**
      * @param RequestFactoryInterface $factory
-     * @return AbstractRequest
+     * @return static
      */
-    protected function withFactory(RequestFactoryInterface $factory)
+    protected function withFactory(RequestFactoryInterface $factory): static
     {
         $clone = clone $this;
         return $clone->setAuth($factory);
@@ -224,11 +226,11 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
 
     /**
      * Set various flags - anything with a setFoo() method.
-     * 
+     *
      * @param array $options
-     * @return $this
+     * @return self
      */
-    protected function setOptions(array $options = [])
+    protected function setOptions(array $options = []): self
     {
         foreach ($options as $name => $value) {
             $method = 'set' . ucfirst($name);
@@ -246,11 +248,11 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
 
     /**
      * Set various flags - anything with a setFoo() method.
-     * 
+     *
      * @param array $options
-     * @return AbstractRequest
+     * @return static
      */
-    public function withOptions(array $options = [])
+    public function withOptions(array $options = []): static
     {
         $copy = clone $this;
         return $copy->setOptions($options);

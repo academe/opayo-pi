@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Request;
 
 use Psr\Http\Message\StreamInterface;
@@ -16,49 +18,47 @@ trait RequestPsr7Trait
     /**
      * Headers for all requests.
      * Basic Auth is added to this.
-     *
-     * @var array
      */
-    protected $httpHeaders = [
+    protected array $httpHeaders = [
         'Content-Type' => ['application/json'],
     ];
 
-    public function getRequestTarget()
+    public function getRequestTarget(): string
     {
         return '/'; // TODO
     }
 
-    public function withRequestTarget($requestTarget)
+    public function withRequestTarget(string $requestTarget): static
     {
         return $this;
     }
 
-    public function getMethod()
+    public function getMethod(): string
     {
         return $this->method;
     }
 
-    public function withMethod($method)
+    public function withMethod(string $method): static
     {
         return $this;
     }
 
-    public function getUri()
+    public function getUri(): UriInterface
     {
         return $this->getFactory(true)->uri($this->getUrl());
     }
 
-    public function withUri(UriInterface $uri, $preserveHost = false)
+    public function withUri(UriInterface $uri, bool $preserveHost = false): static
     {
         return $this;
     }
 
-    public function getProtocolVersion()
+    public function getProtocolVersion(): string
     {
         return '1.1';
     }
 
-    public function withProtocolVersion($version)
+    public function withProtocolVersion(string $version): static
     {
         return $this;
     }
@@ -67,9 +67,9 @@ trait RequestPsr7Trait
      * Merge the current header list with the required authentication
      * headers (which do change between some endpoints).
      *
-     * @return void
+     * @return array
      */
-    public function getHeaders()
+    public function getHeaders(): array
     {
         return array_merge(
             $this->getAuthHeaders(),
@@ -81,9 +81,9 @@ trait RequestPsr7Trait
      * Header keys should use a case-insensitive match.
      *
      * @param string $name
-     * @return boolean
+     * @return bool
      */
-    public function hasHeader($name)
+    public function hasHeader(string $name): bool
     {
         return array_key_exists(
             strtolower($name),
@@ -91,10 +91,10 @@ trait RequestPsr7Trait
         );
     }
 
-    public function getHeader($name)
+    public function getHeader(string $name): array
     {
         foreach ($this->httpHeaders as $key => $values) {
-            if (strtolower($key === atrtolower($name))) {
+            if (strtolower($key) === strtolower($name)) {
                 return $values;
             }
         }
@@ -102,27 +102,27 @@ trait RequestPsr7Trait
         return [];
     }
 
-    public function getHeaderLine($name)
+    public function getHeaderLine(string $name): string
     {
         return ''; // @todo to be supported
     }
 
-    public function withHeader($name, $value)
+    public function withHeader(string $name, mixed $value): static
     {
         return $this; // @todo to be supported
     }
 
-    public function withAddedHeader($name, $value)
+    public function withAddedHeader(string $name, mixed $value): static
     {
         return $this; // @todo to be supported
     }
 
-    public function withoutHeader($name)
+    public function withoutHeader(string $name): static
     {
         return $this; // @todo to be supported
     }
 
-    public function getBody()
+    public function getBody(): StreamInterface
     {
         if (method_exists($this, 'jsonSerializePeek')) {
             $body = json_encode($this->jsonSerializePeek());
@@ -135,7 +135,7 @@ trait RequestPsr7Trait
         return $this->getFactory(true)->stream($body);
     }
 
-    public function withBody(StreamInterface $body)
+    public function withBody(StreamInterface $body): static
     {
         return $this;
     }

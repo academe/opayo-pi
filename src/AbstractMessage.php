@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi;
 
 /**
@@ -14,10 +16,10 @@ abstract class AbstractMessage
 {
     /**
      * Get an array of constants in this [late-bound] class, with an optional prefix.
-     * @param null $prefix
+     * @param string|null $prefix
      * @return array
      */
-    public static function constantList($prefix = null)
+    public static function constantList(?string $prefix = null): array
     {
         $reflection = new ReflectionClass(get_called_class());
         $constants = $reflection->getConstants();
@@ -39,11 +41,11 @@ abstract class AbstractMessage
     /**
      * Get a class constant value based on suffix and prefix.
      * Returns null if not found.
-     * @param $prefix
-     * @param $suffix
-     * @return mixed|null
+     * @param string $prefix
+     * @param string $suffix
+     * @return mixed
      */
-    public static function constantValue($prefix, $suffix)
+    public static function constantValue(string $prefix, string $suffix): mixed
     {
         $name = strtoupper($prefix . '_' . $suffix);
 
@@ -59,10 +61,10 @@ abstract class AbstractMessage
      * TODO: if this message is a ServerRequestInterface, then the parsed body may already
      * be available through getParsedBody() - check that first. Maybe even move that check to
      * AbstractServerRequest and fall back to this (the parent) if not set.
-     * @param $message MessageInterface
-     * @return array|mixed
+     * @param MessageInterface $message
+     * @return mixed
      */
-    public static function parseBody(MessageInterface $message)
+    public static function parseBody(MessageInterface $message): mixed
     {
         return Helper::parseBody($message);
     }
