@@ -1,8 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" backupGlobals="false" bootstrap="vendor/autoload.php" colors="true" processIsolation="false" stopOnFailure="false" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd" cacheDirectory=".phpunit.cache" backupStaticProperties="false">
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" backupGlobals="false" bootstrap="vendor/autoload.php" colors="true" processIsolation="false" stopOnFailure="false" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd" cacheDirectory=".phpunit.cache" backupStaticProperties="false" defaultTestSuite="unit">
   <testsuites>
-    <testsuite name="SagePay Pi Test Suite">
-      <directory suffix=".php">./tests/</directory>
+    <!-- Unit tests - fast, no external dependencies, always run in CI -->
+    <testsuite name="unit">
+      <directory>./tests/</directory>
+      <exclude>./tests/Integration</exclude>
+    </testsuite>
+
+    <!-- Integration tests - require Opayo test account credentials -->
+    <testsuite name="integration">
+      <directory>./tests/Integration</directory>
+    </testsuite>
+
+    <!-- All tests -->
+    <testsuite name="all">
+      <directory>./tests/</directory>
     </testsuite>
   </testsuites>
+
+  <php>
+    <!-- Load environment variables from .env file if it exists -->
+    <env name="OPAYO_VENDOR_NAME" value=""/>
+    <env name="OPAYO_INTEGRATION_KEY" value=""/>
+    <env name="OPAYO_INTEGRATION_PASSWORD" value=""/>
+    <env name="OPAYO_ENVIRONMENT" value="test"/>
+  </php>
 </phpunit>
