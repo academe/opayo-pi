@@ -17,20 +17,28 @@ use Academe\Opayo\Pi\Helper;
 abstract class AbstractTransaction extends AbstractResponse
 {
     /**
-     * Transaction status from Sage Pay.
+     * Transaction status constants (for backwards compatibility).
+     *
+     * @deprecated Since 3.1.0. Use TransactionStatus enum instead.
+     *             These constants reference enum values and will remain for
+     *             backwards compatibility, but new code should use the enum.
+     *
+     * @see TransactionStatus
      */
-    public const STATUS_OK         = 'Ok';
-    public const STATUS_NOTAUTHED  = 'NotAuthed';
-    public const STATUS_REJECTED   = 'Rejected';
-    public const STATUS_3DAUTH     = '3DAuth';
-    public const STATUS_MALFORMED  = 'Malformed';
-    public const STATUS_INVALID    = 'Invalid';
-    public const STATUS_ERROR      = 'Error';
+    public const STATUS_OK = TransactionStatus::OK->value;
+    public const STATUS_NOTAUTHED = TransactionStatus::NOT_AUTHED->value;
+    public const STATUS_REJECTED = TransactionStatus::REJECTED->value;
+    public const STATUS_3DAUTH = TransactionStatus::THREE_D_AUTH->value;
+    public const STATUS_MALFORMED = TransactionStatus::MALFORMED->value;
+    public const STATUS_INVALID = TransactionStatus::INVALID->value;
+    public const STATUS_ERROR = TransactionStatus::ERROR->value;
 
     /**
      * The status, statusCode and statusReason are used in all transaction responses.
+     * statusEnum stores the parsed TransactionStatus enum for type safety.
+     * The parent class $status property remains for backwards compatibility.
      */
-    protected ?string $status = null;
+    protected ?TransactionStatus $statusEnum = null;
     protected ?string $statusCode = null;
     protected ?string $statusDetail = null;
 
@@ -111,13 +119,92 @@ abstract class AbstractTransaction extends AbstractResponse
     }
 
     /**
+     * Get the transaction status as enum (preferred for new code).
+     *
+     * Returns the status as a TransactionStatus enum for type-safe code.
+     * Use this method in new code for full benefits of enum type safety,
+     * IDE autocomplete, and helper methods.
+     *
+     * @return TransactionStatus|null The transaction status enum, or null if not set
+     */
+    public function getStatusEnum(): ?TransactionStatus
+    {
+        return $this->statusEnum;
+    }
+
+    /**
+     * Get the transaction status as string (inherits from parent).
+     *
+     * Returns the status value as a string. This method maintains
+     * backwards compatibility with existing code.
+     *
+     * For new code, prefer getStatusEnum() for type safety and helper methods.
+     *
+     * @return string|null The transaction status string value
+     */
+    public function getStatus(): ?string
+    {
+        // Return the raw string value for backwards compatibility
+        return parent::getStatus();
+    }
+
+    /**
+     * Check if the transaction was successful.
+     *
+     * Convenience method that checks if status is OK.
+     * Recommended over manual status comparisons.
+     *
+     * @return bool True if transaction status is OK
+     */
+    public function isSuccessful(): bool
+    {
+        return $this->statusEnum?->isSuccess() ?? false;
+    }
+
+    /**
+     * Check if the transaction requires 3D Secure authentication.
+     *
+     * Convenience method that checks if status is 3DAuth.
+     *
+     * @return bool True if 3D Secure authentication is required
+     */
+    public function requires3DSecure(): bool
+    {
+        return $this->statusEnum?->requiresAuthentication() ?? false;
+    }
+
+    /**
+     * Check if the transaction has an error status.
+     *
+     * Convenience method that checks if status represents an error.
+     * Includes: NotAuthed, Rejected, Malformed, Invalid, Error.
+     *
+     * @return bool True if status indicates an error
+     */
+    public function hasError(): bool
+    {
+        return $this->statusEnum?->isError() ?? false;
+    }
+
+    /**
      * Set the three status fields from body data.
+     * Parses the status string into a TransactionStatus enum.
+     *
      * @param mixed $data The response message body data.
      * @return void
      */
     protected function setStatuses(mixed $data): void
     {
-        $this->status       = Helper::dataGet($data, 'status', null);
+        $statusValue = Helper::dataGet($data, 'status', null);
+
+        // Store raw string in parent's $status property for backwards compatibility
+        $this->status = $statusValue;
+
+        // Parse status string into enum (case-insensitive for flexibility)
+        if ($statusValue !== null) {
+            $this->statusEnum = TransactionStatus::tryFromInsensitive($statusValue);
+        }
+
         $this->statusCode   = Helper::dataGet($data, 'statusCode', null);
         $this->statusDetail = Helper::dataGet($data, 'statusDetail', null);
     }
@@ -338,7 +425,7 @@ abstract class AbstractTransaction extends AbstractResponse
 
         // Status details.
         $return['httpCode'] = $this->getHttpCode();
-        $return['status'] = $this->getStatus();
+        $return['status'] = $this->getStatus(); // Already returns string from parent
         $return['statusCode'] = $this->getStatusCode();
         $return['statusDetail'] = $this->getStatusDetail();
 
