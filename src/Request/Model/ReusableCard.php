@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Request\Model;
 
 /**
@@ -21,15 +23,18 @@ class ReusableCard extends AbstractCard
      *
      * @param CardIdentifier|string $cardIdentifier
      */
-    public function __construct($cardIdentifier)
+    public function __construct(CardIdentifier|string $cardIdentifier)
     {
         $this->cardIdentifier = (string)$cardIdentifier;
     }
 
     /**
      * Construct an instance from stored data (e.g. JSON serialised object).
+     *
+     * @param array|object|string $data
+     * @return static
      */
-    public static function fromData($data)
+    public static function fromData(array|object|string $data): static
     {
         // For convenience.
         if (is_string($data)) {
@@ -53,13 +58,11 @@ class ReusableCard extends AbstractCard
      */
     public function jsonSerialize(): mixed
     {
-        $message = [
+        return [
             'card' => [
                 'cardIdentifier' => $this->cardIdentifier,
                 'reusable' => true,
             ],
         ];
-
-        return $message;
     }
 }
