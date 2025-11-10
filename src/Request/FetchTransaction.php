@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Request;
 
 /**
@@ -12,26 +14,27 @@ use Academe\Opayo\Pi\Model\Endpoint;
 
 class FetchTransaction extends AbstractRequest
 {
-    protected $resource_path = ['transactions', '{transactionId}'];
-    protected $method = 'GET';
-    protected $transactionId;
+    protected array $resource_path = ['transactions', '{transactionId}'];
+    protected string $method = 'GET';
 
     /**
      * @param Endpoint $endpoint
      * @param Auth $auth
      * @param string $transactionId The ID that Sage Pay gave to the transaction
      */
-    public function __construct(Endpoint $endpoint, Auth $auth, $transactionId)
-    {
+    public function __construct(
+        Endpoint $endpoint,
+        Auth $auth,
+        protected readonly string $transactionId
+    ) {
         $this->setEndpoint($endpoint);
         $this->setAuth($auth);
-        $this->transactionId = $transactionId;
     }
 
     /**
      * @return string
      */
-    public function getTransactionId()
+    public function getTransactionId(): string
     {
         return $this->transactionId;
     }

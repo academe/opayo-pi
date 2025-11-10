@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Request;
 
 /**
@@ -9,7 +11,7 @@ namespace Academe\Opayo\Pi\Request;
 
 class FetchInstructions extends AbstractInstruction
 {
-    protected $method = 'GET';
+    protected string $method = 'GET';
 
     /**
      * Get the message body data for serializing.
@@ -17,5 +19,6 @@ class FetchInstructions extends AbstractInstruction
      */
     public function jsonSerialize(): mixed
     {
+        return null;
     }
 }

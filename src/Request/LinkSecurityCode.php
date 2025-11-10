@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Request;
 
 /**
@@ -16,15 +18,8 @@ use Academe\Opayo\Pi\Security\SensitiveValue;
 
 class LinkSecurityCode extends AbstractRequest
 {
-    protected $resource_path = ['card-identifiers', '{cardIdentifier}', 'security-code'];
-
-    protected $cardIdentifier;
-    protected $sessionKey;
-
-    /**
-     * @var A sensitive value.
-     */
-    protected $securityCode;
+    protected array $resource_path = ['card-identifiers', '{cardIdentifier}', 'security-code'];
+    private readonly SensitiveValue $securityCode;
 
     /**
      * @param Endpoint $endpoint
@@ -36,31 +31,27 @@ class LinkSecurityCode extends AbstractRequest
     public function __construct(
         Endpoint $endpoint,
         Auth $auth,
-        $sessionKey,
-        $cardIdentifier,
-        $securityCode
+        protected readonly string $sessionKey,
+        protected readonly string $cardIdentifier,
+        string $securityCode
     ) {
         $this->setEndpoint($endpoint);
         $this->setAuth($auth);
-
-        $this->sessionKey = (string)$sessionKey;
-        $this->cardIdentifier = (string)$cardIdentifier;
-
         $this->securityCode = new SensitiveValue($securityCode);
     }
 
     /**
-     * @return SensitiveValue|mixed
+     * @return string|null
      */
-    public function getSecurityCode()
+    public function getSecurityCode(): ?string
     {
-        return $this->securityCode ? $this->securityCode->peek() : $this->securityCode;
+        return $this->securityCode?->peek();
     }
 
     /**
-     *
+     * @return string
      */
-    public function getCardIdentifier()
+    public function getCardIdentifier(): string
     {
         return $this->cardIdentifier;
     }
@@ -71,20 +62,18 @@ class LinkSecurityCode extends AbstractRequest
      */
     public function jsonSerialize(): mixed
     {
-        $return = [
+        return [
             'securityCode' => $this->getSecurityCode(),
         ];
-
-        return $return;
     }
 
     /**
      * Get the message header data as an array.
      * TODO: Move the details of this to the abstract, as it is used in several places,
      * and remove it from the Response\SessionKey class as it has nothing to do with responses.
-     * @return array
+     * @return array<string, string>
      */
-    public function getHeaders()
+    public function getHeaders(): array
     {
         return [
             'Authorization' => 'Bearer ' . $this->sessionKey,
