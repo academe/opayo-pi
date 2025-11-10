@@ -19,34 +19,11 @@ use Academe\Opayo\Pi\Helper;
 
 class ApplePayPayment implements PaymentMethodInterface
 {
-    /**
-     * The client's IP address (IPv4 or IPv6).
-     */
-    protected string $clientIpAddress;
-
-    /**
-     * The Base64-encoded Apple Pay payment token from Apple Pay JS API.
-     */
-    protected string $payload;
-
-    /**
-     * Session validation token from Opayo (only for Opayo-managed certificates).
-     */
-    protected ?string $sessionValidationToken = null;
-
-    /**
-     * @param string $clientIpAddress The customer's IP address
-     * @param string $payload Base64-encoded Apple Pay token from Apple
-     * @param string|null $sessionValidationToken For Opayo-managed certificate integration
-     */
     public function __construct(
-        string $clientIpAddress,
-        string $payload,
-        ?string $sessionValidationToken = null
+        protected string $clientIpAddress,
+        protected string $payload,
+        protected ?string $sessionValidationToken = null
     ) {
-        $this->clientIpAddress = $clientIpAddress;
-        $this->payload = $payload;
-        $this->sessionValidationToken = $sessionValidationToken;
     }
 
     /**

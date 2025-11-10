@@ -19,34 +19,11 @@ use Academe\Opayo\Pi\Helper;
 
 class PayPalPayment implements PaymentMethodInterface
 {
-    /**
-     * The client's IP address (IPv4 or IPv6).
-     */
-    protected string $clientIpAddress;
-
-    /**
-     * The PayPal order ID or token from PayPal Checkout.
-     */
-    protected string $paypalOrderId;
-
-    /**
-     * Optional PayPal payer ID.
-     */
-    protected ?string $payerId = null;
-
-    /**
-     * @param string $clientIpAddress The customer's IP address
-     * @param string $paypalOrderId PayPal order ID from PayPal Checkout
-     * @param string|null $payerId Optional PayPal payer ID
-     */
     public function __construct(
-        string $clientIpAddress,
-        string $paypalOrderId,
-        ?string $payerId = null
+        protected string $clientIpAddress,
+        protected string $paypalOrderId,
+        protected ?string $payerId = null
     ) {
-        $this->clientIpAddress = $clientIpAddress;
-        $this->paypalOrderId = $paypalOrderId;
-        $this->payerId = $payerId;
     }
 
     /**

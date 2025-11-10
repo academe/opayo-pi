@@ -2,6 +2,8 @@
 
 This document describes the architectural patterns, coding conventions, and best practices used throughout the Opayo Pi PHP library.
 
+> **⚡ KEY PATTERN REMINDER:** Always use **constructor property promotion** for simple property assignments. This is a core pattern in this codebase. See [Constructor Property Promotion](#constructor-property-promotion--always-prefer-this) section below.
+
 ## Table of Contents
 
 1. [PHP 8.1+ Modernization Patterns](#php-81-modernization-patterns)
@@ -32,12 +34,33 @@ namespace Academe\Opayo\Pi\Example;
 
 **Why:** Ensures type safety and catches type-related bugs at runtime.
 
-### Constructor Property Promotion
+### Constructor Property Promotion ⚡ ALWAYS PREFER THIS
 
-Use constructor property promotion wherever possible to reduce boilerplate:
+**IMPORTANT:** Constructor property promotion should be used whenever possible. This is a core pattern in this codebase and significantly reduces boilerplate code.
 
 ```php
 // ✅ GOOD: Modern constructor promotion
+class GooglePayPayment implements PaymentMethodInterface
+{
+    public function __construct(
+        protected string $clientIpAddress,
+        protected string $payload
+    ) {
+    }
+}
+
+// ✅ GOOD: With optional parameters
+class ApplePayPayment implements PaymentMethodInterface
+{
+    public function __construct(
+        protected string $clientIpAddress,
+        protected string $payload,
+        protected ?string $sessionValidationToken = null
+    ) {
+    }
+}
+
+// ✅ GOOD: With readonly for immutability
 class MoneyAmount implements AmountInterface
 {
     public function __construct(
@@ -46,24 +69,56 @@ class MoneyAmount implements AmountInterface
     }
 }
 
-// ❌ AVOID: Traditional property declaration
+// ❌ BAD: Traditional property declaration - DO NOT USE THIS
 class OldStyle
 {
-    protected $money;
+    protected string $clientIpAddress;
+    protected string $payload;
 
-    public function __construct(Money $money)
+    public function __construct(string $clientIpAddress, string $payload)
     {
-        $this->money = $money;
+        $this->clientIpAddress = $clientIpAddress;
+        $this->payload = $payload;
     }
 }
 ```
 
-**When to use:**
-- ✅ Simple value objects
-- ✅ When properties are set once in constructor
-- ✅ With `readonly` for immutable objects
-- ❌ Complex initialization logic required
-- ❌ Properties need transformation before assignment
+**When to use constructor property promotion:**
+- ✅ **Simple assignment** - Property is directly assigned from parameter
+- ✅ **Value objects** - Classes that hold data
+- ✅ **Payment methods** - All PaymentMethodInterface implementations
+- ✅ **With `readonly`** - For immutable objects
+- ✅ **With default values** - For optional parameters
+- ✅ **Multiple properties** - Even with 5+ properties
+
+**When NOT to use (exceptions only):**
+- ❌ **Complex initialization** - Properties need transformation or validation
+- ❌ **Conditional logic** - Different assignment based on conditions
+- ❌ **Dependencies** - One property depends on another's value
+
+**Examples where NOT to use:**
+```php
+// Complex initialization - needs validation
+public function __construct(string $code)
+{
+    $this->allCurrencies = new ISO4217();
+
+    if (!$this->allCurrencies->getByAlpha3($code)) {
+        throw new UnexpectedValueException(sprintf('Unsupported currency code "%s"', $code));
+    }
+
+    $this->code = $code;
+}
+
+// Property transformation needed
+public function __construct(string $key, string $password)
+{
+    $this->integrationKey = new SensitiveValue($key);
+    $this->integrationPassword = new SensitiveValue($password);
+}
+```
+
+**Rule of Thumb:** If you're writing `$this->property = $parameter;` in the constructor body, you should be using constructor property promotion instead.
 
 ### Typed Properties
 
@@ -776,12 +831,12 @@ public function jsonSerialize(): mixed
 When creating a new class, ensure:
 
 - [ ] `declare(strict_types=1);` at top
+- [ ] **⚡ Constructor uses property promotion** (unless complex initialization needed)
 - [ ] All properties have type declarations
 - [ ] All methods have return types
 - [ ] All constants have `public const` visibility
 - [ ] Immutable methods use `clone` and return `static`
 - [ ] Value objects use `readonly` where appropriate
-- [ ] Constructor uses property promotion when simple
 - [ ] DocBlocks only when adding meaningful information
 - [ ] Use union types over `mixed` when types are known
 - [ ] Abstract methods declared in base classes
@@ -797,11 +852,11 @@ When creating a new class, ensure:
 Converting old code to modern PHP 8.1+:
 
 1. [ ] Add `declare(strict_types=1);`
-2. [ ] Convert properties to typed properties
-3. [ ] Change `const` to `public const`
-4. [ ] Add return types to all methods
-5. [ ] Add parameter types to all methods
-6. [ ] Convert simple constructors to property promotion
+2. [ ] **⚡ Convert simple constructors to property promotion** (high priority!)
+3. [ ] Convert properties to typed properties
+4. [ ] Change `const` to `public const`
+5. [ ] Add return types to all methods
+6. [ ] Add parameter types to all methods
 7. [ ] Add `readonly` to immutable properties
 8. [ ] Change `@return self` to `: self` or `: static`
 9. [ ] Remove redundant docblocks
