@@ -377,25 +377,38 @@ interface PersonInterface
 }
 ```
 
-### Factory Pattern
+### Native PSR-7 Implementation
 
-Factories create PSR-7 objects:
+The library includes lightweight, native implementations of PSR-7 interfaces with zero external dependencies:
 
 ```php
-// Auto-detection of available PSR-7 implementation
-public function getFactory($exception = false): RequestFactoryInterface
+use Academe\Opayo\Pi\Http\Stream;
+use Academe\Opayo\Pi\Http\Uri;
+
+// Create a stream from a string
+$stream = new Stream('{"vendorTxCode": "12345"}');
+
+// Create a URI from a string
+$uri = new Uri('https://pi-test.sagepay.com/api/v1/transactions');
+
+// Request classes use these internally
+public function getBody(): StreamInterface
 {
-    if (!isset($this->factory) && GuzzleFactory::isSupported()) {
-        $this->factory = new GuzzleFactory();
-    }
+    $body = json_encode($this);
+    return new Stream($body);
+}
 
-    if (!isset($this->factory) && DiactorosFactory::isSupported()) {
-        $this->factory = new DiactorosFactory();
-    }
-
-    return $this->factory;
+public function getUri(): UriInterface
+{
+    return new Uri($this->getUrl());
 }
 ```
+
+**Benefits:**
+- Zero dependencies for PSR-7 stream/URI creation
+- Simple, focused implementations
+- Full PSR-7 compliance
+- No factory complexity needed
 
 ---
 

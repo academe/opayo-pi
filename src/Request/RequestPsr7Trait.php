@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Request;
 
+use Academe\Opayo\Pi\Http\Stream;
+use Academe\Opayo\Pi\Http\Uri;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 
@@ -45,7 +47,7 @@ trait RequestPsr7Trait
 
     public function getUri(): UriInterface
     {
-        return $this->getFactory(true)->uri($this->getUrl());
+        return new Uri($this->getUrl());
     }
 
     public function withUri(UriInterface $uri, bool $preserveHost = false): static
@@ -130,9 +132,7 @@ trait RequestPsr7Trait
             $body = json_encode($this);
         }
 
-        // Now turn it into a stream; need a factory.
-
-        return $this->getFactory(true)->stream($body);
+        return new Stream($body);
     }
 
     public function withBody(StreamInterface $body): static
