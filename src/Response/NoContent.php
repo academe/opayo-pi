@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Response;
 
+use Psr\Http\Message\ResponseInterface;
+
 /**
  * A simple (success) response with no data.
  */
-
-use Psr\Http\Message\ResponseInterface;
 
 class NoContent extends AbstractResponse
 {

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi;
 
-/**
- * Shared (Request and Response) abstract message.
- */
-
 use ReflectionClass;
 use Psr\Http\Message\MessageInterface;
 use Academe\Opayo\Pi\Helper;
+
+/**
+ * Shared (Request and Response) abstract message.
+ */
 
 abstract class AbstractMessage
 {

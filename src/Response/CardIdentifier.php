@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Response;
 
+use DateTime;
+use Exception;
+use Psr\Http\Message\ResponseInterface;
+use Academe\Opayo\Pi\Helper;
+
 /**
  * Value object to hold the card identifier, returned by Sage Pay.
  * This is just the temporary card identifier linked to a merchant session.
  * Once it is used for the first time, it can be saved and becomes more permanent.
  */
-
-use DateTime;
-use Exception;
-use Psr\Http\Message\ResponseInterface;
-use Academe\Opayo\Pi\Helper;
 
 class CardIdentifier extends AbstractResponse
 {

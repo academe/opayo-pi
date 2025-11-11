@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Response\Model;
 
+use JsonSerializable;
+use Academe\Opayo\Pi\Helper;
+
 /**
  * Value object to hold an error, returned by SagePay when posting a transaction.
  * Multiple validation errors will be returned when the HTTP return code is 422.
@@ -20,9 +23,6 @@ namespace Academe\Opayo\Pi\Response\Model;
  * Other return codes will return just one error in the body, without a property
  * as they are not targetted as specific fields.
  */
-
-use JsonSerializable;
-use Academe\Opayo\Pi\Helper;
 
 class Error implements JsonSerializable
 {
@@ -56,8 +56,7 @@ class Error implements JsonSerializable
         ?string $description = null,
         ?string $property = null,
         ?string $clientMessage = null
-    )
-    {
+    ) {
         $this->httpCode = $httpCode;
 
         $this->code = $code;

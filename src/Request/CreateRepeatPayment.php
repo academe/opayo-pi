@@ -4,6 +4,13 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Request;
 
+use UnexpectedValueException;
+use Academe\Opayo\Pi\Model\Endpoint;
+use Academe\Opayo\Pi\Model\Auth;
+use Academe\Opayo\Pi\Money\AmountInterface;
+use Academe\Opayo\Pi\Model\AddressInterface;
+use Academe\Opayo\Pi\Model\PersonInterface;
+
 /**
  * The repeat payment value object to send a transaction to Sage Pay.
  * See https://test.sagepay.com/documentation/#transactions
@@ -11,13 +18,6 @@ namespace Academe\Opayo\Pi\Request;
  * authorisation. Sage Pay Direct/Server allows a repeat to be either an
  * authorisation or a payment.
  */
-
-use UnexpectedValueException;
-use Academe\Opayo\Pi\Model\Endpoint;
-use Academe\Opayo\Pi\Model\Auth;
-use Academe\Opayo\Pi\Money\AmountInterface;
-use Academe\Opayo\Pi\Model\AddressInterface;
-use Academe\Opayo\Pi\Model\PersonInterface;
 
 class CreateRepeatPayment extends AbstractRequest
 {

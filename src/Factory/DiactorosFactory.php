@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Factory;
 
+use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UriInterface;
+use Zend\Diactoros\Request;
+use Zend\Diactoros\Stream;
+
 /**
  * Zend Diactoros Factory for creating PSR-7 objects.
  * Requires zendframework/zend-diactoros:~1.3
  *
  * @deprecated 3.0.0 abandoned some time ago https://github.com/zendframework/zend-diactoros
  */
-
-use Psr\Http\Message\StreamInterface;
-use Psr\Http\Message\UriInterface;
-use Zend\Diactoros\Request;
-use Zend\Diactoros\Stream;
 
 class DiactorosFactory implements RequestFactoryInterface
 {

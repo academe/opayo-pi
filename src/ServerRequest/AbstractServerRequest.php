@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\ServerRequest;
 
+use Academe\Opayo\Pi\Request\AbstractRequest;
+use Psr\Http\Message\ServerRequestInterface;
+
 /**
  * TODO: implement parseBody() here to check getParsedBody() before falling
  * back to parent::parseBody() if not set.
  */
-
-use Academe\Opayo\Pi\Request\AbstractRequest;
-use Psr\Http\Message\ServerRequestInterface;
 
 abstract class AbstractServerRequest extends AbstractRequest
 {

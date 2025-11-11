@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\ServerRequest;
 
+use Academe\Opayo\Pi\Helper;
+use Academe\Opayo\Pi\ServerRequest\AbstractServerRequest;
+
 /**
  * The ACS POST response that the issuing bank's Access Control System (ACS)
  * or their agent sends the user back with.
  * This will include the optional MD for finding the transaction again, and the hashed
  * PaRes result that is then sent to Sage Pay to complete the transaction.
  */
-
-use Academe\Opayo\Pi\Helper;
-use Academe\Opayo\Pi\ServerRequest\AbstractServerRequest;
 
 class Secure3DAcs extends AbstractServerRequest
 {

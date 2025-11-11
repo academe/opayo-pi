@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Request\Model;
 
+use Academe\Opayo\Pi\Helper;
+use Academe\Opayo\Pi\Response\SessionKey;
+use Academe\Opayo\Pi\Response\CardIdentifier;
+
 /**
  * Card object to be passed to SagePay for payment of a transaction.
  * This message contains a card identifier linked to a session key.
@@ -11,10 +15,6 @@ namespace Academe\Opayo\Pi\Request\Model;
  * 1. When first using the card that has been tokenised at the front end.
  * 2. When reusing a card that has been linked to a CVV at the front end.
  */
-
-use Academe\Opayo\Pi\Helper;
-use Academe\Opayo\Pi\Response\SessionKey;
-use Academe\Opayo\Pi\Response\CardIdentifier;
 
 class ReusableCvvCard extends SingleUseCard
 {

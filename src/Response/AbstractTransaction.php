@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Response;
 
-/**
- * Shared transaction response abstract.
- */
-
 use Academe\Opayo\Pi\Money\CurrencyInterface;
 use Academe\Opayo\Pi\Money\Currency;
 use Academe\Opayo\Pi\Money\Amount;
 use Academe\Opayo\Pi\Money\AmountInterface;
 use Academe\Opayo\Pi\Helper;
+
+/**
+ * Shared transaction response abstract.
+ */
 
 abstract class AbstractTransaction extends AbstractResponse
 {

@@ -9,13 +9,18 @@ namespace Academe\Opayo\Pi;
  * Contains base methods that all messages will use.
  */
 
+use Closure;
 use Exception;
 use UnexpectedValueException;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Closure;
 use DateTime;
 use DateTimeZone;
+
+/**
+ * Shared message abstract.
+ * Contains base methods that all messages will use.
+ */
 
 abstract class Helper
 {
@@ -100,7 +105,7 @@ abstract class Helper
                 throw new UnexpectedValueException('Unexpected datatype for datetime');
             }
         } catch (Exception $e) {
-            throw new UnexpectedValueException('Unexpected time format "'. $date . '"', $e->getCode(), $e);
+            throw new UnexpectedValueException('Unexpected time format "' . $date . '"', $e->getCode(), $e);
         }
 
         return $datetime;

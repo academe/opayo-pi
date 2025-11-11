@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Money;
 
+use UnexpectedValueException;
+use Exception;
+
 /**
  * Value object for the amount, in the appropriate currency.
  * This object does not use any third-party packages to represent the amount.
  */
-
-use UnexpectedValueException;
-use Exception;
 
 class Amount implements AmountInterface
 {

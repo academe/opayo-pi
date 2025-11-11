@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Response;
 
+use DateTime;
+use Psr\Http\Message\ResponseInterface;
+use Academe\Opayo\Pi\Helper;
+
 /**
  * Value object holding the merchant session key returned by SagePay.
  * See https://test.sagepay.com/documentation/#merchant-session-keys
  */
-
-use DateTime;
-use Psr\Http\Message\ResponseInterface;
-use Academe\Opayo\Pi\Helper;
 
 class SessionKey extends AbstractResponse
 {

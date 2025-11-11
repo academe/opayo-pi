@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Request;
 
-/**
- * The refund payment value object to send a transaction to Sage Pay.
- * See https://test.sagepay.com/documentation/#transactions
- */
-
 use UnexpectedValueException;
 use Academe\Opayo\Pi\Model\Endpoint;
 use Academe\Opayo\Pi\Model\Auth;
 use Academe\Opayo\Pi\Money\AmountInterface;
 use Academe\Opayo\Pi\Model\AddressInterface;
 use Academe\Opayo\Pi\Model\PersonInterface;
+
+/**
+ * The refund payment value object to send a transaction to Sage Pay.
+ * See https://test.sagepay.com/documentation/#transactions
+ */
 
 class CreateRefund extends AbstractRequest
 {

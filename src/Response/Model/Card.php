@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Response\Model;
 
+use Academe\Opayo\Pi\Helper;
+use JsonSerializable;
+
 /**
  * Abstract Card details.
  */
-
-use Academe\Opayo\Pi\Helper;
-use JsonSerializable;
 
 class Card implements JsonSerializable
 {

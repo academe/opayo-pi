@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Factory;
 
+use GuzzleHttp\Psr7\Uri;
+use GuzzleHttp\Psr7\Utils;
+use GuzzleHttp\Psr7\Request;
+use Psr\Http\Message\UriInterface;
+use Psr\Http\Message\StreamInterface;
+
 /**
  * Guzzle Factory for creating PSR-7 objects.
  * Requires guzzlehttp/guzzle:~6.0
  *
  * @deprecated use any PSR-17 factory instead
  */
-
-use GuzzleHttp\Psr7\Uri;
-use GuzzleHttp\Psr7\Utils;
-use GuzzleHttp\Psr7\Request;
-use Psr\Http\Message\UriInterface;
-use Psr\Http\Message\StreamInterface;
 
 class GuzzleFactory implements RequestFactoryInterface
 {

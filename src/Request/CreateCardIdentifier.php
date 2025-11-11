@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Request;
 
+use Academe\Opayo\Pi\Model\Auth;
+use Academe\Opayo\Pi\Model\Endpoint;
+use Academe\Opayo\Pi\Response\SessionKey;
+use Academe\Opayo\Pi\Security\SensitiveValue;
+
 /**
  * Request message for sending card details to Sage Pay to get a
  * Card Identifier.
@@ -14,11 +19,6 @@ namespace Academe\Opayo\Pi\Request;
  * by the merchant site and sent direct to SagePay server-to-server,
  * similar to how Sage Pay Direct would.
  */
-
-use Academe\Opayo\Pi\Model\Auth;
-use Academe\Opayo\Pi\Model\Endpoint;
-use Academe\Opayo\Pi\Response\SessionKey;
-use Academe\Opayo\Pi\Security\SensitiveValue;
 
 class CreateCardIdentifier extends AbstractRequest
 {

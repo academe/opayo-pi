@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Request;
 
+use Academe\Opayo\Pi\Model\Endpoint;
+use Academe\Opayo\Pi\Response\SessionKey as SessionKeyResponse;
+
 /**
  * The request for fetching a copy of a session key, to check its validity.
  * The response will be a SessionKeyResponse message.
  */
-
-use Academe\Opayo\Pi\Model\Endpoint;
-use Academe\Opayo\Pi\Response\SessionKey as SessionKeyResponse;
 
 class FetchSessionKey extends AbstractRequest
 {

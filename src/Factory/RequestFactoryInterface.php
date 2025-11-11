@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Factory;
 
+use Psr\Http\Message\RequestInterface;
+
 /**
  * Factory interface for creating PSR-7 request objects.
  * The implementation will often be Guzzle (GuzzleFactory), but the interface
  * allows other implementations to be used.
  *
- * The factory does handle HTTP clients. That is left entirely for the application.
+ * The factory does not handle HTTP clients. That is left entirely for the application.
  * The HTTP clients are entirely responsible for creating PSR-7 Response objects.
  *
  * A client and client factory may be a PSR recommendation at some point, and we will
  * support that when it happens.
  */
-
-use Psr\Http\Message\RequestInterface;
 
 interface RequestFactoryInterface
 {
@@ -31,11 +31,11 @@ interface RequestFactoryInterface
      * @return RequestInterface The PSR-7 request message
      */
     public function jsonRequest(
-        $method,
-        $uri,
+        ?string $method,
+        UriInterface|string|null $uri,
         array $headers = [],
-        $body = null,
-        $protocolVersion = '1.1'
+        mixed $body = null,
+        string $protocolVersion = '1.1'
     ): RequestInterface;
 
     /**

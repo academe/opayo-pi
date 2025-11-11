@@ -43,6 +43,8 @@ class SessionKeyTest extends IntegrationTestCase
             $_ENV['OPAYO_VENDOR_NAME']
         );
 
+        var_dump($request->getBody()); exit;
+
         // Send the request
         $httpClient = $this->getHttpClient();
         $httpResponse = $httpClient->sendRequest($request);

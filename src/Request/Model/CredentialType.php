@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Request\Model;
 
+use JsonSerializable;
+
 /**
  * Credential on file object, required for reusing cards.
  *
  * @see https://developer-eu.elavon.com/docs/opayo/credential-file-0
  */
-
-use JsonSerializable;
 
 class CredentialType implements JsonSerializable
 {

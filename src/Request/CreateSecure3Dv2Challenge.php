@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Request;
 
-/**
- * Send the 3DS v2 cres, returned by the ACS, to Opayo,
- * to get the final transaction result.
- */
-
 use Academe\Opayo\Pi\Model\Auth;
 use Academe\Opayo\Pi\Model\Endpoint;
 use Academe\Opayo\Pi\ServerRequest\Secure3DAcs;
 use Academe\Opayo\Pi\ServerRequest\Secure3Dv2Notification;
+
+/**
+ * Send the 3DS v2 cres, returned by the ACS, to Opayo,
+ * to get the final transaction result.
+ */
 
 class CreateSecure3Dv2Challenge extends AbstractRequest
 {
