@@ -180,7 +180,9 @@ Integration tests verify:
 
 - ✅ Session key creation (`SessionKeyTest`)
 - ✅ Card tokenization and identifier creation (`CardIdentifierTest`)
-- ✅ Transaction submission
+- ✅ Payment transaction processing (`PaymentTest`)
+- ✅ Multiple currencies (GBP, USD)
+- ✅ Shipping address handling
 - ✅ 3D Secure flows
 - ✅ Error handling with invalid data
 - ✅ API response parsing
@@ -229,6 +231,14 @@ $request = new CreateCardIdentifier(
 - Tests with Visa and MasterCard
 - Verifies error handling with invalid cards
 - Tests CVV optional scenarios
+
+**`tests/Integration/PaymentTest.php`**
+- Complete payment flow from card tokenization to payment
+- Tests successful payments with Visa and MasterCard
+- Tests with different currencies (GBP, USD)
+- Tests with shipping address and recipient
+- Verifies error handling (zero amount)
+- Validates transaction IDs and amounts in responses
 
 ### Example Integration Test
 
