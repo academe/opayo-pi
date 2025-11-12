@@ -13,7 +13,7 @@ use Academe\Opayo\Pi\Response\Payment;
 use Academe\Opayo\Pi\Response\ResponseFactory;
 use Academe\Opayo\Pi\Request\Model\Person;
 use Academe\Opayo\Pi\Request\Model\Address;
-use Academe\Opayo\Pi\Request\Model\ReusableCard;
+use Academe\Opayo\Pi\Request\Model\SingleUseCard;
 use Academe\Opayo\Pi\Money\Amount;
 use Academe\Opayo\Pi\Money\Currency;
 
@@ -54,8 +54,8 @@ class PaymentTest extends IntegrationTestCase
      */
     public function testCreatePaymentWithValidCard(): void
     {
-        // Step 1: Get a card identifier
-        $cardIdentifier = $this->createCardIdentifier(self::TEST_CARD_VISA);
+        // Step 1: Get session key and card identifier
+        [$sessionKey, $cardIdentifier] = $this->createCardIdentifier(self::TEST_CARD_VISA);
 
         // Step 2: Create payment request
         $vendorTxCode = 'TEST-' . uniqid() . '-' . time();
@@ -76,7 +76,8 @@ class PaymentTest extends IntegrationTestCase
             'GB'
         );
 
-        $paymentMethod = new ReusableCard($cardIdentifier);
+        // Use SingleUseCard for first-time card use (requires session key + card identifier)
+        $paymentMethod = new SingleUseCard($sessionKey, $cardIdentifier);
 
         $request = new CreatePayment(
             $this->endpoint,
@@ -166,7 +167,7 @@ class PaymentTest extends IntegrationTestCase
         // Small delay before test to avoid rate limiting
         usleep(1000000); // 1 second
 
-        $cardIdentifier = $this->createCardIdentifier(self::TEST_CARD_MASTERCARD);
+        [$sessionKey, $cardIdentifier] = $this->createCardIdentifier(self::TEST_CARD_MASTERCARD);
 
         $vendorTxCode = 'TEST-MC-' . uniqid() . '-' . time();
         $amount = (new Amount(Currency::GBP(), 0))->withMajorUnit('15.50');
@@ -185,7 +186,7 @@ class PaymentTest extends IntegrationTestCase
             'GB'
         );
 
-        $paymentMethod = new ReusableCard($cardIdentifier);
+        $paymentMethod = new SingleUseCard($sessionKey, $cardIdentifier);
 
         $request = new CreatePayment(
             $this->endpoint,
@@ -232,14 +233,14 @@ class PaymentTest extends IntegrationTestCase
      */
     public function testCreatePaymentWithZeroAmount(): void
     {
-        $cardIdentifier = $this->createCardIdentifier(self::TEST_CARD_VISA);
+        [$sessionKey, $cardIdentifier] = $this->createCardIdentifier(self::TEST_CARD_VISA);
 
         $vendorTxCode = 'TEST-ZERO-' . uniqid() . '-' . time();
         $amount = new Amount(Currency::GBP(), 0); // Zero amount - invalid
 
         $customer = new Person('Test', 'User');
         $billingAddress = new Address('1 Test St', null, 'London', 'EC2A 4DP', 'GB');
-        $paymentMethod = new ReusableCard($cardIdentifier);
+        $paymentMethod = new SingleUseCard($sessionKey, $cardIdentifier);
 
         $request = new CreatePayment(
             $this->endpoint,
@@ -285,14 +286,14 @@ class PaymentTest extends IntegrationTestCase
      */
     public function testCreatePaymentWithUSDCurrency(): void
     {
-        $cardIdentifier = $this->createCardIdentifier(self::TEST_CARD_VISA);
+        [$sessionKey, $cardIdentifier] = $this->createCardIdentifier(self::TEST_CARD_VISA);
 
         $vendorTxCode = 'TEST-USD-' . uniqid() . '-' . time();
         $amount = (new Amount(Currency::USD(), 0))->withMajorUnit('25.00');
 
         $customer = new Person('John', 'Doe', 'john.doe@example.com');
         $billingAddress = new Address('456 Main St', null, 'New York', '10001', 'US', 'NY');
-        $paymentMethod = new ReusableCard($cardIdentifier);
+        $paymentMethod = new SingleUseCard($sessionKey, $cardIdentifier);
 
         $request = new CreatePayment(
             $this->endpoint,
@@ -334,7 +335,7 @@ class PaymentTest extends IntegrationTestCase
      */
     public function testCreatePaymentWithShippingAddress(): void
     {
-        $cardIdentifier = $this->createCardIdentifier(self::TEST_CARD_VISA);
+        [$sessionKey, $cardIdentifier] = $this->createCardIdentifier(self::TEST_CARD_VISA);
 
         $vendorTxCode = 'TEST-SHIP-' . uniqid() . '-' . time();
         $amount = (new Amount(Currency::GBP(), 0))->withMajorUnit('45.00');
@@ -346,7 +347,7 @@ class PaymentTest extends IntegrationTestCase
         $shippingAddress = new Address('20 Delivery Ave', 'Apt 5', 'Leeds', 'LS1 1BB', 'GB');
         $shippingRecipient = new Person('Bob', 'Recipient', null, '07700900123');
 
-        $paymentMethod = new ReusableCard($cardIdentifier);
+        $paymentMethod = new SingleUseCard($sessionKey, $cardIdentifier);
 
         $request = new CreatePayment(
             $this->endpoint,
@@ -380,9 +381,9 @@ class PaymentTest extends IntegrationTestCase
      * Helper method to create a card identifier.
      *
      * @param string $cardNumber The test card number to tokenize
-     * @return string The card identifier
+     * @return array{0: string, 1: string} [sessionKey, cardIdentifier]
      */
-    private function createCardIdentifier(string $cardNumber): string
+    private function createCardIdentifier(string $cardNumber): array
     {
         // Create session key
         $sessionKeyRequest = new CreateSessionKey(
@@ -447,6 +448,7 @@ class PaymentTest extends IntegrationTestCase
             );
         }
 
-        return $cardIdentifier;
+        // Return both session key and card identifier for use with SingleUseCard
+        return [$sessionKey, $cardIdentifier];
     }
 }
