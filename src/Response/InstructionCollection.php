@@ -23,11 +23,11 @@ class InstructionCollection extends AbstractCollection
      * @param int|string|null $httpCode
      * @return void
      */
-    public function setData(mixed $data, int|string|null $httpCode = null): void
+    public function setData(mixed $data /*, int|string|null $httpCode = null*/): mixed
     {
-        if ($httpCode) {
-            $this->setHttpCode($httpCode);
-        }
+        // if ($httpCode) {
+        //     $this->setHttpCode($httpCode);
+        // }
 
         // A list of errors will be provided in a wrapping "errors" element.
         $instructions = Helper::dataGet($data, 'instructions', null);
@@ -41,6 +41,8 @@ class InstructionCollection extends AbstractCollection
                 $this->add(ResponseFactory::fromData($instruction, $httpCode));
             }
         }
+
+        return $this;
     }
 
     /**

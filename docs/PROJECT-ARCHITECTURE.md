@@ -237,17 +237,26 @@ $response = Payment::fromHttpResponse($psrResponse);
 $response = Payment::fromData($jsonString);
 ```
 
-### 6. Strategy Pattern
+### 6. Native PSR-7 Implementation
 
-Different PSR-7 implementations via factories:
+The library provides its own lightweight PSR-7 stream and URI implementations:
 
 ```php
-interface RequestFactoryInterface
+namespace Academe\Opayo\Pi\Http;
+
+class Stream implements StreamInterface
 {
-    public function createRequest(string $method, string $uri): RequestInterface;
+    // Zero-dependency stream using php://temp
 }
 
-// Strategies: GuzzleFactory, DiactorosFactory
+class Uri implements UriInterface
+{
+    // Zero-dependency URI using parse_url()
+}
+
+// Used internally by request classes:
+$stream = new Stream($jsonBody);
+$uri = new Uri($fullUrl);
 ```
 
 ### 7. Value Object Pattern

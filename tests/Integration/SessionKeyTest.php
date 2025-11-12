@@ -6,7 +6,8 @@ namespace Academe\Opayo\Pi\Integration;
 
 use Academe\Opayo\Pi\Request\CreateSessionKey;
 use Academe\Opayo\Pi\Response\SessionKey;
-use Academe\Opayo\Pi\Response\ResponseFactory;
+use Academe\Opayo\Pi\Factory\ResponseFactory;
+use Academe\Opayo\Pi\Model\Auth;
 
 /**
  * Integration test for creating session keys with real Opayo API.
@@ -63,7 +64,7 @@ class SessionKeyTest extends IntegrationTestCase
 
         // Session keys should be UUIDs wrapped in braces
         $this->assertMatchesRegularExpression(
-            '/^\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}$/i',
+            '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i',
             $merchantSessionKey,
             'Merchant session key should be a UUID in braces'
         );

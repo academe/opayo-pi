@@ -18,7 +18,7 @@ abstract class AbstractInstruction extends AbstractResponse
     protected ?string $instructionType = null;
     protected ?DateTime $date = null;
 
-    protected function setData(array|object $data): static
+    protected function setData(mixed $data): static
     {
         if ($date = Helper::dataGet($data, 'date')) {
             $this->date = Helper::parseDateTime($date);

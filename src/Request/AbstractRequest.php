@@ -7,14 +7,8 @@ namespace Academe\Opayo\Pi\Request;
 use Academe\Opayo\Pi\AbstractMessage;
 use Academe\Opayo\Pi\Model\Endpoint;
 use Academe\Opayo\Pi\Model\Auth;
-use Academe\Opayo\Pi\Factory\FactoryInterface;
-use Academe\Opayo\Pi\Factory\DiactorosFactory;
-use Academe\Opayo\Pi\Factory\GuzzleFactory;
-use Academe\Opayo\Pi\Factory\RequestFactoryInterface;
 use UnexpectedValueException;
 use JsonSerializable;
-use Exception;
-// use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\RequestInterface;
 
 /**
@@ -39,7 +33,6 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
 
     protected ?Endpoint $endpoint = null;
     protected ?Auth $auth = null;
-    protected ?RequestFactoryInterface $factory = null;
     protected array $resource_path = [];
 
     /**
@@ -154,70 +147,10 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
     }
 
     /**
-     * TODO: can we use the PSR-17 Psr\Http\Message\RequestFactoryInterface
-     * instead of our custom factory?
-     *
-     * @param RequestFactoryInterface $factory
-     * @return self
-     */
-    protected function setFactory(RequestFactoryInterface $factory): self
-    {
-        $this->factory = $factory;
-        return $this;
-    }
-
-    /**
-     * @param RequestFactoryInterface $factory
-     * @return static
-     */
-    protected function withFactory(RequestFactoryInterface $factory): static
-    {
-        $clone = clone $this;
-        return $clone->setAuth($factory);
-    }
-
-    /**
-     * Get the PSR-7 factory.
-     * Create a factory if none supplied and relevant libraries are installed.
-     *
-     * @param bool $exception
-     * @return RequestFactoryInterface for example DiactorosFactory or GuzzleFactory
-     * @throws Exception
-     */
-    public function getFactory($exception = false): RequestFactoryInterface
-    {
-        if (!isset($this->factory) && GuzzleFactory::isSupported()) {
-            // If the GuzzleFactory is supported (relevant Guzzle package is
-            // installed) then instantiate this factory.
-
-            $this->factory = new GuzzleFactory();
-        }
-
-        if (!isset($this->factory) && DiactorosFactory::isSupported()) {
-            // If the DiactorosFactory is supported (relevant Zend package is
-            // installed) then instantiate this factory.
-
-            $this->factory = new DiactorosFactory();
-        }
-
-        // If the exception flag is set, then throw an exception if we do not
-        // have a factory.
-        // Without the factory we cannot create PSR-7 Requests.
-
-        if ($exception && empty($this->factory)) {
-            throw new Exception('No PSR-7 Request factory has been provided.');
-        }
-
-        return $this->factory;
-    }
-
-    /**
      * Return as a PSR-7 request message.
-     * TODO: Use a PSR-17 factory to create the basic request, then add the
-     * headers and body to that.
+     * The request classes are native PSR-7 requests, so just return $this.
      *
      * @return \Psr\Http\Message\RequestInterface
-     * @throws Exception
      */
     public function createHttpRequest(): RequestInterface
     {
