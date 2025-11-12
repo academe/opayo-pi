@@ -163,6 +163,9 @@ class PaymentTest extends IntegrationTestCase
      */
     public function testCreatePaymentWithMasterCard(): void
     {
+        // Small delay before test to avoid rate limiting
+        usleep(1000000); // 1 second
+
         $cardIdentifier = $this->createCardIdentifier(self::TEST_CARD_MASTERCARD);
 
         $vendorTxCode = 'TEST-MC-' . uniqid() . '-' . time();
@@ -203,11 +206,21 @@ class PaymentTest extends IntegrationTestCase
         $httpResponse = $httpClient->sendRequest($request);
         $response = ResponseFactory::fromHttpResponse($httpResponse);
 
-        $this->assertInstanceOf(Payment::class, $response);
+        $statusCode = $httpResponse->getStatusCode();
 
         echo "\n";
         echo "MasterCard payment test completed\n";
-        echo "Status: " . $response->getStatus() . "\n";
+        echo "HTTP Status Code: $statusCode\n";
+        echo "Response Status: " . $response->getStatus() . "\n";
+
+        if ($response->isError()) {
+            echo "Error detected - this may be expected in test environment\n";
+            // Get response body for debugging
+            $body = (string)$httpResponse->getBody();
+            echo "Response body: " . substr($body, 0, 500) . "\n";
+        }
+
+        $this->assertInstanceOf(Payment::class, $response);
     }
 
     /**
@@ -392,6 +405,9 @@ class PaymentTest extends IntegrationTestCase
         $sessionKey = $sessionKeyResponse->getMerchantSessionKey();
         $this->assertNotNull($sessionKey);
 
+        // Small delay to avoid rate limiting
+        usleep(500000); // 0.5 seconds
+
         // Create card identifier
         $cardRequest = new CreateCardIdentifier(
             $this->endpoint,
@@ -415,6 +431,21 @@ class PaymentTest extends IntegrationTestCase
 
         $cardIdentifier = $cardResponse->getCardIdentifier();
         $this->assertNotNull($cardIdentifier);
+
+        // Verify the card identifier is not expired
+        $this->assertFalse(
+            $cardResponse->isExpired(),
+            'Card identifier should not be expired immediately after creation'
+        );
+
+        // Output expiry time for debugging
+        $expiry = $cardResponse->getExpiry();
+        if ($expiry) {
+            echo sprintf(
+                "\nCard identifier created, expires at: %s",
+                $expiry->format('Y-m-d H:i:s')
+            );
+        }
 
         return $cardIdentifier;
     }
