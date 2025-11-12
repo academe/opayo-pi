@@ -178,12 +178,57 @@ vendor/bin/phpunit --testsuite=integration
 
 Integration tests verify:
 
-- ✅ Session key creation
-- ✅ Card tokenization (if manual testing)
+- ✅ Session key creation (`SessionKeyTest`)
+- ✅ Card tokenization and identifier creation (`CardIdentifierTest`)
 - ✅ Transaction submission
 - ✅ 3D Secure flows
-- ✅ Error handling
+- ✅ Error handling with invalid data
 - ✅ API response parsing
+
+### Opayo Test Cards
+
+Integration tests use official Opayo test card numbers. These cards are designed for testing and will not process real transactions:
+
+| Card Type | Card Number | CVV | Expiry |
+|-----------|-------------|-----|--------|
+| **Visa** | `4929000000006` | `123` | Any future date (MMYY) |
+| **MasterCard** | `5404000000000001` | `123` | Any future date |
+| **Visa Debit** | `4462000000000003` | `123` | Any future date |
+| **American Express** | `374200000000004` | `1234` | Any future date |
+
+**Important Notes:**
+- These are official Opayo test cards - they will NOT work in production
+- Use CVV `123` for all cards except AmEx (use `1234`)
+- Any future expiry date works (format: MMYY)
+- These cards trigger specific test behaviors in the Opayo test environment
+- All other card numbers will be rejected as invalid
+
+**Example Usage:**
+```php
+// Valid test card for integration tests
+$request = new CreateCardIdentifier(
+    $endpoint,
+    $auth,
+    $sessionKey,
+    'Test Cardholder',
+    '4929000000006',  // Visa test card
+    '1225',           // December 2025
+    '123'             // CVV
+);
+```
+
+### Available Integration Tests
+
+**`tests/Integration/SessionKeyTest.php`**
+- Creates merchant session keys
+- Tests authentication
+- Validates session key format and expiry
+
+**`tests/Integration/CardIdentifierTest.php`**
+- Tokenizes test cards to get card identifiers
+- Tests with Visa and MasterCard
+- Verifies error handling with invalid cards
+- Tests CVV optional scenarios
 
 ### Example Integration Test
 
