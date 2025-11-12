@@ -8,7 +8,7 @@ use Academe\Opayo\Pi\Request\CreateSessionKey;
 use Academe\Opayo\Pi\Request\CreateCardIdentifier;
 use Academe\Opayo\Pi\Response\SessionKey;
 use Academe\Opayo\Pi\Response\CardIdentifier;
-use Academe\Opayo\Pi\Response\ResponseFactory;
+use Academe\Opayo\Pi\Factory\ResponseFactory;
 
 /**
  * Integration test for creating card identifiers with real Opayo API.
@@ -57,6 +57,9 @@ class CardIdentifierTest extends IntegrationTestCase
         $sessionKey = $this->createSessionKey();
         $this->assertNotNull($sessionKey, 'Session key should not be null');
 
+        // Expiry: two months from now (MMYY format)
+        $expiry = (new \DateTime())->modify('+2 months')->format('my');
+
         // Step 2: Create card identifier request with valid Visa test card
         $request = new CreateCardIdentifier(
             $this->endpoint,
@@ -64,7 +67,7 @@ class CardIdentifierTest extends IntegrationTestCase
             $sessionKey,
             'Test Cardholder',
             self::TEST_CARD_VISA,
-            '1225', // Expiry: December 2025 (MMYY format)
+            $expiry,
             self::TEST_CARD_CVV
         );
 
@@ -96,7 +99,7 @@ class CardIdentifierTest extends IntegrationTestCase
 
         // Card identifiers should be UUIDs wrapped in braces
         $this->assertMatchesRegularExpression(
-            '/^\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}$/i',
+            '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i',
             $cardIdentifier,
             'Card identifier should be a UUID in braces'
         );

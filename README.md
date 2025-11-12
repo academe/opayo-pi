@@ -60,6 +60,7 @@ From v3.0.0 this package is being rebranded for Opayo, gets a new composer name,
 | -------------------- | ------------ | -------------- |
 | 2.x.x | academe/sagepaymsg | Academe\SagePay\Psr7 |
 | 3.x.x | academe/opayo-pi | Academe\Opayo\Pi |
+| 4.x.x | academe/opayo-pi | Academe\Opayo\Pi |
 
 The `PSR7` branch is now in maintenance mode only, and won't have any major changes - just bugfixes if they are reported.
 The aim is to release on the master branch as soon as a demo (and some units tests) are up and running.
