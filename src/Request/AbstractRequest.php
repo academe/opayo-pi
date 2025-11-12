@@ -154,7 +154,7 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
      */
     public function createHttpRequest(): RequestInterface
     {
-        return $this;
+        return $this; // The requests are now native PSR-7 requests.
     }
 
     /**

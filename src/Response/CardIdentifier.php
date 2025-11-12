@@ -31,7 +31,7 @@ class CardIdentifier extends AbstractResponse
      * @param array|object $data The parsed data returned by Sage Pay.
      * @return self
      */
-    protected function setData(array|object $data): self
+    protected function setData(mixed $data): self
     {
         $this->cardIdentifier = Helper::dataGet(
             $data,

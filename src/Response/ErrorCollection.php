@@ -18,7 +18,7 @@ class ErrorCollection extends AbstractCollection
     /**
      * The class type that can be added to this collection.
      */
-    protected string $permittedClass = Model\Error::class;
+    protected null|string $permittedClass = Model\Error::class;
 
     /**
      * @param mixed $data
@@ -70,7 +70,7 @@ class ErrorCollection extends AbstractCollection
      */
     public function byProperty(?string $property_name = null): static
     {
-        $result = new static();
+        $result = new static([]);
 
         foreach ($this as $error) {
             if ($property_name === $error->getProperty()) {

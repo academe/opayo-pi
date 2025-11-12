@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi;
 
+/**
+ * Shared message abstract.
+ * Contains base methods that all messages will use.
+ */
+
 use Closure;
 use Exception;
 use UnexpectedValueException;
