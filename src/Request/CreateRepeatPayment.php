@@ -1,4 +1,15 @@
-<?php namespace Academe\Opayo\Pi\Request;
+<?php
+
+declare(strict_types=1);
+
+namespace Academe\Opayo\Pi\Request;
+
+use UnexpectedValueException;
+use Academe\Opayo\Pi\Model\Endpoint;
+use Academe\Opayo\Pi\Model\Auth;
+use Academe\Opayo\Pi\Money\AmountInterface;
+use Academe\Opayo\Pi\Model\AddressInterface;
+use Academe\Opayo\Pi\Model\PersonInterface;
 
 /**
  * The repeat payment value object to send a transaction to Sage Pay.
@@ -8,37 +19,29 @@
  * authorisation or a payment.
  */
 
-use UnexpectedValueException;
-use Academe\Opayo\Pi\Model\Endpoint;
-use Academe\Opayo\Pi\Model\Auth;
-use Academe\Opayo\Pi\Money\AmountInterface;
-use Academe\Opayo\Pi\Model\AddressInterface;
-use Academe\Opayo\Pi\Model\PersonInterface;
-
 class CreateRepeatPayment extends AbstractRequest
 {
     // Supports the URL "api/v1/transactions/<transactionId>"
-    protected $resource_path = ['transactions'];
+    protected array $resource_path = ['transactions'];
 
     // Minimum mandatory data (constructor).
-    protected $transactionId;
-    protected $vendorTxCode;
-    protected $amount;
-    protected $description;
+    protected string $transactionId;
+    protected string $description;
 
     // Optional or overridable data.
-    protected $shippingAddress;
-    protected $shippingRecipient;
+    protected ?AddressInterface $shippingAddress = null;
+    protected ?PersonInterface $shippingRecipient = null;
+    protected ?bool $giftAid = null;
 
     /**
      * @var string The prefix is added to the name fields when sending to Sage Pay
      */
-    protected $shippingNameFieldPrefix = 'recipient';
+    protected string $shippingNameFieldPrefix = 'recipient';
 
     /**
      * @var string The prefix added to address name fields
      */
-    protected $shippingAddressFieldPrefix = 'shipping';
+    protected string $shippingAddressFieldPrefix = 'shipping';
 
     /**
      * Repeat payment constructor.
@@ -56,21 +59,18 @@ class CreateRepeatPayment extends AbstractRequest
     public function __construct(
         Endpoint $endpoint,
         Auth $auth,
-        $transactionId,
-        $vendorTxCode,
-        AmountInterface $amount,
-        $description,
-        Model\AddressInterface $shippingAddress = null,
-        Model\PersonInterface $shippingRecipient = null,
+        string $transactionId,
+        protected readonly string $vendorTxCode,
+        protected readonly AmountInterface $amount,
+        string $description,
+        ?AddressInterface $shippingAddress = null,
+        ?PersonInterface $shippingRecipient = null,
         array $options = []
     ) {
         $this->setEndpoint($endpoint);
         $this->setAuth($auth);
         $this->setDescription($description);
-
         $this->setTransactionId($transactionId);
-        $this->vendorTxCode = $vendorTxCode;
-        $this->amount = $amount;
 
         if (isset($shippingAddress)) {
             $this->shippingAddress = $shippingAddress->withFieldPrefix($this->shippingAddressFieldPrefix);
@@ -84,10 +84,10 @@ class CreateRepeatPayment extends AbstractRequest
     }
 
     /**
-     * @param ShippingAddress $shippingAddress
-     * @return Transaction
+     * @param AddressInterface $shippingAddress
+     * @return static
      */
-    public function withShippingAddress(ShippingAddress $shippingAddress)
+    public function withShippingAddress(AddressInterface $shippingAddress): static
     {
         $copy = clone $this;
         $copy->shippingAddress = $shippingAddress;
@@ -95,10 +95,10 @@ class CreateRepeatPayment extends AbstractRequest
     }
 
     /**
-     * @param ShippingRecipient $shippingRecipient
-     * @return Repeat
+     * @param PersonInterface $shippingRecipient
+     * @return static
      */
-    public function withShippingRecipient(ShippingRecipient $shippingRecipient)
+    public function withShippingRecipient(PersonInterface $shippingRecipient): static
     {
         $copy = clone $this;
         $copy->shippingRecipient = $shippingRecipient;
@@ -106,20 +106,20 @@ class CreateRepeatPayment extends AbstractRequest
     }
 
     /**
-     * @param $description
+     * @param string $description
      * @return $this
      */
-    protected function setDescription($description)
+    protected function setDescription(string $description): static
     {
         $this->description = $description;
         return $this;
     }
 
     /**
-     * @param $description
-     * @return Repeat
+     * @param string $description
+     * @return static
      */
-    public function withDescription($description)
+    public function withDescription(string $description): static
     {
         $copy = clone $this;
         return $copy->setDescription($description);
@@ -128,26 +128,26 @@ class CreateRepeatPayment extends AbstractRequest
     /**
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return $this->description;
     }
 
     /**
-     * @param $transactionId
+     * @param string $transactionId
      * @return $this
      */
-    protected function setTransactionId($transactionId)
+    protected function setTransactionId(string $transactionId): static
     {
         $this->transactionId = $transactionId;
         return $this;
     }
 
     /**
-     * @param $transactionId
-     * @return Repeat
+     * @param string $transactionId
+     * @return static
      */
-    public function withTransactionId($transactionId)
+    public function withTransactionId(string $transactionId): static
     {
         $copy = clone $this;
         return $copy->setTransactionId($transactionId);
@@ -156,26 +156,26 @@ class CreateRepeatPayment extends AbstractRequest
     /**
      * @return string $transactionId
      */
-    protected function getTransactionId()
+    protected function getTransactionId(): string
     {
         return $this->transactionId;
     }
 
     /**
-     * @param $giftAid
+     * @param bool $giftAid
      * @return $this
      */
-    protected function setGiftAid($giftAid)
+    protected function setGiftAid(bool $giftAid): static
     {
         $this->giftAid = ! empty($giftAid);
         return $this;
     }
 
     /**
-     * @param $giftAid
-     * @return Transaction
+     * @param bool $giftAid
+     * @return static
      */
-    public function withGiftAid($giftAid)
+    public function withGiftAid(bool $giftAid): static
     {
         $copy = clone $this;
         return $copy->setGiftAid($giftAid);

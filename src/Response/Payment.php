@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Response;
 
 /**
@@ -12,7 +14,7 @@ class Payment extends AbstractTransaction
     /**
      * @inheritdoc
      */
-    public function isSuccess()
+    public function isSuccess(): bool
     {
         return $this->getStatus() == static::STATUS_OK;
     }

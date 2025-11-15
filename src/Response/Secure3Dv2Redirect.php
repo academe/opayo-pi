@@ -1,42 +1,36 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Response;
+
+use Academe\Opayo\Pi\Helper;
 
 /**
  * Response to a Payment (and probably Authorise) requent when a
  * 3D Secure v2 redirect (a "challenge") is needed.
  */
 
-use Academe\Opayo\Pi\Helper;
-
 class Secure3Dv2Redirect extends AbstractTransaction
 {
     /**
      * Directory Server (DS) transaction ID. This is a unique ID provided
      * by the card scheme for 3DSv2 authentications.
-     *
-     * @var string
      */
-    protected $dsTranId;
+    protected ?string $dsTranId = null;
 
     /**
      * A fully qualified URL that points to the 3-D Secure authentication
      * system at the card holder's issuing bank
-     *
-     * @var string
      */
-    protected $acsUrl;
+    protected ?string $acsUrl = null;
 
     /**
-     * @var string Remember to post to the ACS as "creq"
+     * Remember to post to the ACS as "creq"
      */
-    protected $cReq;
+    protected ?string $cReq = null;
 
-    /**
-     * @param $data
-     * @return $this
-     */
-    protected function setData($data)
+    protected function setData(mixed $data): mixed
     {
         $this->setStatuses($data);
 
@@ -49,17 +43,15 @@ class Secure3Dv2Redirect extends AbstractTransaction
         return $this;
     }
 
-    public function getDsTranId()
+    public function getDsTranId(): ?string
     {
         return $this->dsTranId;
     }
 
     /**
      * The ACS URL to send the user to.
-     *
-     * @return string
      */
-    public function getAcsUrl()
+    public function getAcsUrl(): ?string
     {
         return $this->acsUrl;
     }
@@ -69,10 +61,8 @@ class Secure3Dv2Redirect extends AbstractTransaction
      * Unlike 3DS v1, this is the only attribute posted, since the
      * notification URL has already been declared in the initial
      * transaction request SCA object.
-     *
-     * @return string
      */
-    public function getCReq()
+    public function getCReq(): ?string
     {
         return $this->cReq;
     }
@@ -82,10 +72,9 @@ class Secure3Dv2Redirect extends AbstractTransaction
      * This function is named for compatibility with the Secure3DRedirect
      * response for convenience.
      *
-     * @param array $additionalSessionData to send to be ACS, which will be returned
-     * @return array
+     * @param string|null $threeDSSessionData to send to be ACS, which will be returned
      */
-    public function getPaRequestFields($threeDSSessionData = null)
+    public function getPaRequestFields(?string $threeDSSessionData = null): array
     {
         $data = [
             'creq' => $this->getCReq(),
@@ -100,8 +89,6 @@ class Secure3Dv2Redirect extends AbstractTransaction
 
     /**
      * Convenient serialisation for logging and debugging.
-     * 
-     * @return array
      */
     public function jsonSerialize(): mixed
     {
@@ -116,9 +103,9 @@ class Secure3Dv2Redirect extends AbstractTransaction
     }
 
     /**
-     * @inheritdoc This is a 3D Secure redirect.
+     * This is a 3D Secure redirect.
      */
-    public function isRedirect()
+    public function isRedirect(): bool
     {
         return true;
     }

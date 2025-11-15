@@ -1,34 +1,43 @@
-<?php namespace Academe\Opayo\Pi;
+<?php
+
+declare(strict_types=1);
+
+namespace Academe\Opayo\Pi;
 
 /**
  * Shared message abstract.
  * Contains base methods that all messages will use.
  */
 
+use Closure;
 use Exception;
 use UnexpectedValueException;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ServerRequestInterface;
-
 use DateTime;
 use DateTimeZone;
+
+/**
+ * Shared message abstract.
+ * Contains base methods that all messages will use.
+ */
 
 abstract class Helper
 {
     // SagePay date format, ISO 8601 with microseconds.
     // e.g. 2015-08-11T11:45:16.285+01:00
 
-    const SAGEPAY_DATE_FORMAT = 'Y-m-d\TH:i:s.uP';
+    public const SAGEPAY_DATE_FORMAT = 'Y-m-d\TH:i:s.uP';
 
     /**
      * Get an element from a nested array, nested objects, or mix of the two.
      * The key uses "dot notation" to walk the nested data structure.
+     *
      * @param array|object $target The data structure to walk.
-     * @param string $key The location of the data in "dot notation"
+     * @param string|null $key The location of the data in "dot notation"
      * @param mixed $default The value if the key is not found
-     * @return mixed
      */
-    public static function dataGet($target, $key, $default = null)
+    public static function dataGet(array|object $target, ?string $key, mixed $default = null): mixed
     {
         if (is_null($key) || trim($key) == '') {
             return $target;
@@ -51,10 +60,7 @@ abstract class Helper
         return $target;
     }
 
-    /**
-     * @param $value
-     */
-    protected static function theValue($value)
+    protected static function theValue(mixed $value): mixed
     {
         if ($value instanceof Closure) {
             return $value();
@@ -65,10 +71,8 @@ abstract class Helper
 
     /**
      * Parse a date, returning a DateTime.
-     * @param $date
-     * @return DateTime
      */
-    public static function parseDateTime($date)
+    public static function parseDateTime(string|DateTime|int $date): DateTime
     {
         try {
             if (is_string($date)) {
@@ -101,7 +105,7 @@ abstract class Helper
                 throw new UnexpectedValueException('Unexpected datatype for datetime');
             }
         } catch (Exception $e) {
-            throw new UnexpectedValueException('Unexpected time format "'. $date . '"', $e->getCode(), $e);
+            throw new UnexpectedValueException('Unexpected time format "' . $date . '"', $e->getCode(), $e);
         }
 
         return $datetime;
@@ -112,11 +116,8 @@ abstract class Helper
      * TODO: We really need to find a package to do this. It is built into the
      * Guzzle client as helper methods, but this is not specifically a client
      * function.
-     *
-     * @param $message MessageInterface
-     * @return array|mixed
      */
-    public static function parseBody(MessageInterface $message)
+    public static function parseBody(MessageInterface $message): mixed
     {
         // If a ServerRequest object, then parsing will be handled (and cached if necessary)
         // by the implementation.
@@ -146,9 +147,9 @@ abstract class Helper
      * Used to translate an error code returned by the underlying Sage Pay
      * Direct API to property names in the new REST data structions.
      *
-     * @returns array {code, property, message}
+     * @return array Array of error mappings: {code, property, message, clientMessage}
      */
-    public static function readErrorPropertyMap()
+    public static function readErrorPropertyMap(): array
     {
         $source = __DIR__ . '/../data/error-maps.json';
 

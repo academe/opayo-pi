@@ -1,13 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit backupGlobals="false"
-         backupStaticAttributes="false"
-         bootstrap="vendor/autoload.php"
-         colors="true"
-         processIsolation="false"
-         stopOnFailure="false">
-    <testsuites>
-        <testsuite name="SagePay Pi Test Suite">
-            <directory suffix=".php">./tests/</directory>
-        </testsuite>
-    </testsuites>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" backupGlobals="false" bootstrap="vendor/autoload.php" colors="true" processIsolation="false" stopOnFailure="false" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd" cacheDirectory=".phpunit.cache" backupStaticProperties="false" defaultTestSuite="unit">
+  <testsuites>
+    <!-- Unit tests - fast, no external dependencies, always run in CI -->
+    <testsuite name="unit">
+      <directory>./tests/</directory>
+      <exclude>./tests/Integration</exclude>
+    </testsuite>
+
+    <!-- Integration tests - require Opayo test account credentials -->
+    <testsuite name="integration">
+      <directory>./tests/Integration</directory>
+    </testsuite>
+
+    <!-- All tests -->
+    <testsuite name="all">
+      <directory>./tests/</directory>
+    </testsuite>
+  </testsuites>
 </phpunit>

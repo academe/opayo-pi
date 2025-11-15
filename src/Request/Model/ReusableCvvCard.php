@@ -1,6 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Request\Model;
+
+use Academe\Opayo\Pi\Helper;
+use Academe\Opayo\Pi\Response\SessionKey;
+use Academe\Opayo\Pi\Response\CardIdentifier;
 
 /**
  * Card object to be passed to SagePay for payment of a transaction.
@@ -10,18 +16,18 @@ namespace Academe\Opayo\Pi\Request\Model;
  * 2. When reusing a card that has been linked to a CVV at the front end.
  */
 
-use Academe\Opayo\Pi\Helper;
-
 class ReusableCvvCard extends SingleUseCard
 {
     /**
      * Card constructor.
      *
-     * @param Academe\Opayo\Pi\Response\SessionKey|string $sessionKey
-     * @param Academe\Opayo\Pi\Response\CardIdentifier|string $cardIdentifier
+     * @param SessionKey|string $sessionKey
+     * @param CardIdentifier|string $cardIdentifier
      */
-    public function __construct($sessionKey, $cardIdentifier)
-    {
+    public function __construct(
+        SessionKey|string $sessionKey,
+        CardIdentifier|string $cardIdentifier
+    ) {
         $this->cardIdentifier = (string)$cardIdentifier;
         $this->sessionKey = (string)$sessionKey;
     }
@@ -32,14 +38,12 @@ class ReusableCvvCard extends SingleUseCard
      */
     public function jsonSerialize(): mixed
     {
-        $message = [
+        return [
             'card' => [
                 'merchantSessionKey' => $this->sessionKey,
                 'cardIdentifier' => $this->cardIdentifier,
                 'reusable' => true,
             ],
         ];
-
-        return $message;
     }
 }

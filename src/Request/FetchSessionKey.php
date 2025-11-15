@@ -1,48 +1,40 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Request;
+
+use Academe\Opayo\Pi\Model\Endpoint;
+use Academe\Opayo\Pi\Response\SessionKey as SessionKeyResponse;
 
 /**
  * The request for fetching a copy of a session key, to check its validity.
  * The response will be a SessionKeyResponse message.
  */
 
-use Academe\Opayo\Pi\Model\Endpoint;
-use Academe\Opayo\Pi\Response\SessionKey as SessionKeyResponse;
-
 class FetchSessionKey extends AbstractRequest
 {
-    protected $resource_path = ['merchant-session-keys', '{merchantSessionKey}'];
-
-    /**
-     * @var string The session key.
-     */
-    protected $sessionKey;
-
-    /**
-     * @var string This message is a GET request
-     */
-    protected $method = 'GET';
+    protected array $resource_path = ['merchant-session-keys', '{merchantSessionKey}'];
+    protected string $method = 'GET';
 
     /**
      * Supply the previously provided SessionKeyResponse for validation.
      * @param Endpoint $endpoint
-     * @param SessionKeyResponse|string $sessionKey
+     * @param SessionKeyResponse|string $sessionKey The session key
      */
-    public function __construct(Endpoint $endpoint, $sessionKey)
-    {
+    public function __construct(
+        Endpoint $endpoint,
+        protected readonly string $sessionKey
+    ) {
         $this->endpoint = $endpoint;
-
-        // We only want the session key string.
-        $this->sessionKey = (string)$sessionKey;
     }
 
     /**
      * The merchantSessionKey will be sent as a URL parameter.
      * This message to SagePay has no body otherwise, and no authorisation is required.
-     * @return null|string
+     * @return string
      */
-    public function getMerchantSessionKey()
+    public function getMerchantSessionKey(): string
     {
         return $this->sessionKey;
     }
@@ -59,7 +51,7 @@ class FetchSessionKey extends AbstractRequest
      * This message has no authentication headers.
      * @return array
      */
-    public function getHeaders()
+    public function getHeaders(): array
     {
         return [];
     }

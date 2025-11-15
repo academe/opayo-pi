@@ -1,78 +1,43 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Response\Model;
+
+use Academe\Opayo\Pi\Helper;
+use JsonSerializable;
 
 /**
  * Abstract Card details.
  */
 
-use Academe\Opayo\Pi\Helper;
-use JsonSerializable;
-
 class Card implements JsonSerializable
 {
-    /**
-     * @var Tokenised card.
-     */
-    protected $cardIdentifier;
-
-    /**
-     * @var Flag indicates this is a reusable card identifier; it has been used before.
-     */
-    protected $reusable = false;
-
-    /**
-     * @var Captured (safe) details for the card.
-     */
-    protected $cardType;
-    protected $lastFourDigits;
-    protected $expiryDate; // MMYY
-
     /**
      * Card constructor.
      *
      * @param string|null $cardType
      * @param string|null $lastFourDigits
-     * @param string|null $expiryDate
-     * @param string|null $cardIdentifier
-     * @param boolean|null $reusable
+     * @param string|null $expiryDate MMYY format (TODO: validate MMYY)
+     * @param string|null $cardIdentifier Tokenised card
+     * @param bool|null $reusable Flag indicates this is a reusable card identifier
      */
     public function __construct(
-        $cardType = null,
-        $lastFourDigits = null,
-        $expiryDate = null,
-        $cardIdentifier = null,
-        $reusable = null
+        protected readonly ?string $cardType = null,
+        protected readonly ?string $lastFourDigits = null,
+        protected readonly ?string $expiryDate = null,
+        protected readonly ?string $cardIdentifier = null,
+        protected readonly bool $reusable = false
     ) {
-        if (isset($cardType)) {
-            $this->cardType = $cardType;
-        }
-
-        if (isset($lastFourDigits)) {
-            $this->lastFourDigits = $lastFourDigits;
-        }
-
-        //  TODO: validate MMYY
-        if (isset($expiryDate)) {
-            $this->expiryDate = $expiryDate;
-        }
-
-        if (isset($cardIdentifier)) {
-            $this->cardIdentifier = $cardIdentifier;
-        }
-
-        if (isset($reusable)) {
-            $this->reusable = (bool)$reusable;
-        }
-        if (isset($reusable)) {
-            $this->reusable = (bool)$reusable;
-        }
     }
 
     /**
      * Construct an instance from stored data (e.g. JSON serialised object).
+     *
+     * @param array|object|string $data
+     * @return static
      */
-    public static function fromData($data)
+    public static function fromData(array|object|string $data): static
     {
         // For convenience.
         if (is_string($data)) {
@@ -95,9 +60,9 @@ class Card implements JsonSerializable
     }
 
     /**
-     *
+     * @return array<string, array<string, string|bool>>
      */
-    public function getData()
+    public function getData(): array
     {
         $message = ['card' => []];
 
@@ -136,9 +101,9 @@ class Card implements JsonSerializable
     /**
      * Tells you if this is a reusable card token.
      *
-     * @return boolean
+     * @return bool
      */
-    public function isReusable()
+    public function isReusable(): bool
     {
         return $this->reusable === true;
     }
@@ -146,9 +111,9 @@ class Card implements JsonSerializable
     /**
      * Content of the reusable flag.
      *
-     * @return boolean|null
+     * @return bool
      */
-    public function getReusable()
+    public function getReusable(): bool
     {
         return $this->reusable;
     }
@@ -157,40 +122,40 @@ class Card implements JsonSerializable
      * Getter for the type of credit card.
      * There is no definitive list of card types, but "Visa", "MasterCard" and
      * "American Express" are given as examples.
-     * return string|null Null if no card type present or not a card
+     * @return string|null Null if no card type present or not a card
      */
-    public function getCardType()
+    public function getCardType(): ?string
     {
         return $this->cardType;
     }
 
     /**
      * Getter for the last four digits of the credit card.
-     * return string|null Null if no digits present or not a card
+     * @return string|null Null if no digits present or not a card
      */
-    public function getLastFourDigits()
+    public function getLastFourDigits(): ?string
     {
         return $this->lastFourDigits;
     }
 
-    public function getCardIdentifier()
+    public function getCardIdentifier(): ?string
     {
         return $this->cardIdentifier;
     }
 
     /**
      * Getter for the raw expiry date of the credit card.
-     * return string|null Format MMYY
+     * @return string|null Format MMYY
      */
-    public function getExpiryDate()
+    public function getExpiryDate(): ?string
     {
         return $this->expiryDate;
     }
 
     /**
-     * return string|null Month number, format MM (leading zero)
+     * @return string|null Month number, format MM (leading zero)
      */
-    public function getExpiryMonth()
+    public function getExpiryMonth(): ?string
     {
         $expiry = $this->getExpiryDate();
 
@@ -203,9 +168,9 @@ class Card implements JsonSerializable
 
     /**
      * No attempt is made to expand the year into four digits.
-     * return string|null Year number, format YY
+     * @return string|null Year number, format YY
      */
-    public function getExpiryYear()
+    public function getExpiryYear(): ?string
     {
         $expiry = $this->getExpiryDate();
 

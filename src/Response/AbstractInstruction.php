@@ -1,6 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Response;
+
+use DateTime;
+use Academe\Opayo\Pi\Helper;
 
 /**
  * Value object to hold the void instruction response.
@@ -8,19 +13,12 @@ namespace Academe\Opayo\Pi\Response;
  * instruction types are rolled out.
  */
 
-use Psr\Http\Message\ResponseInterface;
-use Academe\Opayo\Pi\Helper;
-
 abstract class AbstractInstruction extends AbstractResponse
 {
-    protected $instructionType;
-    protected $date;
+    protected ?string $instructionType = null;
+    protected ?DateTime $date = null;
 
-    /**
-     * @param array|object $data The parsed data returned by Sage Pay.
-     * @return $this
-     */
-    protected function setData($data)
+    protected function setData(mixed $data): static
     {
         if ($date = Helper::dataGet($data, 'date')) {
             $this->date = Helper::parseDateTime($date);
@@ -31,24 +29,21 @@ abstract class AbstractInstruction extends AbstractResponse
         return $this;
     }
 
-    public function getInstructionType()
+    public function getInstructionType(): ?string
     {
         return $this->instructionType;
     }
 
-    public function getDate()
+    public function getDate(): ?DateTime
     {
         return $this->date;
     }
 
-    /**
-     * @return array
-     */
     public function jsonSerialize(): mixed
     {
         return [
             'instructionType' => $this->getInstructionType(),
-            'date' => $this->getDate() ? $this->getDate()->format(Helper::SAGEPAY_DATE_FORMAT) : null,
+            'date' => $this->getDate()?->format(Helper::SAGEPAY_DATE_FORMAT),
             'httpCode' => $this->getHttpCode(),
         ];
     }

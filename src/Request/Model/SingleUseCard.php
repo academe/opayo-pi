@@ -1,6 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Request\Model;
+
+use Academe\Opayo\Pi\Helper;
+use Academe\Opayo\Pi\Response\SessionKey;
+use Academe\Opayo\Pi\Response\CardIdentifier;
 
 /**
  * Card object to be passed to SagePay for payment of a transaction.
@@ -10,38 +16,37 @@ namespace Academe\Opayo\Pi\Request\Model;
  * 2. When reusing a card that has been linked to a CVV at the front end.
  */
 
-use Academe\Opayo\Pi\Helper;
-
 class SingleUseCard extends AbstractCard
 {
     /**
-     * Flag to indicaste whether the cards should be saved for reuse.
-     *
-     * @var bool|null
+     * Flag to indicate whether the cards should be saved for reuse.
      */
-    protected $save;
+    protected ?bool $save = null;
 
     /**
      * Card constructor.
      *
-     * @param Academe\Opayo\Pi\Response\SessionKey|string $sessionKey
-     * @param Academe\Opayo\Pi\Response\CardIdentifier|string $cardIdentifier
-     * @param boolean $save True so (re)save this identifier as a card token for future use.
+     * @param SessionKey|string $sessionKey
+     * @param CardIdentifier|string $cardIdentifier
+     * @param bool|null $save True so (re)save this identifier as a card token for future use.
      */
-    public function __construct($sessionKey, $cardIdentifier, $save = null)
-    {
+    public function __construct(
+        SessionKey|string $sessionKey,
+        CardIdentifier|string $cardIdentifier,
+        ?bool $save = null
+    ) {
         $this->sessionKey = (string)$sessionKey;
         $this->cardIdentifier = (string)$cardIdentifier;
 
         if (isset($save)) {
-            $this->save = (bool)$save;
+            $this->save = $save;
         }
     }
 
     /**
      * Construct an instance from stored data (e.g. JSON serialised object).
      */
-    public static function fromData($data)
+    public static function fromData(array|object|string $data): static
     {
         // For convenience.
         if (is_string($data)) {
@@ -64,13 +69,13 @@ class SingleUseCard extends AbstractCard
      * Sets or resets the save flag.
      * Only valid for unsaved cards, i.e. the first use "SessionCard".
      *
-     * @returnb self
+     * @return self
      */
-    public function withSave($save = true)
+    public function withSave(bool $save = true): self
     {
         $clone = clone $this;
 
-        $clone->save = (bool)$save;
+        $clone->save = $save;
 
         return $clone;
     }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Request\Model;
 
 /**
@@ -9,12 +11,12 @@ namespace Academe\Opayo\Pi\Request\Model;
 abstract class AbstractCard implements PaymentMethodInterface
 {
     /**
-     * @var Supplied when sending card identifier.
+     * @var string|null Supplied when sending card identifier.
      */
-    protected $sessionKey;
+    protected ?string $sessionKey = null;
 
     /**
-     * @var Tokenised card.
+     * @var string|null Tokenised card.
      */
-    protected $cardIdentifier;
+    protected ?string $cardIdentifier = null;
 }

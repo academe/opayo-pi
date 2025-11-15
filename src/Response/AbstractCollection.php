@@ -1,6 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Response;
+
+use ArrayIterator;
+use InvalidArgumentException;
+use Traversable;
 
 /**
  * A a collection of instructions.
@@ -10,19 +16,18 @@ abstract class AbstractCollection extends AbstractResponse implements \IteratorA
 {
     /**
      * The list of items.
-     * @var array
      */
-    protected $items = [];
+    protected array $items = [];
 
     /**
      * The class type that can be added.
      */
-    protected $permittedClass;
+    protected ?string $permittedClass = null;
 
     /**
      * @return ArrayIterator
      */
-    public function getIterator()
+    public function getIterator(): Traversable
     {
         return new ArrayIterator($this->items);
     }
@@ -31,12 +36,12 @@ abstract class AbstractCollection extends AbstractResponse implements \IteratorA
      * Add a new item to the collection.
      * This collection is not a value object. Perhaps it should be: withError()?
      *
-     * @param Object $item An object to add
+     * @param object $item An object to add
      */
-    public function add($item)
+    public function add(object $item): void
     {
         if (! empty($this->permittedClass) && ! $item instanceof $this->permittedClass) {
-            throw new \InvalidArgumentException(sprintf(
+            throw new InvalidArgumentException(sprintf(
                 'Item to be added to collection must be of type "%s"',
                 $this->permittedClass
             ));
@@ -48,7 +53,7 @@ abstract class AbstractCollection extends AbstractResponse implements \IteratorA
     /**
      * @return int Count of instructions in the collection
      */
-    public function count()
+    public function count(): int
     {
         return count($this->items);
     }
@@ -56,15 +61,15 @@ abstract class AbstractCollection extends AbstractResponse implements \IteratorA
     /**
      * @return array all instructions in the collection.
      */
-    public function all()
+    public function all(): array
     {
         return $this->items;
     }
 
     /**
-     * @return Object The first item in the collection.
+     * @return object|false The first item in the collection.
      */
-    public function first()
+    public function first(): object|false
     {
         return reset($this->items);
     }

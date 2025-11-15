@@ -1,6 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Model;
+
+//use Exception;
+use UnexpectedValueException;
 
 /**
  * The endpoint to use to access the Sage Pay API.
@@ -10,54 +15,45 @@ namespace Academe\Opayo\Pi\Model;
  * bypass the UriInterface.
  */
 
-//use Exception;
-use UnexpectedValueException;
-
 class Endpoint
 {
-    /**
-     * Whether test or production.
-     */
-    protected $mode;
-
     /**
      * This release is locked onto just one API version.
      * It is likely beta will remain v1 for its entire lifetime.
      */
-    protected $api_version = 'v1';
+    protected string $api_version = 'v1';
 
     /**
      * Modes of operation.
      */
-    const MODE_LIVE = 1;
-    const MODE_TEST = 2;
+    public const MODE_LIVE = 1;
+    public const MODE_TEST = 2;
 
     /**
-     * @var array The endpoint URL templates, one for each mode.
+     * @var array<int, string> The endpoint URL templates, one for each mode.
      */
-    protected $urls_templates = [
+    protected array $urls_templates = [
         1 => 'https://live.opayo.eu.elavon.com/api/{version}{resource}',
         2 => 'https://sandbox.opayo.eu.elavon.com/api/{version}{resource}',
     ];
 
     /**
-     * @param int $mode The mode of operation
+     * @param int $mode The mode of operation (whether test or production)
      */
-    public function __construct($mode = self::MODE_LIVE)
-    {
+    public function __construct(
+        protected int $mode = self::MODE_LIVE
+    ) {
         // The mode - testing or production. Possible others later.
         if (! isset($this->urls_templates[$mode])) {
             throw new UnexpectedValueException(sprintf('Unexpected mode value "%s"', $mode));
         }
-
-        $this->mode = $mode;
     }
 
     /**
-     * @param $version
+     * @param string $version
      * @return static Clone of $this with the new API version set.
      */
-    public function withApiVersion($version)
+    public function withApiVersion(string $version): static
     {
         $clone = clone $this;
         $clone->api_version = $version;
@@ -67,7 +63,7 @@ class Endpoint
     /**
      * @return string The API version
      */
-    public function getApiVersion()
+    public function getApiVersion(): string
     {
         return $this->api_version;
     }
@@ -76,12 +72,12 @@ class Endpoint
      * Override any of the URLs.
      * Supports replacement fields {version} and {resource}
      *
-     * @param string $mode The mode to set the endpoint URL for
+     * @param int $mode The mode to set the endpoint URL for
      * @param string $url The absolute URL or URL template with placeholders
      *
-     * @return Auth A clone of $this with the new URL or URL template set
+     * @return static A clone of $this with the new URL or URL template set
      */
-    public function withUrl($mode, $url)
+    public function withUrl(int $mode, string $url): static
     {
         if (! isset($this->urls_templates[$mode])) {
             throw new UnexpectedValueException(sprintf('Unexpected mode value "%s"', $mode));
@@ -99,18 +95,18 @@ class Endpoint
      * A resource as an array should not have directory separators included, and will
      * be url encoded here, so should not be done in advance.
      *
-     * @param string $resource The name of the resource
+     * @param string|array<string> $resource The name of the resource
      *
      * @return string The absolute endpoint URL
      */
-    public function getUrl($resource = '')
+    public function getUrl(string|array $resource = ''): string
     {
         // If the resource is an array, then combine it into the path.
         if (is_array($resource)) {
             // Encode all parts of the path.
             $resource = '/' . implode('/', array_map('rawurlencode', $resource));
         } else {
-            if ($resource !== '' && strpos('/', $resource) !== 0) {
+            if ($resource !== '' && !str_starts_with($resource, '/')) {
                 $resource = '/' . $resource;
             }
         }
@@ -127,7 +123,7 @@ class Endpoint
      *
      * @return string The URL to the JavaScript front end resource on the Sage Pay gateway.
      */
-    public function getJavascriptUrl()
+    public function getJavascriptUrl(): string
     {
         return $this->getUrl(['js', 'sagepay.js']);
     }
@@ -137,7 +133,7 @@ class Endpoint
      *
      * @return string The URL to the JavaScript front end resource on the Sage Pay gateway.
      */
-    public function getDropinJavascriptUrl()
+    public function getDropinJavascriptUrl(): string
     {
         return $this->getUrl(['js', 'sagepay-dropin.js']);
     }
@@ -145,9 +141,9 @@ class Endpoint
     /**
      * Return a testing instance (since it was an optional setting on first instantiation).
      *
-     * @return Auth A clone of $this with test mode set
+     * @return static A clone of $this with test mode set
      */
-    public function withTestingMode()
+    public function withTestingMode(): static
     {
         $copy = clone $this;
         $copy->mode = static::MODE_TEST;
@@ -159,7 +155,7 @@ class Endpoint
      *
      * @return bool True if we are in testing mode, otherwise False
      */
-    public function isTesting()
+    public function isTesting(): bool
     {
         return $this->mode === static::MODE_TEST;
     }

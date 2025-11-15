@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Iso3166;
 
 class Countries
 {
     // Source: https://gist.github.com/vxnick/380904
 
-    public static $countries = array(
+    public static array $countries = [
         'AF' => 'Afghanistan',
         'AX' => 'Aland Islands',
         'AL' => 'Albania',
@@ -257,21 +259,14 @@ class Countries
         'YE' => 'Yemen',
         'ZM' => 'Zambia',
         'ZW' => 'Zimbabwe',
-    );
+    ];
 
-    /**
-     * @param $code
-     * @return bool
-     */
-    public static function isValid($code)
+    public static function isValid(string $code): bool
     {
         return isset(static::$countries[$code]);
     }
 
-    /**
-     * @return array
-     */
-    public static function getAll()
+    public static function getAll(): array
     {
         return static::$countries;
     }
