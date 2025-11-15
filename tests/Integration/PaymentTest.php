@@ -10,7 +10,7 @@ use Academe\Opayo\Pi\Request\CreatePayment;
 use Academe\Opayo\Pi\Response\SessionKey;
 use Academe\Opayo\Pi\Response\CardIdentifier;
 use Academe\Opayo\Pi\Response\Payment;
-use Academe\Opayo\Pi\Response\ResponseFactory;
+use Academe\Opayo\Pi\Factory\ResponseFactory;
 use Academe\Opayo\Pi\Request\Model\Person;
 use Academe\Opayo\Pi\Request\Model\Address;
 use Academe\Opayo\Pi\Request\Model\SingleUseCard;
@@ -168,6 +168,8 @@ class PaymentTest extends IntegrationTestCase
         usleep(1000000); // 1 second
 
         [$sessionKey, $cardIdentifier] = $this->createCardIdentifier(self::TEST_CARD_MASTERCARD);
+
+        echo "cardIdentifier=$cardIdentifier\n";
 
         $vendorTxCode = 'TEST-MC-' . uniqid() . '-' . time();
         $amount = (new Amount(Currency::GBP(), 0))->withMajorUnit('15.50');
