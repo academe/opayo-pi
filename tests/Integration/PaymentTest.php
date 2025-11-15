@@ -10,10 +10,11 @@ use Academe\Opayo\Pi\Request\CreatePayment;
 use Academe\Opayo\Pi\Response\SessionKey;
 use Academe\Opayo\Pi\Response\CardIdentifier;
 use Academe\Opayo\Pi\Response\Payment;
-use Academe\Opayo\Pi\Response\ResponseFactory;
+use Academe\Opayo\Pi\Factory\ResponseFactory;
 use Academe\Opayo\Pi\Request\Model\Person;
 use Academe\Opayo\Pi\Request\Model\Address;
 use Academe\Opayo\Pi\Request\Model\ReusableCard;
+use Academe\Opayo\Pi\Request\Model\SingleUseCard;
 use Academe\Opayo\Pi\Money\Amount;
 use Academe\Opayo\Pi\Money\Currency;
 
@@ -165,6 +166,8 @@ class PaymentTest extends IntegrationTestCase
     {
         $cardIdentifier = $this->createCardIdentifier(self::TEST_CARD_MASTERCARD);
 
+        echo "cardIdentifier=$cardIdentifier\n";
+
         $vendorTxCode = 'TEST-MC-' . uniqid() . '-' . time();
         $amount = (new Amount(Currency::GBP(), 0))->withMajorUnit('15.50');
 
@@ -202,6 +205,8 @@ class PaymentTest extends IntegrationTestCase
         $httpClient = $this->getHttpClient();
         $httpResponse = $httpClient->sendRequest($request);
         $response = ResponseFactory::fromHttpResponse($httpResponse);
+
+        var_dump($response); exit;
 
         $this->assertInstanceOf(Payment::class, $response);
 
