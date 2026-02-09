@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Request;
 
 /**
@@ -10,5 +12,5 @@ namespace Academe\Opayo\Pi\Request;
 
 class CreateAbort extends AbstractInstruction
 {
-    protected $instructionType = 'abort';
+    protected string $instructionType = 'abort';
 }

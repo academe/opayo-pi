@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Request\Model;
 
+use UnexpectedValueException;
+
 /**
  * Value object used to hold details about a person.
  * Details include just a first name and last name.
  */
-
-use UnexpectedValueException;
 
 class Person implements PersonInterface
 {
@@ -55,7 +55,7 @@ class Person implements PersonInterface
         return $this->phone;
     }
 
-    public function jsonSerialize(): array
+    public function jsonSerialize(): mixed
     {
         // First/last name is always required.
         $return = $this->getNamesBody();
@@ -97,4 +97,3 @@ class Person implements PersonInterface
         return $copy;
     }
 }
-

@@ -1,6 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Response\Model;
+
+use JsonSerializable;
+use Academe\Opayo\Pi\Helper;
 
 /**
  * Value object to hold an error, returned by SagePay when posting a transaction.
@@ -19,37 +24,39 @@ namespace Academe\Opayo\Pi\Response\Model;
  * as they are not targetted as specific fields.
  */
 
-use JsonSerializable;
-use Academe\Opayo\Pi\Helper;
-
 class Error implements JsonSerializable
 {
     /**
-     * @var The http response code.
+     * The http response code.
      */
-    protected $httpCode;
+    protected int|string|null $httpCode;
 
     /**
-     * @var The basic error code and description, if available.
+     * The basic error code and description, if available.
      */
-    protected $code;
-    protected $description;
+    protected string|int|null $code;
+    protected ?string $description;
 
     /**
-     * @var The property name and client-safe explanation, if available.
+     * The property name and client-safe explanation, if available.
      */
-    protected $property;
-    protected $clientMessage;
+    protected ?string $property;
+    protected ?string $clientMessage;
 
     /**
-     * @param string|int $code The error code supplied by the remote API
-     * @param string $description The textual detail of the error
+     * @param int|string|null $httpCode The HTTP response code
+     * @param string|int|null $code The error code supplied by the remote API
+     * @param string|null $description The textual detail of the error
      * @param string|null $property The name of the property the error applies to
      * @param string|null $clientMessage
-     * @param integer|null $httpCode
      */
-    public function __construct($httpCode, $code = null, $description = null, $property = null, $clientMessage = null)
-    {
+    public function __construct(
+        int|string|null $httpCode,
+        string|int|null $code = null,
+        ?string $description = null,
+        ?string $property = null,
+        ?string $clientMessage = null
+    ) {
         $this->httpCode = $httpCode;
 
         $this->code = $code;
@@ -82,7 +89,7 @@ class Error implements JsonSerializable
     /**
      * @return int|string|null The HTTP code associated with the error, if available
      */
-    public function getHttpCode()
+    public function getHttpCode(): int|string|null
     {
         return $this->httpCode;
     }
@@ -90,33 +97,33 @@ class Error implements JsonSerializable
     /**
      * Normally a four-digit numeric code.
      *
-     * @return null|string The error code supplied by the remote API.
+     * @return string|int|null The error code supplied by the remote API.
      */
-    public function getCode()
+    public function getCode(): string|int|null
     {
         return $this->code;
     }
 
     /**
-     * @return null|string The textual detail of the error.
+     * @return string|null The textual detail of the error.
      */
-    public function getDescription()
+    public function getDescription(): ?string
     {
         return $this->description;
     }
 
     /**
-     * @return null|string The property name (field name) of the property the error applies to
+     * @return string|null The property name (field name) of the property the error applies to
      */
-    public function getProperty()
+    public function getProperty(): ?string
     {
         return $this->property;
     }
 
     /**
-     * @return null|string The end-person presentable message associated with some validation errors
+     * @return string|null The end-person presentable message associated with some validation errors
      */
-    public function getClientMessage()
+    public function getClientMessage(): ?string
     {
         return $this->clientMessage;
     }
@@ -132,11 +139,10 @@ class Error implements JsonSerializable
 
     /**
      * @param array|object $data Error data from the API to initialise the Error object
-     *
-     * @param null $httpCode
+     * @param int|string|null $httpCode
      * @return static New instance of Error object
      */
-    public static function fromData($data, $httpCode = null)
+    public static function fromData(array|object $data, int|string|null $httpCode = null): static
     {
         if ($data instanceof Error) {
             return $data;
@@ -209,7 +215,7 @@ class Error implements JsonSerializable
      * Reduce the object to an array so it can be serialised.
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         $return = [
             'httpCode' => $this->getHttpCode(),

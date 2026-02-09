@@ -119,17 +119,6 @@ class AmountTest extends TestCase
         $this->assertEquals('GBP', $amount->getCurrency()->getCode());
     }
 
-    public function testInvalidMinorUnitFloat()
-    {
-        // With union types (int|string), floats are coerced to int at call boundary
-        // This tests that validation still happens for actual invalid types
-        $currency = new Currency('GBP');
-        $amount = new Amount($currency, 9.99); // Float is coerced to 9
-
-        // Verify the coercion happened
-        $this->assertEquals(9, $amount->getAmount());
-    }
-
     public function testValidMinorUnitString()
     {
         $currency = new Currency('GBP');

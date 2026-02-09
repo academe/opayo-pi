@@ -1,6 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Request\Model;
+
+use JsonSerializable;
 
 /**
  * Credential on file object, required for reusing cards.
@@ -8,49 +12,34 @@ namespace Academe\Opayo\Pi\Request\Model;
  * @see https://developer-eu.elavon.com/docs/opayo/credential-file-0
  */
 
-use JsonSerializable;
-
 class CredentialType implements JsonSerializable
 {
-    const COF_USAGE_FIRST = 'First';
-    const COF_USAGE_SUBSEQUENT = 'Subsequent';
+    public const COF_USAGE_FIRST = 'First';
+    public const COF_USAGE_SUBSEQUENT = 'Subsequent';
 
-    const INITIATED_TYPE_CONSUMER_INITIATED = 'CIT';
-    const INITIATED_TYPE_MERCHANT_INITIATED = 'MIT';
+    public const INITIATED_TYPE_CONSUMER_INITIATED = 'CIT';
+    public const INITIATED_TYPE_MERCHANT_INITIATED = 'MIT';
 
-    const MIT_TYPE_RECURRING = 'Recurring';
-    const MIT_TYPE_INSTALMENT = 'Instalment';
-    const MIT_TYPE_UNSCHEDULED = 'Unscheduled';
-    const MIT_TYPE_INCREMENTAL = 'Incremental';
-    const MIT_TYPE_DELAYEDCHARGE = 'DelayedCharge';
-    const MIT_TYPE_NOSHOW = 'NoShow';
-    const MIT_TYPE_REAUTHORISATION = 'Reauthorisation';
-    const MIT_TYPE_RESUBMISSION = 'Resubmission';
-
-    protected $cofUsage;
-    protected $initiatedType;
-    protected $mitType;
-    protected $recurringExpiry;
-    protected $recurringFrequency;
-    protected $purchaseInstalData;
+    public const MIT_TYPE_RECURRING = 'Recurring';
+    public const MIT_TYPE_INSTALMENT = 'Instalment';
+    public const MIT_TYPE_UNSCHEDULED = 'Unscheduled';
+    public const MIT_TYPE_INCREMENTAL = 'Incremental';
+    public const MIT_TYPE_DELAYEDCHARGE = 'DelayedCharge';
+    public const MIT_TYPE_NOSHOW = 'NoShow';
+    public const MIT_TYPE_REAUTHORISATION = 'Reauthorisation';
+    public const MIT_TYPE_RESUBMISSION = 'Resubmission';
 
     public function __construct(
-        $cofUsage,
-        $initiatedType,
-        $mitType = null,
-        $recurringExpiry = null,
-        $recurringFrequency = null,
-        $purchaseInstalData = null
+        protected readonly string $cofUsage,
+        protected readonly string $initiatedType,
+        protected readonly ?string $mitType = null,
+        protected readonly ?string $recurringExpiry = null,
+        protected readonly ?int $recurringFrequency = null,
+        protected readonly ?int $purchaseInstalData = null
     ) {
-        $this->cofUsage = $cofUsage;
-        $this->initiatedType = $initiatedType;
-        $this->mitType = $mitType;
-        $this->recurringExpiry = $recurringExpiry;
-        $this->recurringFrequency = $recurringFrequency;
-        $this->purchaseInstalData = $purchaseInstalData;
     }
 
-    public static function createForNewReusableCard()
+    public static function createForNewReusableCard(): static
     {
         return new self(
             self::COF_USAGE_FIRST,
@@ -58,7 +47,7 @@ class CredentialType implements JsonSerializable
         );
     }
 
-    public static function createForCustomerReusingCard()
+    public static function createForCustomerReusingCard(): static
     {
         return new self(
             self::COF_USAGE_SUBSEQUENT,
@@ -67,7 +56,7 @@ class CredentialType implements JsonSerializable
         );
     }
 
-    public static function createForMerchantReusingCard()
+    public static function createForMerchantReusingCard(): static
     {
         return new self(
             self::COF_USAGE_SUBSEQUENT,
@@ -79,7 +68,7 @@ class CredentialType implements JsonSerializable
     /**
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         $attributes = [
             'cofUsage' => $this->cofUsage,

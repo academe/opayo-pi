@@ -1,14 +1,8 @@
 <?php
 
-namespace Academe\Opayo\Pi\Factory;
+declare(strict_types=1);
 
-/**
- * Factory to return the appropriate Response object given
- * the PSR-7 HTTP Response object. This handles a lot of logic,
- * such as checking for errors in a number of different places,
- * and knowing exactly which Response object to create, that the
- * application would otherwise have to deal with.
- */
+namespace Academe\Opayo\Pi\Factory;
 
 use Academe\Opayo\Pi\Response\AbstractTransaction;
 use Academe\Opayo\Pi\Request\AbstractRequest;
@@ -18,12 +12,20 @@ use Academe\Opayo\Pi\ServerRequest;
 use Academe\Opayo\Pi\Helper;
 use Teapot\StatusCode\Http;
 
+/**
+ * Factory to return the appropriate Response object given
+ * the PSR-7 HTTP Response object. This handles a lot of logic,
+ * such as checking for errors in a number of different places,
+ * and knowing exactly which Response object to create, that the
+ * application would otherwise have to deal with.
+ */
+
 class ResponseFactory
 {
     /**
      * Return a response instance from a PSR-7 Response message.
      */
-    public static function fromHttpResponse(ResponseInterface $response)
+    public static function fromHttpResponse(ResponseInterface $response): mixed
     {
         // Decode the body for the returned data.
         $data = Helper::parseBody($response);
@@ -39,7 +41,7 @@ class ResponseFactory
     /**
      * Return a response instance from response data.
      */
-    public static function fromData($data, $httpCode = null)
+    public static function fromData(mixed $data, ?int $httpCode = null): mixed
     {
         // An error or error collection.
 
@@ -99,9 +101,11 @@ class ResponseFactory
         // Just dump it into a Payment to access isSucess().
 
         if (Helper::dataGet($data, 'transactionId')) {
-            if (Helper::dataGet($data, 'paymentMethod')
+            if (
+                Helper::dataGet($data, 'paymentMethod')
                 && Helper::dataGet($data, 'amount')
-                && Helper::dataGet($data, 'transactionType') === null) {
+                && Helper::dataGet($data, 'transactionType') === null
+            ) {
                 return Response\Payment::fromData($data, $httpCode);
             }
         }

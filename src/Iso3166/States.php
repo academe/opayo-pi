@@ -1,12 +1,16 @@
-<?php namespace Academe\Opayo\Pi\Iso3166;
+<?php
+
+declare(strict_types=1);
+
+namespace Academe\Opayo\Pi\Iso3166;
 
 class States
 {
     // Qualify by country, in case the state field gets extended to other
     // countries than the US.
 
-    public static $states = array(
-        'US' => array(
+    public static array $states = [
+        'US' => [
             'AL' => 'Alabama',
             'AK' => 'Alaska',
             'AZ' => 'Arizona',
@@ -58,14 +62,10 @@ class States
             'WV' => 'West Virginia',
             'WI' => 'Wisconsin',
             'WY' => 'Wyoming',
-        ),
-    );
+        ],
+    ];
 
-    /**
-     * @param $country
-     * @return bool
-     */
-    public static function hasStates($country)
+    public static function hasStates(string $country): bool
     {
         return isset(static::$states[$country]);
     }
@@ -73,21 +73,17 @@ class States
     /**
      * The API states that state codes must be an ISO3166-2 code. These codes
      * all start with the country code, e.g. "US-AL". The documentation states this
-     * gateway supports the two-chacater codes only.
-     * @param $country
-     * @param $code
-     * @return bool
+     * gateway supports the two-character codes only.
      */
-    public static function isValid($country, $code)
+    public static function isValid(string $country, string $code): bool
     {
         return isset(static::$states[$country][$code]);
     }
 
     /**
-     * @param string $country_code Optional country to return states for.
-     * @return array
+     * Optional country to return states for.
      */
-    public static function getAll($country_code = null)
+    public static function getAll(?string $country_code = null): array
     {
         if (isset($country_code)) {
             return isset(static::$states[$country_code]) ? static::$states[$country_code] : [];

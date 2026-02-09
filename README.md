@@ -59,6 +59,7 @@ From v3.0.0 this package is being rebranded for Opayo, gets a new composer name,
 | -------------------- | ------------ | -------------- |
 | 2.x.x | academe/sagepaymsg | Academe\SagePay\Psr7 |
 | 3.x.x | academe/opayo-pi | Academe\Opayo\Pi |
+| 4.x.x | academe/opayo-pi | Academe\Opayo\Pi |
 
 The `PSR7` branch is now in maintenance mode only, and won't have any major changes - just bugfixes if they are reported.
 The aim is to release on the master branch as soon as a demo (and some units tests) are up and running.
@@ -343,8 +344,7 @@ if ($payment->isRedirect()) {
     // A status of "Ok" means the transaction was successful.
     // A number of validation errors can be captured and linked to specific submitted
     // fields (more about that in a bit too).
-    // In future gateway releases there may be other reasons to redirect, such as PayPal
-    // authorisation.
+    // Note: Alternative payment methods like PayPal may also require redirects for authorization.
     // ...
 }
 
@@ -822,15 +822,108 @@ if ($merchantPlacingOrderOnCustomersBehalf) {
 }
 ```
 
+## Working with Transaction Status
+
+Opayo Pi returns transaction statuses that indicate the result of payment operations. This library provides both modern enum-based access (recommended) and backwards-compatible string access.
+
+### Using Transaction Status Enums (Recommended)
+
+The `TransactionStatus` enum provides type-safe status handling with built-in helper methods:
+
+```php
+use Academe\Opayo\Pi\Response\TransactionStatus;
+
+// Process a transaction response
+$transactionResponse = ResponseFactory::fromHttpResponse(
+    $client->sendRequest($paymentRequest)
+);
+
+// NEW: Get status as enum (type-safe, full IDE support)
+$status = $transactionResponse->getStatusEnum();
+
+// Use strict comparison with enum
+if ($status === TransactionStatus::OK) {
+    // Payment successful
+    echo "Payment approved!";
+}
+
+// Or use convenient helper methods
+if ($transactionResponse->isSuccessful()) {
+    // Payment was successful
+    processOrder($transactionResponse->getTransactionId());
+} elseif ($transactionResponse->requires3DSecure()) {
+    // Redirect to 3D Secure authentication
+    redirectTo3DSecure($transactionResponse->get3DSecure());
+} elseif ($transactionResponse->hasError()) {
+    // Handle payment error
+    $errorMessage = $transactionResponse->getStatusDetail();
+    displayError($errorMessage);
+}
+```
+
+### Enum Helper Methods
+
+The `TransactionStatus` enum provides these helper methods:
+
+```php
+// Check specific conditions
+$status->isSuccess();                  // true if OK
+$status->requiresAuthentication();      // true if 3DAuth
+$status->isError();                     // true if error state
+$status->isFinal();                     // false if pending authentication
+
+// Get metadata
+$status->description();                 // Human-readable description
+$status->severity();                    // "success", "info", "warning", "error"
+```
+
+### All Transaction Statuses
+
+```php
+TransactionStatus::OK;          // Transaction successful
+TransactionStatus::NOT_AUTHED;  // Transaction not authenticated
+TransactionStatus::REJECTED;    // Transaction rejected by bank
+TransactionStatus::THREE_D_AUTH;// 3D Secure authentication required
+TransactionStatus::MALFORMED;   // Malformed request
+TransactionStatus::INVALID;     // Invalid request
+TransactionStatus::ERROR;       // Transaction error
+```
+
+### Backwards Compatible String Access
+
+Existing code using string comparisons continues to work:
+
+```php
+use Academe\Opayo\Pi\Response\AbstractTransaction;
+
+// OLD: String-based status access (still supported)
+$statusString = $transactionResponse->getStatus();
+
+if ($statusString === AbstractTransaction::STATUS_OK) {
+    // Payment successful (constants still work)
+}
+
+// Direct string comparison also works
+if ($statusString === "Ok") {
+    // Payment successful
+}
+```
+
+**Migration Recommendation**: For new code, use `getStatusEnum()` and the enum directly for type safety and IDE support. Existing code using `getStatus()` (returns string) and constants continues to work without changes.
+
+
 ## Payment Methods
 
-At this time, Sage Pay Pi supports just `card` payment types. However, there are three
-different types of card object:
+Opayo Pi supports multiple payment methods including traditional cards and modern digital wallets.
 
-1. `SingleUseCard` - The fist time a card is used. It has been tokenised and will
+### Card Payment Methods
+
+There are three different types of card payment objects:
+
+1. `SingleUseCard` - The first time a card is used. It has been tokenised and will
     be held against the merchant session key for 400 seconds before being discarded.
 2. `ReusableCard` - A card that has been saved and so is reusable. Use this for
-    non-interaractive payments when no CVV is being used.
+    non-interactive payments when no CVV is being used.
 3. `ReusableCvvCard` - A card that has been saved and so is reusable, and has
     been linked to a CVV and merchant session. Use this for interactive reuse of a card, where
     the user is being asked to supply their CVV for additional security, but otherwise do not
@@ -880,8 +973,7 @@ payments just to authenticate and set up a reusable card, but not here.
 
 $transactionResponse = ResponseFactory::fromHttpResponse($response);
 
-// Get the card. Only cards are supported as Payment Method at this time,
-// though that is likely to change when PayPal support is rolled out.
+// Get the card. Cards, Apple Pay, Google Pay, and PayPal are supported as payment methods.
 
 $card = $transactionResponse->getPaymentMethod();
 
@@ -904,3 +996,126 @@ $card = new ReusableCard($cardIdentifier);
 
 $card = new ReusableCard($merchantSessionKey, $cardIdentifier);
 ```
+
+### Alternative Payment Methods
+
+In addition to card payments, Opayo Pi supports modern digital wallet payment methods.
+
+#### Apple Pay
+
+Apple Pay allows customers to pay using their Apple devices with biometric authentication.
+
+```php
+use Academe\Opayo\Pi\Request\Model\ApplePayPayment;
+
+// Apple Pay token received from Apple Pay JS API (client-side)
+// The token must be Base64 encoded
+$applePayToken = base64_encode($rawApplePayToken);
+
+// Create Apple Pay payment method
+$applePayment = new ApplePayPayment(
+    $_SERVER['REMOTE_ADDR'],           // Client IP address
+    $applePayToken,                     // Base64-encoded Apple Pay token
+    $sessionValidationToken             // Optional: for Opayo-managed certificates
+);
+
+// Use in payment request
+$paymentRequest = new CreatePayment(
+    $endpoint,
+    $auth,
+    $applePayment,                      // Use Apple Pay instead of card
+    'MyVendorTxCode-' . rand(10000000, 99999999),
+    $amount,
+    'Apple Pay Purchase',
+    $billingAddress,
+    $customer
+);
+
+$response = $client->sendRequest($paymentRequest);
+$payment = ResponseFactory::fromHttpResponse($response);
+```
+
+**Apple Pay Certificate Types:**
+- **Opayo-managed**: Easier setup, no Apple Developer account needed. Requires `sessionValidationToken`.
+- **Merchant-managed**: Full control, requires Apple Developer account and certificate upload.
+
+#### Google Pay
+
+Google Pay provides a seamless checkout experience across devices.
+
+```php
+use Academe\Opayo\Pi\Request\Model\GooglePayPayment;
+
+// Google Pay token received from Google Pay API (client-side)
+// The token must be Base64 encoded
+$googlePayToken = base64_encode($rawGooglePayToken);
+
+// Create Google Pay payment method
+$googlePayment = new GooglePayPayment(
+    $_SERVER['REMOTE_ADDR'],           // Client IP address
+    $googlePayToken                     // Base64-encoded Google Pay token
+);
+
+// Use in payment request
+$paymentRequest = new CreatePayment(
+    $endpoint,
+    $auth,
+    $googlePayment,                     // Use Google Pay instead of card
+    'MyVendorTxCode-' . rand(10000000, 99999999),
+    $amount,
+    'Google Pay Purchase',
+    $billingAddress,
+    $customer
+);
+
+$response = $client->sendRequest($paymentRequest);
+$payment = ResponseFactory::fromHttpResponse($response);
+```
+
+**Google Pay Benefits:**
+- No certificate management required
+- Works on Chrome, Android devices, and limited Safari support
+- Simpler integration than Apple Pay
+
+#### PayPal
+
+PayPal integration allows customers to pay using their PayPal account.
+
+**Note:** PayPal support in Opayo Pi is currently being rolled out. Check with Opayo support for availability.
+
+```php
+use Academe\Opayo\Pi\Request\Model\PayPalPayment;
+
+// PayPal order ID and payer ID received from PayPal Checkout (client-side)
+$paypalOrderId = $paypalResponse['orderID'];
+$payerId = $paypalResponse['payerID']; // Optional
+
+// Create PayPal payment method
+$paypalPayment = new PayPalPayment(
+    $_SERVER['REMOTE_ADDR'],           // Client IP address
+    $paypalOrderId,                     // PayPal order ID
+    $payerId                            // Optional: PayPal payer ID
+);
+
+// Use in payment request
+$paymentRequest = new CreatePayment(
+    $endpoint,
+    $auth,
+    $paypalPayment,                     // Use PayPal instead of card
+    'MyVendorTxCode-' . rand(10000000, 99999999),
+    $amount,
+    'PayPal Purchase',
+    $billingAddress,
+    $customer
+);
+
+$response = $client->sendRequest($paymentRequest);
+$payment = ResponseFactory::fromHttpResponse($response);
+```
+
+**PayPal Requirements:**
+- Must be enabled in MyOpayo dashboard
+- PayPal account setup and permissions
+- Currently limited availability in Pi API
+
+For more details on alternative payment methods, see [docs/payment-flows.md](docs/payment-flows.md).

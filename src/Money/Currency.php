@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Money;
 
+use UnexpectedValueException;
+use Alcohol\ISO4217;
+
 /**
  * Defines a currency.
  * Only supports currencies that SagePay supports.
  */
-
-use UnexpectedValueException;
-use Alcohol\ISO4217;
 
 class Currency implements CurrencyInterface
 {
@@ -66,4 +66,3 @@ class Currency implements CurrencyInterface
         return $this->allCurrencies->getByAlpha3($this->code)['name'];
     }
 }
-

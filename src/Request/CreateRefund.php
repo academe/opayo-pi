@@ -1,11 +1,8 @@
 <?php
 
-namespace Academe\Opayo\Pi\Request;
+declare(strict_types=1);
 
-/**
- * The refund payment value object to send a transaction to Sage Pay.
- * See https://test.sagepay.com/documentation/#transactions
- */
+namespace Academe\Opayo\Pi\Request;
 
 use UnexpectedValueException;
 use Academe\Opayo\Pi\Model\Endpoint;
@@ -14,16 +11,19 @@ use Academe\Opayo\Pi\Money\AmountInterface;
 use Academe\Opayo\Pi\Model\AddressInterface;
 use Academe\Opayo\Pi\Model\PersonInterface;
 
+/**
+ * The refund payment value object to send a transaction to Sage Pay.
+ * See https://test.sagepay.com/documentation/#transactions
+ */
+
 class CreateRefund extends AbstractRequest
 {
     // Supports the URL "api/v1/transactions/<transactionId>"
-    protected $resource_path = ['transactions'];
+    protected array $resource_path = ['transactions'];
 
     // Minimum mandatory data (constructor).
-    protected $transactionId;
-    protected $vendorTxCode;
-    protected $amount;
-    protected $description;
+    protected string $transactionId;
+    protected string $description;
 
     /**
      * Repeat payment constructor.
@@ -40,36 +40,32 @@ class CreateRefund extends AbstractRequest
     public function __construct(
         Endpoint $endpoint,
         Auth $auth,
-        $transactionId,
-        $vendorTxCode,
-        AmountInterface $amount,
-        $description
+        string $transactionId,
+        protected readonly string $vendorTxCode,
+        protected readonly AmountInterface $amount,
+        string $description
     ) {
         $this->setEndpoint($endpoint);
         $this->setAuth($auth);
         $this->setDescription($description);
-
         $this->setTransactionId($transactionId);
-
-        $this->vendorTxCode = $vendorTxCode;
-        $this->amount = $amount;
     }
 
     /**
-     * @param $description
+     * @param string $description
      * @return $this
      */
-    protected function setDescription($description)
+    protected function setDescription(string $description): static
     {
         $this->description = $description;
         return $this;
     }
 
     /**
-     * @param $description
-     * @return Repeat
+     * @param string $description
+     * @return static
      */
-    public function withDescription($description)
+    public function withDescription(string $description): static
     {
         $copy = clone $this;
         return $copy->setDescription($description);
@@ -78,26 +74,26 @@ class CreateRefund extends AbstractRequest
     /**
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return $this->description;
     }
 
     /**
-     * @param $transactionId
+     * @param string $transactionId
      * @return $this
      */
-    protected function setTransactionId($transactionId)
+    protected function setTransactionId(string $transactionId): static
     {
         $this->transactionId = $transactionId;
         return $this;
     }
 
     /**
-     * @param $transactionId
-     * @return Repeat
+     * @param string $transactionId
+     * @return static
      */
-    public function withTransactionId($transactionId)
+    public function withTransactionId(string $transactionId): static
     {
         $copy = clone $this;
         return $copy->setTransactionId($transactionId);
@@ -106,7 +102,7 @@ class CreateRefund extends AbstractRequest
     /**
      * @return string $transactionId
      */
-    protected function getTransactionId()
+    protected function getTransactionId(): string
     {
         return $this->transactionId;
     }
@@ -115,7 +111,7 @@ class CreateRefund extends AbstractRequest
      * Get the message body data for serializing.
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         // The mandatory fields.
         $result = [

@@ -1,11 +1,8 @@
 <?php
 
-namespace Academe\Opayo\Pi\Response\Model;
+declare(strict_types=1);
 
-/**
- * Amount in a transaction response.
- * This is split into multiple elements: totalAmount, saleAmount and surchargeAmount.
- */
+namespace Academe\Opayo\Pi\Response\Model;
 
 use Academe\Opayo\Pi\Money\Amount as AmountValue;
 use Academe\Opayo\Pi\Money\CurrencyInterface;
@@ -14,31 +11,26 @@ use Academe\Opayo\Pi\Money\Currency;
 use Academe\Opayo\Pi\Helper;
 use JsonSerializable;
 
+/**
+ * Amount in a transaction response.
+ * This is split into multiple elements: totalAmount, saleAmount and surchargeAmount.
+ */
+
 class Amount implements JsonSerializable
 {
-    /**
-     * The components of the amount.
-     */
-    protected $total;
-    protected $sale;
-    protected $surcharge;
-
     /**
      * Amount constructor.
      * The currency will be known for these amounts at this point.
      *
-     * @param string $totalAmount
-     * @param string $saleAmount
-     * @param string $surchargeAmount
+     * @param AmountInterface|null $total
+     * @param AmountInterface|null $sale
+     * @param AmountInterface|null $surcharge
      */
     public function __construct(
-        AmountInterface $totalAmount = null,
-        AmountInterface $saleAmount = null,
-        AmountInterface $surchargeAmount = null
+        protected readonly ?AmountInterface $total = null,
+        protected readonly ?AmountInterface $sale = null,
+        protected readonly ?AmountInterface $surcharge = null
     ) {
-        $this->total = $totalAmount;
-        $this->sale = $saleAmount;
-        $this->surcharge = $surchargeAmount;
     }
 
     /**
@@ -47,8 +39,12 @@ class Amount implements JsonSerializable
      * will extract from an entire message.
      * If the currency is not passed in separately, then a "currency"
      * element will be expected.
+     *
+     * @param array|object|string $data
+     * @param CurrencyInterface|null $currency
+     * @return static
      */
-    public static function fromData($data, CurrencyInterface $currency = null)
+    public static function fromData(array|object|string $data, ?CurrencyInterface $currency = null): static
     {
         // For convenience.
         if (is_string($data)) {
@@ -89,7 +85,10 @@ class Amount implements JsonSerializable
         );
     }
 
-    public function getData()
+    /**
+     * @return array<string, array<string, int>>
+     */
+    public function getData(): array
     {
         $amount = [];
 
@@ -112,22 +111,22 @@ class Amount implements JsonSerializable
      * Serialisation for storage/logging/debug.
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return $this->getData();
     }
 
-    public function getTotal()
+    public function getTotal(): ?AmountInterface
     {
         return $this->total;
     }
 
-    public function getSale()
+    public function getSale(): ?AmountInterface
     {
         return $this->sale;
     }
 
-    public function getSurcharge()
+    public function getSurcharge(): ?AmountInterface
     {
         return $this->surcharge;
     }

@@ -1,55 +1,50 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Request;
+
+use Academe\Opayo\Pi\AbstractMessage;
+use Academe\Opayo\Pi\Model\Endpoint;
+use Academe\Opayo\Pi\Model\Auth;
+use UnexpectedValueException;
+use JsonSerializable;
+use Psr\Http\Message\RequestInterface;
 
 /**
  * Shared message abstract.
  * Contains base methods that request messages will use.
  */
 
-use Academe\Opayo\Pi\AbstractMessage;
-use Academe\Opayo\Pi\Model\Endpoint;
-use Academe\Opayo\Pi\Model\Auth;
-use Academe\Opayo\Pi\Factory\FactoryInterface;
-use Academe\Opayo\Pi\Factory\DiactorosFactory;
-use Academe\Opayo\Pi\Factory\GuzzleFactory;
-use Academe\Opayo\Pi\Factory\RequestFactoryInterface;
-use UnexpectedValueException;
-use JsonSerializable;
-use Exception;
-// use Psr\Http\Message\RequestFactoryInterface;
-use Psr\Http\Message\RequestInterface;
-
 abstract class AbstractRequest extends AbstractMessage implements JsonSerializable, RequestInterface
 {
     use RequestPsr7Trait;
 
     // Transaction types.
-    const TRANSACTION_TYPE_PAYMENT  = 'Payment';
-    const TRANSACTION_TYPE_REPEAT   = 'Repeat';
-    const TRANSACTION_TYPE_REFUND   = 'Refund';
-    const TRANSACTION_TYPE_DEFERRED = 'Deferred';
+    public const TRANSACTION_TYPE_PAYMENT  = 'Payment';
+    public const TRANSACTION_TYPE_REPEAT   = 'Repeat';
+    public const TRANSACTION_TYPE_REFUND   = 'Refund';
+    public const TRANSACTION_TYPE_DEFERRED = 'Deferred';
 
     // Instruction types.
-    const INSTRUCTION_TYPE_VOID     = 'void';
-    const INSTRUCTION_TYPE_ABORT    = 'abort';
-    const INSTRUCTION_TYPE_RELEASE  = 'release';
+    public const INSTRUCTION_TYPE_VOID     = 'void';
+    public const INSTRUCTION_TYPE_ABORT    = 'abort';
+    public const INSTRUCTION_TYPE_RELEASE  = 'release';
 
-    protected $endpoint;
-    protected $auth;
-    protected $factory;
-    protected $resource_path = [];
+    protected ?Endpoint $endpoint = null;
+    protected ?Auth $auth = null;
+    protected array $resource_path = [];
 
     /**
-     * @var string Most messages are sent with the POST method, so this is the default
+     * Most messages are sent with the POST method, so this is the default
      */
-    protected $method = 'POST';
+    protected string $method = 'POST';
 
     /**
      * @param Auth $auth
-     * @return $this
+     * @return self
      */
-    protected function setAuth(Auth $auth)
+    protected function setAuth(Auth $auth): self
     {
         $this->auth = $auth;
         return $this;
@@ -57,27 +52,27 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
 
     /**
      * @param Auth $auth
-     * @return AbstractRequest
+     * @return static
      */
-    protected function withAuth(Auth $auth)
+    protected function withAuth(Auth $auth): static
     {
         $clone = clone $this;
         return $clone->setAuth($auth);
     }
 
     /**
-     * @return mixed
+     * @return Auth|null
      */
-    public function getAuth()
+    public function getAuth(): ?Auth
     {
         return $this->auth;
     }
 
     /**
      * @param Endpoint $endpoint
-     * @return $this
+     * @return self
      */
-    protected function setEndpoint(Endpoint $endpoint)
+    protected function setEndpoint(Endpoint $endpoint): self
     {
         $this->endpoint = $endpoint;
         return $this;
@@ -85,9 +80,9 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
 
     /**
      * @param Endpoint $endpoint
-     * @return AbstractRequest
+     * @return static
      */
-    protected function withEndpoint(Endpoint $endpoint)
+    protected function withEndpoint(Endpoint $endpoint): static
     {
         $clone = clone $this;
         return $clone->setEndpoint($endpoint);
@@ -96,7 +91,7 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
     /**
      * @return Endpoint|null
      */
-    public function getEndpoint()
+    public function getEndpoint(): ?Endpoint
     {
         return $this->endpoint;
     }
@@ -104,9 +99,9 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
     /**
      * Support substitution strings; any {fooBar} mapped to $this->getFooBar()
      *
-     * @returns array The path of this resource, as an array of path segments
+     * @return array The path of this resource, as an array of path segments
      */
-    public function getResourcePath()
+    public function getResourcePath(): array
     {
         $path = $this->resource_path;
 
@@ -127,9 +122,9 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
     }
 
     /**
-     * @returns string The fully qualified URL of this resource
+     * @return string The fully qualified URL of this resource
      */
-    public function getUrl()
+    public function getUrl(): string
     {
         return $this->getEndpoint()->getUrl($this->getResourcePath());
     }
@@ -137,10 +132,10 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
     /**
      * The HTTP Basic Auth header, as an array.
      * Use this if your transport tool does not do "Basic Auth" out of the box.
-     * 
+     *
      * @return array
      */
-    protected function getAuthHeaders()
+    protected function getAuthHeaders(): array
     {
         return [
             'Authorization' => ['Basic '
@@ -152,83 +147,23 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
     }
 
     /**
-     * TODO: can we use the PSR-17 Psr\Http\Message\RequestFactoryInterface
-     * instead of our custom factory?
-     * 
-     * @param RequestFactoryInterface $factory
-     * @return $this
-     */
-    protected function setFactory(RequestFactoryInterface $factory)
-    {
-        $this->factory = $factory;
-        return $this;
-    }
-
-    /**
-     * @param RequestFactoryInterface $factory
-     * @return AbstractRequest
-     */
-    protected function withFactory(RequestFactoryInterface $factory)
-    {
-        $clone = clone $this;
-        return $clone->setAuth($factory);
-    }
-
-    /**
-     * Get the PSR-7 factory.
-     * Create a factory if none supplied and relevant libraries are installed.
-     * 
-     * @param bool $exception
-     * @return RequestFactoryInterface for example DiactorosFactory or GuzzleFactory
-     * @throws Exception
-     */
-    public function getFactory($exception = false): RequestFactoryInterface
-    {
-        if (!isset($this->factory) && GuzzleFactory::isSupported()) {
-            // If the GuzzleFactory is supported (relevant Guzzle package is
-            // installed) then instantiate this factory.
-
-            $this->factory = new GuzzleFactory();
-        }
-
-        if (!isset($this->factory) && DiactorosFactory::isSupported()) {
-            // If the DiactorosFactory is supported (relevant Zend package is
-            // installed) then instantiate this factory.
-
-            $this->factory = new DiactorosFactory();
-        }
-
-        // If the exception flag is set, then throw an exception if we do not
-        // have a factory.
-        // Without the factory we cannot create PSR-7 Requests.
-
-        if ($exception && empty($this->factory)) {
-            throw new Exception('No PSR-7 Request factory has been provided.');
-        }
-
-        return $this->factory;
-    }
-
-    /**
      * Return as a PSR-7 request message.
-     * TODO: Use a PSR-17 factory to create the basic request, then add the
-     * headers and body to that.
-     * 
+     * The request classes are native PSR-7 requests, so just return $this.
+     *
      * @return \Psr\Http\Message\RequestInterface
-     * @throws Exception
      */
     public function createHttpRequest(): RequestInterface
     {
-        return $this; // The requests now are now native PSR-7 requests.
+        return $this; // The requests are now native PSR-7 requests.
     }
 
     /**
      * Set various flags - anything with a setFoo() method.
-     * 
+     *
      * @param array $options
-     * @return $this
+     * @return self
      */
-    protected function setOptions(array $options = [])
+    protected function setOptions(array $options = []): self
     {
         foreach ($options as $name => $value) {
             $method = 'set' . ucfirst($name);
@@ -246,11 +181,11 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
 
     /**
      * Set various flags - anything with a setFoo() method.
-     * 
+     *
      * @param array $options
-     * @return AbstractRequest
+     * @return static
      */
-    public function withOptions(array $options = [])
+    public function withOptions(array $options = []): static
     {
         $copy = clone $this;
         return $copy->setOptions($options);

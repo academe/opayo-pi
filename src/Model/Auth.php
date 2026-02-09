@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Model;
 
+use Academe\Opayo\Pi\Security\SensitiveValue;
+
 /**
  * Value object given the account authentication details.
  * Provides the as needed, and the correct base URL.
  */
-
-use Academe\Opayo\Pi\Security\SensitiveValue;
 
 class Auth
 {
@@ -45,4 +45,3 @@ class Auth
         return $this->integrationPassword?->peek();
     }
 }
-

@@ -1,29 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Response;
+
+use Academe\Opayo\Pi\Factory\ResponseFactory;
+use Academe\Opayo\Pi\Helper;
 
 /**
  * A a collection of instructions.
  */
-
-use Academe\Opayo\Pi\Factory\ResponseFactory;
-use Academe\Opayo\Pi\Helper;
 
 class InstructionCollection extends AbstractCollection
 {
     /**
      * The class type that can be added to this collection.
      */
-    protected $permittedClass = AbstractInstruction::class;
+    protected string $permittedClass = AbstractInstruction::class;
 
     /**
-     *
+     * @param mixed $data
+     * @param int|string|null $httpCode
+     * @return void
      */
-    public function setData($data, $httpCode = null)
+    public function setData(mixed $data /*, int|string|null $httpCode = null*/): mixed
     {
-        if ($httpCode) {
-            $this->setHttpCode($httpCode);
-        }
+        // if ($httpCode) {
+        //     $this->setHttpCode($httpCode);
+        // }
 
         // A list of errors will be provided in a wrapping "errors" element.
         $instructions = Helper::dataGet($data, 'instructions', null);
@@ -37,12 +41,14 @@ class InstructionCollection extends AbstractCollection
                 $this->add(ResponseFactory::fromData($instruction, $httpCode));
             }
         }
+
+        return $this;
     }
 
     /**
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return [
             'instructions' => $this->items,

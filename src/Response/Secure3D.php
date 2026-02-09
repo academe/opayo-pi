@@ -1,4 +1,11 @@
-<?php namespace Academe\Opayo\Pi\Response;
+<?php
+
+declare(strict_types=1);
+
+namespace Academe\Opayo\Pi\Response;
+
+use Academe\Opayo\Pi\Helper;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * The 3D Secure response embedded within a Sage Pay transaction
@@ -7,34 +14,31 @@
  * result for the transaction.
  */
 
-use Academe\Opayo\Pi\Helper;
-use Psr\Http\Message\ResponseInterface;
-
 class Secure3D extends AbstractResponse
 {
     /**
      * List of statuses that the 3DSecure object can return.
      */
-    const STATUS3D_AUTHENTICATED        = 'Authenticated';
-    const STATUS3D_NOTCHECKED           = 'NotChecked';
-    const STATUS3D_NOTAUTHENTICATED     = 'NotAuthenticated';
-    const STATUS3D_ERROR                = 'Error';
-    const STATUS3D_CARDNOTENROLLED      = 'CardNotEnrolled';
-    const STATUS3D_ISSUERNOTENROLLED    = 'IssuerNotEnrolled';
-    const STATUS3D_MALFORMEDORINVALID   = 'MalformedOrInvalid';
-    const STATUS3D_ATTEMPTONLY          = 'AttemptOnly';
-    const STATUS3D_INCOMPLETE           = 'Incomplete';
+    public const STATUS3D_AUTHENTICATED        = 'Authenticated';
+    public const STATUS3D_NOTCHECKED           = 'NotChecked';
+    public const STATUS3D_NOTAUTHENTICATED     = 'NotAuthenticated';
+    public const STATUS3D_ERROR                = 'Error';
+    public const STATUS3D_CARDNOTENROLLED      = 'CardNotEnrolled';
+    public const STATUS3D_ISSUERNOTENROLLED    = 'IssuerNotEnrolled';
+    public const STATUS3D_MALFORMEDORINVALID   = 'MalformedOrInvalid';
+    public const STATUS3D_ATTEMPTONLY          = 'AttemptOnly';
+    public const STATUS3D_INCOMPLETE           = 'Incomplete';
 
     /**
      * The 3D Secure status.
      */
-    protected $status;
+    protected ?string $status = null;
 
     /**
-     * @param $data
-     * @return $this
+     * @param mixed $data
+     * @return mixed
      */
-    protected function setData($data)
+    protected function setData(mixed $data): mixed
     {
         $this->status = Helper::dataGet($data, 'status', null);
         return $this;
@@ -42,8 +46,9 @@ class Secure3D extends AbstractResponse
 
     /**
      * The 3D Secure status.
+     * @return string|null
      */
-    public function getStatus()
+    public function getStatus(): ?string
     {
         return $this->status;
     }
@@ -52,7 +57,7 @@ class Secure3D extends AbstractResponse
      * @inheritdoc
      * CHECKME: any other statuses considered sucessful? e.g. is "not checked" a success?
      */
-    public function isSuccess()
+    public function isSuccess(): bool
     {
         return $this->getStatus() == static::STATUS3D_AUTHENTICATED;
     }
@@ -61,7 +66,7 @@ class Secure3D extends AbstractResponse
      * Convenient serialisation for logging and debugging.
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         $return = [];
 

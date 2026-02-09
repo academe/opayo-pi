@@ -1,26 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Response;
+
+use DateTime;
+use Psr\Http\Message\ResponseInterface;
+use Academe\Opayo\Pi\Helper;
 
 /**
  * Value object holding the merchant session key returned by SagePay.
  * See https://test.sagepay.com/documentation/#merchant-session-keys
  */
 
-use DateTime;
-use Psr\Http\Message\ResponseInterface;
-use Academe\Opayo\Pi\Helper;
-
 class SessionKey extends AbstractResponse
 {
-    protected $merchantSessionKey;
-    protected $expiry;
+    protected ?string $merchantSessionKey = null;
+    protected ?DateTime $expiry = null;
 
     /**
-     * @param $data
-     * @return $this
+     * @param mixed $data
+     * @return mixed
      */
-    protected function setData($data)
+    protected function setData(mixed $data): mixed
     {
         $this->merchantSessionKey = Helper::dataGet($data, 'merchantSessionKey');
 
@@ -34,9 +36,9 @@ class SessionKey extends AbstractResponse
     }
 
     /**
-     * @return null|string
+     * @return string|null
      */
-    public function getMerchantSessionKey()
+    public function getMerchantSessionKey(): ?string
     {
         return $this->merchantSessionKey;
     }
@@ -46,20 +48,20 @@ class SessionKey extends AbstractResponse
      * object: the session key string.
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         return (string)$this->getMerchantSessionKey();
     }
 
     /**
-     * @return null|DateTime The time at which the session key will expire
+     * @return DateTime|null The time at which the session key will expire
      */
-    public function getExpiry()
+    public function getExpiry(): ?DateTime
     {
         return $this->expiry;
     }
 
-    public function isExpired()
+    public function isExpired(): bool
     {
         // Use the default system timezone; the DateTime comparison
         // operation will handle any timezone conversions.
@@ -71,9 +73,9 @@ class SessionKey extends AbstractResponse
     }
 
     /**
-     * @returns bool True if the session key appears to be valid and usable.
+     * @return bool True if the session key appears to be valid and usable.
      */
-    public function isValid()
+    public function isValid(): bool
     {
         // Check if it has expired according to the time we have.
         if ($this->isExpired()) {
@@ -103,8 +105,10 @@ class SessionKey extends AbstractResponse
      * the form that submits to Sage Pay (via sagepay.js). The array contains all the
      * attributes needed to create the input element.
      * TODO: make this an object that can handle its rendering too.
+     *
+     * @return array<string, array<string, mixed>>
      */
-    public function toHtmlElements()
+    public function toHtmlElements(): array
     {
         return [
             'merchantSessionKey' => [
@@ -122,7 +126,7 @@ class SessionKey extends AbstractResponse
      * Reduce the object to an array so it can be serialised.
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return [
             'merchantSessionKey' => $this->getMerchantSessionKey(),

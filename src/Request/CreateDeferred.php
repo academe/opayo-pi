@@ -1,11 +1,8 @@
 <?php
 
-namespace Academe\Opayo\Pi\Request;
+declare(strict_types=1);
 
-/**
- * The transaction value object to send a transaction to Sage Pay.
- * See https://test.sagepay.com/documentation/#transactions
- */
+namespace Academe\Opayo\Pi\Request;
 
 use UnexpectedValueException;
 use Academe\Opayo\Pi\Model\Endpoint;
@@ -13,7 +10,12 @@ use Academe\Opayo\Pi\Model\Auth;
 use Academe\Opayo\Pi\PaymentMethod\PaymentMethodInterface;
 use Academe\Opayo\Pi\Money\AmountInterface;
 
+/**
+ * The transaction value object to send a transaction to Sage Pay.
+ * See https://test.sagepay.com/documentation/#transactions
+ */
+
 class CreateDeferred extends CreatePayment
 {
-    protected $transactionType = AbstractRequest::TRANSACTION_TYPE_DEFERRED;
+    protected string $transactionType = AbstractRequest::TRANSACTION_TYPE_DEFERRED;
 }

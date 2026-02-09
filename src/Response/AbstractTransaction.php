@@ -1,57 +1,71 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Response;
+
+use Academe\Opayo\Pi\Money\CurrencyInterface;
+use Academe\Opayo\Pi\Money\Currency;
+use Academe\Opayo\Pi\Money\Amount;
+use Academe\Opayo\Pi\Money\AmountInterface;
+use Academe\Opayo\Pi\Helper;
 
 /**
  * Shared transaction response abstract.
  */
 
-use Academe\Opayo\Pi\Money\CurrencyInterface;
-use Academe\Opayo\Pi\Money\Currency;
-use Academe\Opayo\Pi\Money\Amount;
-use Academe\Opayo\Pi\Helper;
-
 abstract class AbstractTransaction extends AbstractResponse
 {
     /**
-     * Transaction status from Sage Pay.
+     * Transaction status constants (for backwards compatibility).
+     *
+     * @deprecated Since 3.1.0. Use TransactionStatus enum instead.
+     *             These constants are kept for backwards compatibility but
+     *             new code should use the TransactionStatus enum for type safety.
+     *
+     * Note: These constants use string literals (not enum->value) for PHP 8.1 compatibility.
+     *       Enum property access in constants requires PHP 8.2+.
+     *
+     * @see TransactionStatus
      */
-    const STATUS_OK         = 'Ok';
-    const STATUS_NOTAUTHED  = 'NotAuthed';
-    const STATUS_REJECTED   = 'Rejected';
-    const STATUS_3DAUTH     = '3DAuth';
-    const STATUS_MALFORMED  = 'Malformed';
-    const STATUS_INVALID    = 'Invalid';
-    const STATUS_ERROR      = 'Error';
+    public const STATUS_OK = 'Ok';
+    public const STATUS_NOTAUTHED = 'NotAuthed';
+    public const STATUS_REJECTED = 'Rejected';
+    public const STATUS_3DAUTH = '3DAuth';
+    public const STATUS_MALFORMED = 'Malformed';
+    public const STATUS_INVALID = 'Invalid';
+    public const STATUS_ERROR = 'Error';
 
     /**
      * The status, statusCode and statusReason are used in all transaction responses.
+     * statusEnum stores the parsed TransactionStatus enum for type safety.
+     * The parent class $status property remains for backwards compatibility.
      */
-    protected $status;
-    protected $statusCode;
-    protected $statusDetail;
+    protected ?TransactionStatus $statusEnum = null;
+    protected ?string $statusCode = null;
+    protected ?string $statusDetail = null;
 
-    protected $transactionId;
-    protected $transactionType;
+    protected ?string $transactionId = null;
+    protected ?string $transactionType = null;
 
-    protected $retrievalReference;
-    protected $bankResponseCode;
-    protected $bankAuthorisationCode;
+    protected ?int $retrievalReference = null;
+    protected ?string $bankResponseCode = null;
+    protected ?string $bankAuthorisationCode = null;
 
-    protected $secure3D;
-    protected $paymentMethod;
+    protected ?Secure3D $secure3D = null;
+    protected ?Model\Card $paymentMethod = null;
 
-    protected $currency;
+    protected ?CurrencyInterface $currency = null;
 
-    protected $amount;
+    protected ?Model\Amount $amount = null;
 
-    protected $avsCvcCheck;
+    protected ?Model\AvsCvcCheck $avsCvcCheck = null;
 
     /**
-     * @param $data
-     * @return $this
+     * @param mixed $data
+     * @return self
      */
-    protected function setData($data)
+    protected function setData(mixed $data): mixed
     {
         // Note the resource is called "3DSecure" and not "Secure3D" as used
         // for valid class, method and variable names.
@@ -81,7 +95,7 @@ abstract class AbstractTransaction extends AbstractResponse
         $this->setAmount($data, $this->getCurrency());
 
         // Create the "AVS CVC Check Object" if present in the response.
-        
+
         if ($avsCvcCheck = Helper::dataGet($data, 'avsCvcCheck')) {
             $this->setAvsCvcCheck($avsCvcCheck);
         }
@@ -90,9 +104,9 @@ abstract class AbstractTransaction extends AbstractResponse
     }
 
     /**
-     * @return string The numeric code that represents the status detail.
+     * @return string|null The numeric code that represents the status detail.
      */
-    public function getStatusCode()
+    public function getStatusCode(): ?string
     {
         return $this->statusCode;
     }
@@ -100,36 +114,121 @@ abstract class AbstractTransaction extends AbstractResponse
     /**
      * This message in some range of codes can be presented to the end user.
      * In other ranges of codes it should only ever be logged fot the site administrator.
-     * @return string The detailed status message.
+     * @return string|null The detailed status message.
      */
-    public function getStatusDetail()
+    public function getStatusDetail(): ?string
     {
         return $this->statusDetail;
     }
 
     /**
-     * Set the three status fields from body data.
-     * @param array $data The response message body data.
-     * @return null
+     * Get the transaction status as enum (preferred for new code).
+     *
+     * Returns the status as a TransactionStatus enum for type-safe code.
+     * Use this method in new code for full benefits of enum type safety,
+     * IDE autocomplete, and helper methods.
+     *
+     * @return TransactionStatus|null The transaction status enum, or null if not set
      */
-    protected function setStatuses($data)
+    public function getStatusEnum(): ?TransactionStatus
     {
-        $this->status       = Helper::dataGet($data, 'status', null);
+        return $this->statusEnum;
+    }
+
+    /**
+     * Get the transaction status as string (inherits from parent).
+     *
+     * Returns the status value as a string. This method maintains
+     * backwards compatibility with existing code.
+     *
+     * For new code, prefer getStatusEnum() for type safety and helper methods.
+     *
+     * @return string|null The transaction status string value
+     */
+    public function getStatus(): ?string
+    {
+        // Return the raw string value for backwards compatibility
+        return parent::getStatus();
+    }
+
+    /**
+     * Check if the transaction was successful.
+     *
+     * Convenience method that checks if status is OK.
+     * Recommended over manual status comparisons.
+     *
+     * @return bool True if transaction status is OK
+     */
+    public function isSuccessful(): bool
+    {
+        return $this->statusEnum?->isSuccess() ?? false;
+    }
+
+    /**
+     * Check if the transaction requires 3D Secure authentication.
+     *
+     * Convenience method that checks if status is 3DAuth.
+     *
+     * @return bool True if 3D Secure authentication is required
+     */
+    public function requires3DSecure(): bool
+    {
+        return $this->statusEnum?->requiresAuthentication() ?? false;
+    }
+
+    /**
+     * Check if the transaction has an error status.
+     *
+     * Convenience method that checks if status represents an error.
+     * Includes: NotAuthed, Rejected, Malformed, Invalid, Error.
+     *
+     * @return bool True if status indicates an error
+     */
+    public function hasError(): bool
+    {
+        return $this->statusEnum?->isError() ?? false;
+    }
+
+    /**
+     * Set the three status fields from body data.
+     * Parses the status string into a TransactionStatus enum.
+     *
+     * @param mixed $data The response message body data.
+     * @return void
+     */
+    protected function setStatuses(mixed $data): void
+    {
+        $statusValue = Helper::dataGet($data, 'status', null);
+
+        // Store raw string in parent's $status property for backwards compatibility
+        $this->status = $statusValue;
+
+        // Parse status string into enum (case-insensitive for flexibility)
+        if ($statusValue !== null) {
+            $this->statusEnum = TransactionStatus::tryFromInsensitive($statusValue);
+        }
+
         $this->statusCode   = Helper::dataGet($data, 'statusCode', null);
         $this->statusDetail = Helper::dataGet($data, 'statusDetail', null);
     }
 
     /**
      * Set the currency of the response from the data.
+     * @param mixed $data
+     * @return void
      */
-    protected function setCurrency($data)
+    protected function setCurrency(mixed $data): void
     {
         if (($currency = Helper::dataGet($data, 'currency')) != null) {
             $this->currency = new Currency($currency);
         }
     }
 
-    protected function setPaymentMethod($data)
+    /**
+     * @param mixed $data
+     * @return void
+     */
+    protected function setPaymentMethod(mixed $data): void
     {
         $paymentMethod = Helper::dataGet($data, 'paymentMethod');
 
@@ -144,55 +243,65 @@ abstract class AbstractTransaction extends AbstractResponse
     }
 
     /**
-     *
+     * @param mixed $data
+     * @return void
      */
-    protected function set3dSecure($data)
+    protected function set3dSecure(mixed $data): void
     {
         // Create a 3DSecure object from the array data.
         $this->secure3D = Secure3D::fromData($data);
     }
 
-    protected function setAmount($data, CurrencyInterface $currency = null)
+    /**
+     * @param mixed $data
+     * @param CurrencyInterface|null $currency
+     * @return void
+     */
+    protected function setAmount(mixed $data, ?CurrencyInterface $currency = null): void
     {
         $this->amount = Model\Amount::fromData($data, $currency);
     }
 
-    protected function setAvsCvcCheck($data)
+    /**
+     * @param mixed $data
+     * @return void
+     */
+    protected function setAvsCvcCheck(mixed $data): void
     {
         $this->avsCvcCheck = Model\AvsCvcCheck::fromData($data);
     }
 
     /**
      * The ID given to the transaction by Sage Pay.
-     * @return mixed
+     * @return string|null
      */
-    public function getTransactionId()
+    public function getTransactionId(): ?string
     {
         return $this->transactionId;
     }
 
     /**
      * The type of the transaction.
-     * @return mixed
+     * @return string|null
      */
-    public function getTransactionType()
+    public function getTransactionType(): ?string
     {
         return $this->transactionType;
     }
 
     /**
      * The 3D Secure object.
-     * @return mixed
+     * @return Secure3D|null
      */
-    public function get3DSecure()
+    public function get3DSecure(): ?Secure3D
     {
         return $this->secure3D;
     }
 
     /**
-     * @return Secure3D|null The 3D Secure final status object, if available.
+     * @return string|null The 3D Secure final status, if available.
      */
-    public function get3DSecureStatus()
+    public function get3DSecureStatus(): ?string
     {
         if (isset($this->secure3D)) {
             return $this->secure3D->getStatus();
@@ -201,7 +310,10 @@ abstract class AbstractTransaction extends AbstractResponse
         return null;
     }
 
-    public function getCurrency()
+    /**
+     * @return CurrencyInterface|null
+     */
+    public function getCurrency(): ?CurrencyInterface
     {
         return $this->currency;
     }
@@ -210,42 +322,54 @@ abstract class AbstractTransaction extends AbstractResponse
      * The Sage Pay docs treat the total/sale/surchage amounts as a single
      * "amount" object. Bizarrely, the object of amounts does *not* include
      * te currency, so it lacks some very important context there.
+     * @return Model\Amount|null
      */
-    public function getAmount()
+    public function getAmount(): ?Model\Amount
     {
         return $this->amount;
     }
 
     /**
      * Convenience methods dive into the amount object.
-     * @return Academe\Opayo\Pi\Money\AmountInterface|null
+     * @return AmountInterface|null
      */
-
-    public function getTotalAmount()
+    public function getTotalAmount(): ?AmountInterface
     {
         if ($amount = $this->getAmount()) {
             return $amount->getTotal();
         }
+
+        return null;
     }
 
-    public function getSaleAmount()
+    /**
+     * @return AmountInterface|null
+     */
+    public function getSaleAmount(): ?AmountInterface
     {
         if ($amount = $this->getAmount()) {
             return $amount->getSale();
         }
+
+        return null;
     }
 
-    public function getSurchargeAmount()
+    /**
+     * @return AmountInterface|null
+     */
+    public function getSurchargeAmount(): ?AmountInterface
     {
         if ($amount = $this->getAmount()) {
             return $amount->getSurcharge();
         }
+
+        return null;
     }
 
     /**
-     * @return PaymentMethod|null The payment method object, if available.
+     * @return Model\Card|null The payment method object, if available.
      */
-    public function getPaymentMethod()
+    public function getPaymentMethod(): ?Model\Card
     {
         return $this->paymentMethod;
     }
@@ -253,9 +377,9 @@ abstract class AbstractTransaction extends AbstractResponse
     /**
      * Sage Pay unique Authorisation Code for a successfully authorised
      * transaction. Only present if Status is OK (or Ok).
-     * @return mixed
+     * @return int|null
      */
-    public function getRetrievalReference()
+    public function getRetrievalReference(): ?int
     {
         return $this->retrievalReference;
     }
@@ -263,18 +387,18 @@ abstract class AbstractTransaction extends AbstractResponse
     /**
      * Also known as the decline code, these are codes that are
      * specific to the merchant bank.
-     * @return mixed
+     * @return string|null
      */
-    public function getBankResponseCode()
+    public function getBankResponseCode(): ?string
     {
         return $this->bankResponseCode;
     }
 
     /**
      * The authorisation code returned from your merchant bank.
-     * @return mixed
+     * @return string|null
      */
-    public function getBankAuthorisationCode()
+    public function getBankAuthorisationCode(): ?string
     {
         return $this->bankAuthorisationCode;
     }
@@ -283,7 +407,7 @@ abstract class AbstractTransaction extends AbstractResponse
      * The AVS CVC Check results.
      * @return Model\AvsCvcCheck|null
      */
-    public function getAvsCvcCheck()
+    public function getAvsCvcCheck(): ?Model\AvsCvcCheck
     {
         return $this->avsCvcCheck;
     }
@@ -294,7 +418,7 @@ abstract class AbstractTransaction extends AbstractResponse
      *
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         $return = [];
 
@@ -304,7 +428,7 @@ abstract class AbstractTransaction extends AbstractResponse
 
         // Status details.
         $return['httpCode'] = $this->getHttpCode();
-        $return['status'] = $this->getStatus();
+        $return['status'] = $this->getStatus(); // Already returns string from parent
         $return['statusCode'] = $this->getStatusCode();
         $return['statusDetail'] = $this->getStatusDetail();
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Money;
 
 /**
@@ -11,10 +13,10 @@ interface CurrencyInterface
     /**
      * @return string The ISO 4217 three-character currency code
      */
-    public function getCode();
+    public function getCode(): string;
 
     /**
-     * @return mixed The number of digits in the decimal subunit
+     * @return int The number of digits in the decimal subunit
      */
-    public function getMinorUnits();
+    public function getMinorUnits(): int;
 }

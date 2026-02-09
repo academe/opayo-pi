@@ -1,39 +1,46 @@
-<?php namespace Academe\Opayo\Pi\Request\Model;
+<?php
 
-/**
- * Value object used to define the customer's billing address.
- * Reasonable validation is done at creation.
- */
+declare(strict_types=1);
+
+namespace Academe\Opayo\Pi\Request\Model;
 
 use UnexpectedValueException;
 use Academe\Opayo\Pi\Iso3166\Countries;
 use Academe\Opayo\Pi\Iso3166\States;
 use Academe\Opayo\Pi\Helper;
 
+/**
+ * Value object used to define the customer's billing address.
+ * Reasonable validation is done at creation.
+ */
+
 class Address implements AddressInterface
 {
-    /**
-     * @var
-     */
-    protected $address1;
-    protected $address2;
-    protected $city;
-    protected $postalCode;
-    protected $country;
-    protected $state;
+    protected string $address1;
+    protected ?string $address2;
+    protected string $city;
+    protected ?string $postalCode;
+    protected string $country;
+    protected ?string $state;
 
-    protected $fieldPrefix = '';
+    protected string $fieldPrefix = '';
 
     /**
-     * @param string $address1 Address line 1
-     * @param string $address2 Address line 2
-     * @param string $city The name of the city or town
-     * @param string $postalCode The postal code
-     * @param string $country The country ISO 3166-2 two-letter code
-     * @param string $state The last two letters of the ISO 3166-2:US state code
+     * @param string|null $address1 Address line 1
+     * @param string|null $address2 Address line 2
+     * @param string|null $city The name of the city or town
+     * @param string|null $postalCode The postal code
+     * @param string|null $country The country ISO 3166-2 two-letter code
+     * @param string|null $state The last two letters of the ISO 3166-2:US state code
      */
-    public function __construct($address1, $address2, $city, $postalCode, $country, $state = null)
-    {
+    public function __construct(
+        ?string $address1,
+        ?string $address2,
+        ?string $city,
+        ?string $postalCode,
+        ?string $country,
+        ?string $state = null
+    ) {
         // These fields are always mandatory.
         foreach (array('address1', 'city', 'country') as $field_name) {
             if (empty($$field_name)) {
@@ -87,7 +94,7 @@ class Address implements AddressInterface
      *
      * @return static New address object set up from the data
      */
-    public static function fromData($data)
+    public static function fromData(array|object $data): static
     {
         return new static(
             Helper::dataGet($data, 'address1', null),
@@ -108,7 +115,7 @@ class Address implements AddressInterface
      *
      * @return string The name of the data field with the current prefix added, if a prefix is set
      */
-    protected function addFieldPrefix($field)
+    protected function addFieldPrefix(string $field): string
     {
         if (! $this->fieldPrefix) {
             return $field;
@@ -124,7 +131,7 @@ class Address implements AddressInterface
      *
      * @return array Data for passing to the API, requiring JSON conversion first.
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         $return = [
             $this->addFieldPrefix('address1') => $this->address1,
@@ -154,9 +161,9 @@ class Address implements AddressInterface
      *
      * @param string $fieldPrefix The prefix to be added to all fields, normally lower-case
      *
-     * @return Address Clone of $this with the prefix set.
+     * @return self Clone of $this with the prefix set.
      */
-    public function withFieldPrefix($fieldPrefix)
+    public function withFieldPrefix(string $fieldPrefix): self
     {
         $copy = clone $this;
         $copy->fieldPrefix = $fieldPrefix;

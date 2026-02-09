@@ -1,6 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Academe\Opayo\Pi\Request;
+
+use Academe\Opayo\Pi\Model\Auth;
+use Academe\Opayo\Pi\Model\Endpoint;
+use Academe\Opayo\Pi\Response\SessionKey;
+use Academe\Opayo\Pi\Security\SensitiveValue;
 
 /**
  * Request message for sending card details to Sage Pay to get a
@@ -13,95 +20,62 @@ namespace Academe\Opayo\Pi\Request;
  * similar to how Sage Pay Direct would.
  */
 
-use Academe\Opayo\Pi\Model\Auth;
-use Academe\Opayo\Pi\Model\Endpoint;
-use Academe\Opayo\Pi\Response\SessionKey;
-use Academe\Opayo\Pi\Security\SensitiveValue;
-
 class CreateCardIdentifier extends AbstractRequest
 {
-    protected $resource_path = ['card-identifiers'];
-
-    protected $sessionKey;
-
-    // Store card details as sensitive information.
-    // This won't protect us from JSON serialisation, since that function is needed
-    // for constructing messages, but should help protect from other types of serialisation.
-
-    protected $cardholderName;
-    protected $cardNumber;
-    protected $expiryDate;
-    protected $securityCode;
+    protected array $resource_path = ['card-identifiers'];
+    private readonly SensitiveValue $cardholderName;
+    private readonly SensitiveValue $cardNumber;
+    private readonly SensitiveValue $expiryDate;
+    private readonly SensitiveValue $securityCode;
 
     /**
      * @param Endpoint $endpoint
      * @param Auth $auth
      * @param SessionKey|string $sessionKey Any object that casts to sessionKey string is suitable.
-     * @param $cardholderName
-     * @param $cardNumber
-     * @param $expiryDate
-     * @param null $securityCode
+     * @param string $cardholderName
+     * @param string $cardNumber
+     * @param string $expiryDate
+     * @param string|null $securityCode
      */
     public function __construct(
         Endpoint $endpoint,
         Auth $auth,
-        $sessionKey,
-        //
-        $cardholderName,
-        $cardNumber,
-        $expiryDate,
-        $securityCode = null
+        private readonly string $sessionKey,
+        string $cardholderName,
+        string $cardNumber,
+        string $expiryDate,
+        ?string $securityCode = null
     ) {
-        // Access data.
         $this->setEndpoint($endpoint);
         $this->setAuth($auth);
-        $this->sessionKey = (string)$sessionKey;
 
-        // Card details.
         $this->cardholderName = new SensitiveValue($cardholderName);
         $this->cardNumber = new SensitiveValue($cardNumber);
         $this->expiryDate = new SensitiveValue($expiryDate);
         $this->securityCode = new SensitiveValue($securityCode);
     }
 
-    /**
-     * @return SensitiveValue|mixed
-     */
-    public function getCardholderName()
+    public function getCardholderName(): ?string
     {
-        return $this->cardholderName ? $this->cardholderName->peek() : $this->cardholderName;
+        return $this->cardholderName?->peek();
     }
 
-    /**
-     * @return SensitiveValue|mixed
-     */
-    public function getCardNumber()
+    public function getCardNumber(): ?string
     {
-        return $this->cardNumber ? $this->cardNumber->peek() : $this->cardNumber;
+        return $this->cardNumber?->peek();
     }
 
-    /**
-     * @return SensitiveValue|mixed
-     */
-    public function getExpiryDate()
+    public function getExpiryDate(): ?string
     {
-        return $this->expiryDate ? $this->expiryDate->peek() : $this->expiryDate;
+        return $this->expiryDate?->peek();
     }
 
-    /**
-     * @return SensitiveValue|mixed
-     */
-    public function getSecurityCode()
+    public function getSecurityCode(): ?string
     {
-        return $this->securityCode ? $this->securityCode->peek() : $this->securityCode;
+        return $this->securityCode?->peek();
     }
 
-    /**
-     * Protect this class from direct JSON serialisation.
-     * Replace all card detail characters with asterisks.
-     * @return array
-     */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         $data = $this->jsonSerializePeek();
 
@@ -114,12 +88,7 @@ class CreateCardIdentifier extends AbstractRequest
         return $data;
     }
 
-    /**
-     * Get the message body data for serializing.
-     * This is the explicit JSON serialisation method, not called up during debug.
-     * @return array
-     */
-    public function jsonSerializePeek()
+    public function jsonSerializePeek(): array
     {
         $data = [
             'cardDetails' => [
@@ -129,24 +98,14 @@ class CreateCardIdentifier extends AbstractRequest
             ],
         ];
 
-        // The security code is optional, so only provide it if it has been set.
-
-        if (! empty($this->getSecurityCode())) {
+        if (!empty($this->getSecurityCode())) {
             $data['cardDetails']['securityCode'] = $this->getSecurityCode();
         }
 
         return $data;
     }
 
-    /**
-     * Get the message header data as an array.
-     * This request does not use the HTTP Basic Auth, but the temporary session
-     * key token instead. This is because it will accessible to end users, and
-     * the secure integration key and password cannot be exposed here.
-     *
-     * @return array
-     */
-    public function getAuthHeaders()
+    public function getAuthHeaders(): array
     {
         return [
             'Authorization' => ['Bearer ' . $this->sessionKey],
