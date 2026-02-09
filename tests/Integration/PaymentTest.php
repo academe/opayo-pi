@@ -135,9 +135,9 @@ class PaymentTest extends IntegrationTestCase
             );
 
             // Verify amount matches
-            $responseAmount = $response->getAmount();
+            $responseAmount = $response->getAmount(); // Academe\Opayo\Pi\Money\Amount
             $this->assertNotNull($responseAmount);
-            $this->assertEquals(999, $responseAmount->getAmount(), 'Amount should match (in minor units)');
+            $this->assertEquals(999, $responseAmount->getTotal()->getAmount(), 'Amount should match (in minor units)');
 
             echo "\n";
             echo "Payment successful!\n";
@@ -290,8 +290,8 @@ class PaymentTest extends IntegrationTestCase
     {
         [$sessionKey, $cardIdentifier] = $this->createCardIdentifier(self::TEST_CARD_VISA);
 
-        $vendorTxCode = 'TEST-USD-' . uniqid() . '-' . time();
-        $amount = (new Amount(Currency::USD(), 0))->withMajorUnit('25.00');
+        $vendorTxCode = 'TEST-GBP-' . uniqid() . '-' . time();
+        $amount = (new Amount(Currency::GBP(), 0))->withMajorUnit('25.00');
 
         $customer = new Person('John', 'Doe', 'john.doe@example.com');
         $billingAddress = new Address('456 Main St', null, 'New York', '10001', 'US', 'NY');
@@ -303,7 +303,7 @@ class PaymentTest extends IntegrationTestCase
             $paymentMethod,
             $vendorTxCode,
             $amount,
-            'USD Payment Test',
+            'GBP Payment Test',
             $billingAddress,
             $customer,
             options: [
@@ -321,11 +321,11 @@ class PaymentTest extends IntegrationTestCase
         // Verify currency in response if payment successful
         if ($response->isSuccessful()) {
             $responseAmount = $response->getAmount();
-            $this->assertEquals('USD', $responseAmount?->getCurrency()?->getCode());
+            $this->assertEquals('GBP', $responseAmount?->getTotal()?->getCurrency()?->getCode());
         }
 
         echo "\n";
-        echo "USD payment test completed\n";
+        echo "GBP payment test completed\n";
         echo "Status: " . $response->getStatus() . "\n";
     }
 
