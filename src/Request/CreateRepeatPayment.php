@@ -8,8 +8,9 @@ use UnexpectedValueException;
 use Academe\Opayo\Pi\Model\Endpoint;
 use Academe\Opayo\Pi\Model\Auth;
 use Academe\Opayo\Pi\Money\AmountInterface;
-use Academe\Opayo\Pi\Model\AddressInterface;
-use Academe\Opayo\Pi\Model\PersonInterface;
+use Academe\Opayo\Pi\Request\Model\AddressInterface;
+use Academe\Opayo\Pi\Request\Model\CredentialType;
+use Academe\Opayo\Pi\Request\Model\PersonInterface;
 
 /**
  * The repeat payment value object to send a transaction to Sage Pay.
@@ -32,6 +33,14 @@ class CreateRepeatPayment extends AbstractRequest
     protected ?AddressInterface $shippingAddress = null;
     protected ?PersonInterface $shippingRecipient = null;
     protected ?bool $giftAid = null;
+
+    /**
+     * Required by the gateway for Repeat transactions, to advise the card
+     * issuer why a stored credential is being used.
+     *
+     * @var CredentialType|null
+     */
+    protected ?CredentialType $credentialType = null;
 
     /**
      * @var string The prefix is added to the name fields when sending to Sage Pay
@@ -161,6 +170,18 @@ class CreateRepeatPayment extends AbstractRequest
         return $this->transactionId;
     }
 
+    public function setCredentialType(CredentialType $credentialType): static
+    {
+        $this->credentialType = $credentialType;
+        return $this;
+    }
+
+    public function withCredentialType(CredentialType $credentialType): static
+    {
+        $copy = clone $this;
+        return $copy->setCredentialType($credentialType);
+    }
+
     /**
      * @param bool $giftAid
      * @return $this
@@ -209,12 +230,16 @@ class CreateRepeatPayment extends AbstractRequest
         }
 
         // If there are shipping details, then merge it in:
-        if (! empty($shippingAddress)) {
+        if (! empty($shippingDetails)) {
             $result['shippingDetails'] = $shippingDetails;
         }
 
         if (! empty($this->giftAid)) {
             $result['giftAid'] = $this->giftAid;
+        }
+
+        if (! empty($this->credentialType)) {
+            $result['credentialType'] = $this->credentialType->jsonSerialize();
         }
 
         return $result;

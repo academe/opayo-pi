@@ -66,6 +66,28 @@ class CredentialType implements JsonSerializable
     }
 
     /**
+     * For a Repeat transaction the gateway only accepts cofUsage
+     * "Subsequent" and initiatedType "MIT". recurringExpiry (YYYYMMDD, the
+     * date of the last scheduled payment) and recurringFrequency (in days)
+     * are required when the mitType is Recurring or Instalment.
+     */
+    public static function createForRepeatPayment(
+        string $mitType = self::MIT_TYPE_UNSCHEDULED,
+        ?string $recurringExpiry = null,
+        ?int $recurringFrequency = null,
+        ?int $purchaseInstalData = null
+    ): static {
+        return new self(
+            self::COF_USAGE_SUBSEQUENT,
+            self::INITIATED_TYPE_MERCHANT_INITIATED,
+            $mitType,
+            $recurringExpiry,
+            $recurringFrequency,
+            $purchaseInstalData
+        );
+    }
+
+    /**
      * @return array
      */
     public function jsonSerialize(): mixed
@@ -73,7 +95,6 @@ class CredentialType implements JsonSerializable
         $attributes = [
             'cofUsage' => $this->cofUsage,
             'initiatedType' => $this->initiatedType,
-            'mitType' => $this->mitType,
         ];
 
         if ($this->mitType !== null) {

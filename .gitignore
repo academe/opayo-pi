@@ -46,3 +46,4 @@ composer.lock
 # Development/testing
 /.env
 /.phpunit.cache
+.gstack/
