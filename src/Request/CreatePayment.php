@@ -8,6 +8,9 @@ use UnexpectedValueException;
 use Academe\Opayo\Pi\Model\Auth;
 use Academe\Opayo\Pi\Model\Endpoint;
 use Academe\Opayo\Pi\Money\AmountInterface;
+use Academe\Opayo\Pi\Request\Enums\Apply3DSecure;
+use Academe\Opayo\Pi\Request\Enums\ApplyAvsCvcCheck;
+use Academe\Opayo\Pi\Request\Enums\EntryMethod;
 use Academe\Opayo\Pi\Request\Model\CredentialType;
 use Academe\Opayo\Pi\Request\Model\PersonInterface;
 use Academe\Opayo\Pi\Request\Model\AddressInterface;
@@ -122,8 +125,13 @@ class CreatePayment extends AbstractRequest
         $this->setOptions($options);
     }
 
-    public function setEntryMethod(string $entryMethod): static
+    public function setEntryMethod(string|EntryMethod $entryMethod): static
     {
+        if ($entryMethod instanceof EntryMethod) {
+            $this->entryMethod = $entryMethod->value;
+            return $this;
+        }
+
         // Get the value from the class constants.
         $value = $this->constantValue('ENTRY_METHOD', $entryMethod);
 
@@ -139,7 +147,7 @@ class CreatePayment extends AbstractRequest
         return $this;
     }
 
-    public function withEntryMethod(string $entryMethod): static
+    public function withEntryMethod(string|EntryMethod $entryMethod): static
     {
         $copy = clone $this;
         return $copy->setEntryMethod($entryMethod);
@@ -179,8 +187,13 @@ class CreatePayment extends AbstractRequest
         return $copy->setGiftAid($giftAid);
     }
 
-    protected function setApplyAvsCvcCheck(string $applyAvsCvcCheck): static
+    protected function setApplyAvsCvcCheck(string|ApplyAvsCvcCheck $applyAvsCvcCheck): static
     {
+        if ($applyAvsCvcCheck instanceof ApplyAvsCvcCheck) {
+            $this->applyAvsCvcCheck = $applyAvsCvcCheck->value;
+            return $this;
+        }
+
         // Get the value from the class constants.
         $value = $this->constantValue('APPLY_AVS_CVC_CHECK', $applyAvsCvcCheck);
 
@@ -196,7 +209,7 @@ class CreatePayment extends AbstractRequest
         return $this;
     }
 
-    public function withApplyAvsCvcCheck(string $applyAvsCvcCheck): static
+    public function withApplyAvsCvcCheck(string|ApplyAvsCvcCheck $applyAvsCvcCheck): static
     {
         $copy = clone $this;
         return $copy->setApplyAvsCvcCheck($applyAvsCvcCheck);
@@ -207,8 +220,13 @@ class CreatePayment extends AbstractRequest
         return static::constantList('APPLY_AVS_CVC_CHECK');
     }
 
-    protected function setApply3DSecure(string $apply3DSecure): static
+    protected function setApply3DSecure(string|Apply3DSecure $apply3DSecure): static
     {
+        if ($apply3DSecure instanceof Apply3DSecure) {
+            $this->apply3DSecure = $apply3DSecure->value;
+            return $this;
+        }
+
         // Get the value from the class constants.
         $value = $this->constantValue('APPLY_3D_SECURE', $apply3DSecure);
 
@@ -224,7 +242,7 @@ class CreatePayment extends AbstractRequest
         return $this;
     }
 
-    public function withApply3DSecure(string $apply3DSecure): static
+    public function withApply3DSecure(string|Apply3DSecure $apply3DSecure): static
     {
         $copy = clone $this;
         return $copy->setApply3DSecure($apply3DSecure);

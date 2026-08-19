@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Academe\Opayo\Pi\Request\Model;
 
 use PHPUnit\Framework\TestCase;
+use Academe\Opayo\Pi\Request\Enums\CofUsage;
+use Academe\Opayo\Pi\Request\Enums\InitiatedType;
+use Academe\Opayo\Pi\Request\Enums\MitType;
 
 class CredentialTypeTest extends TestCase
 {
@@ -53,6 +56,37 @@ class CredentialTypeTest extends TestCase
             ],
             $body
         );
+    }
+
+    public function testConstructorAcceptsEnums()
+    {
+        $credentialType = new CredentialType(
+            CofUsage::Subsequent,
+            InitiatedType::MerchantInitiated,
+            MitType::Recurring,
+            '20270301',
+            28
+        );
+
+        $this->assertSame(
+            [
+                'cofUsage' => 'Subsequent',
+                'initiatedType' => 'MIT',
+                'mitType' => 'Recurring',
+                'recurringExpiry' => '20270301',
+                'recurringFrequency' => 28,
+            ],
+            $credentialType->jsonSerialize()
+        );
+    }
+
+    public function testCreateForRepeatPaymentAcceptsMitTypeEnum()
+    {
+        $body = CredentialType::createForRepeatPayment(MitType::Recurring, '20270301', 28)
+            ->jsonSerialize();
+
+        $this->assertSame('Recurring', $body['mitType']);
+        $this->assertSame('20270301', $body['recurringExpiry']);
     }
 
     public function testAllFieldsSerialized()

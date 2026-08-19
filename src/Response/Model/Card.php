@@ -55,7 +55,8 @@ class Card implements JsonSerializable
             Helper::dataGet($data, 'lastFourDigits'),
             Helper::dataGet($data, 'expiryDate'),
             Helper::dataGet($data, 'cardIdentifier'),
-            Helper::dataGet($data, 'reusable')
+            // Absent in some responses, e.g. for a Repeat transaction.
+            Helper::dataGet($data, 'reusable', false)
         );
     }
 

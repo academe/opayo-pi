@@ -107,12 +107,14 @@ class TransactionStatusTest extends TestCase
         $this->assertEquals('error', TransactionStatus::MALFORMED->severity());
         $this->assertEquals('error', TransactionStatus::INVALID->severity());
         $this->assertEquals('error', TransactionStatus::ERROR->severity());
+        $this->assertEquals('success', TransactionStatus::AUTHENTICATED->severity());
+        $this->assertEquals('warning', TransactionStatus::REGISTERED->severity());
     }
 
     public function testEnumCasesCount()
     {
         $cases = TransactionStatus::cases();
-        $this->assertCount(7, $cases);
+        $this->assertCount(9, $cases);
     }
 
     public function testAllCasesAreUnique()

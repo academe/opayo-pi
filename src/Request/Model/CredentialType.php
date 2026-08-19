@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Academe\Opayo\Pi\Request\Model;
 
 use JsonSerializable;
+use Academe\Opayo\Pi\Request\Enums\CofUsage;
+use Academe\Opayo\Pi\Request\Enums\InitiatedType;
+use Academe\Opayo\Pi\Request\Enums\MitType;
 
 /**
  * Credential on file object, required for reusing cards.
@@ -29,14 +32,24 @@ class CredentialType implements JsonSerializable
     public const MIT_TYPE_REAUTHORISATION = 'Reauthorisation';
     public const MIT_TYPE_RESUBMISSION = 'Resubmission';
 
+    protected readonly string $cofUsage;
+    protected readonly string $initiatedType;
+    protected readonly ?string $mitType;
+
     public function __construct(
-        protected readonly string $cofUsage,
-        protected readonly string $initiatedType,
-        protected readonly ?string $mitType = null,
+        string|CofUsage $cofUsage,
+        string|InitiatedType $initiatedType,
+        string|MitType|null $mitType = null,
         protected readonly ?string $recurringExpiry = null,
         protected readonly ?int $recurringFrequency = null,
         protected readonly ?int $purchaseInstalData = null
     ) {
+        $this->cofUsage = $cofUsage instanceof CofUsage
+            ? $cofUsage->value : $cofUsage;
+        $this->initiatedType = $initiatedType instanceof InitiatedType
+            ? $initiatedType->value : $initiatedType;
+        $this->mitType = $mitType instanceof MitType
+            ? $mitType->value : $mitType;
     }
 
     public static function createForNewReusableCard(): static
@@ -72,7 +85,7 @@ class CredentialType implements JsonSerializable
      * are required when the mitType is Recurring or Instalment.
      */
     public static function createForRepeatPayment(
-        string $mitType = self::MIT_TYPE_UNSCHEDULED,
+        string|MitType $mitType = self::MIT_TYPE_UNSCHEDULED,
         ?string $recurringExpiry = null,
         ?int $recurringFrequency = null,
         ?int $purchaseInstalData = null

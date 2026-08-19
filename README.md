@@ -95,16 +95,7 @@ This library does provide support for the front end though, and this is noted wh
 
 Get the latest release:
 
-    composer.phar require academe/opayo-pi
-
-Until this library has been released to packagist, include the VCS in `composer.json`:
-
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/academe/SagePay-Integration.git"
-        }
-    ]
+    composer require academe/opayo-pi
 
 ### Create a Session Key
 
@@ -395,8 +386,24 @@ A previous transaction can be used as a base for a repeat payment.
 You can amend the shipping details and the amount (with no limit)
 but not the payee details or address.
 
+Two things are required by the gateway:
+
+1. The *original* payment must have been flagged for credential-on-file
+   reuse by sending a `credentialType` of `cofUsage` `First` and
+   `initiatedType` `CIT` (see [Saving and Reusing Cards](#saving-and-reusing-cards)
+   below) — use `CredentialType::createForNewReusableCard()`.
+   A CIT `credentialType` also requires the full
+   `strongCustomerAuthentication` object on that original payment, and if
+   3D Secure is being bypassed (`apply3DSecure` `Disable`), a
+   `threeDSExemptionIndicator` as well.
+2. The *repeat* itself must carry a `credentialType` of `cofUsage`
+   `Subsequent` and `initiatedType` `MIT` — repeats are always classed as
+   Merchant Initiated Transactions, and no 3D Secure authentication is
+   needed. `CredentialType::createForRepeatPayment()` builds this.
+
 ```php
 use Academe\Opayo\Pi\Request\CreateRepeatPayment;
+use Academe\Opayo\Pi\Request\Model\CredentialType;
 
 $repeat_payment = new CreateRepeatPayment(
     $endpoint,
@@ -406,9 +413,32 @@ $repeat_payment = new CreateRepeatPayment(
     $amount, // Not limited by the original amount.
     'My Repeat Purchase Description',
     null, // Optional shipping address
-    null // Optional shipping recipient
+    null, // Optional shipping recipient
+    [
+        'credentialType' => CredentialType::createForRepeatPayment(),
+    ]
+);
+
+// Or immutably:
+
+$repeat_payment = $repeat_payment->withCredentialType(
+    CredentialType::createForRepeatPayment()
 );
 ```
+
+The `mitType` defaults to `Unscheduled` (irregular intervals, fixed or
+variable amount). For a fixed-schedule subscription use `Recurring`, which
+additionally requires the date of the final payment (`YYYYMMDD`) and the
+frequency in days:
+
+```php
+use Academe\Opayo\Pi\Request\Enums\MitType;
+
+CredentialType::createForRepeatPayment(MitType::Recurring, '20270301', 28);
+```
+
+Check with your acquirer which MIT types they support; `Unscheduled` and
+`Recurring` are typically supported by all.
 
 All other options remain the same as for the original transaction
 (though it does appear that giftAid can now be set in the API).

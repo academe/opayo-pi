@@ -158,13 +158,13 @@ sequenceDiagram
     participant Merchant as Merchant Server
     participant Opayo as Opayo Gateway
 
-    Note over Merchant: Prerequisites:<br/>- Previous successful transaction<br/>- previousTransactionId stored
+    Note over Merchant: Prerequisites:<br/>- Previous successful transaction<br/>- previousTransactionId stored<br/>- Original sent credentialType First/CIT<br/>(createForNewReusableCard)
 
     Browser->>+Merchant: Initiate repeat payment<br/>(new amount, shipping)
 
-    Merchant->>Merchant: Build CreateRepeatPayment<br/>(previousTransactionId, newAmount)
+    Merchant->>Merchant: Build CreateRepeatPayment<br/>(previousTransactionId, newAmount,<br/>credentialType Subsequent/MIT<br/>via createForRepeatPayment)
 
-    Merchant->>+Opayo: POST /transactions<br/>(referenceTransactionId, amount,<br/>description, shipping)
+    Merchant->>+Opayo: POST /transactions<br/>(referenceTransactionId, amount,<br/>description, shipping, credentialType)
 
     Opayo->>Opayo: Retrieve original card<br/>from previous transaction
 

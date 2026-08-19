@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Academe\Opayo\Pi\Response;
 
 use Academe\Opayo\Pi\Helper;
+use Academe\Opayo\Pi\Response\Enums\Secure3DStatus;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -51,6 +52,17 @@ class Secure3D extends AbstractResponse
     public function getStatus(): ?string
     {
         return $this->status;
+    }
+
+    /**
+     * The 3D Secure status as an enum (preferred for new code).
+     * Returns null when the status is not set, or is a value the gateway
+     * added that this package does not know yet; getStatus() always
+     * carries the raw value.
+     */
+    public function getStatusEnum(): ?Secure3DStatus
+    {
+        return Secure3DStatus::tryFromInsensitive($this->status);
     }
 
     /**

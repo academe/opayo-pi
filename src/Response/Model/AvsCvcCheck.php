@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Academe\Opayo\Pi\Response\Model;
 
 use Academe\Opayo\Pi\Helper;
+use Academe\Opayo\Pi\Response\Enums\AvsCvcCheckResult;
+use Academe\Opayo\Pi\Response\Enums\AvsCvcCheckStatus;
 use JsonSerializable;
 
 /**
@@ -73,6 +75,40 @@ class AvsCvcCheck implements JsonSerializable
     public function getSecurityCode(): ?string
     {
         return $this->securityCode;
+    }
+
+    /**
+     * The overall check result as an enum (preferred for new code).
+     * Returns null when not set or when the gateway returns a value this
+     * package does not know yet; the string getters carry the raw values.
+     */
+    public function getStatusEnum(): ?AvsCvcCheckStatus
+    {
+        return AvsCvcCheckStatus::tryFromInsensitive($this->status);
+    }
+
+    /**
+     * The address check result as an enum (preferred for new code).
+     */
+    public function getAddressEnum(): ?AvsCvcCheckResult
+    {
+        return AvsCvcCheckResult::tryFromInsensitive($this->address);
+    }
+
+    /**
+     * The postal code check result as an enum (preferred for new code).
+     */
+    public function getPostalCodeEnum(): ?AvsCvcCheckResult
+    {
+        return AvsCvcCheckResult::tryFromInsensitive($this->postalCode);
+    }
+
+    /**
+     * The security code check result as an enum (preferred for new code).
+     */
+    public function getSecurityCodeEnum(): ?AvsCvcCheckResult
+    {
+        return AvsCvcCheckResult::tryFromInsensitive($this->securityCode);
     }
 
     /**

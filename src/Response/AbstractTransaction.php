@@ -35,6 +35,9 @@ abstract class AbstractTransaction extends AbstractResponse
     public const STATUS_MALFORMED = 'Malformed';
     public const STATUS_INVALID = 'Invalid';
     public const STATUS_ERROR = 'Error';
+    // Returned only for Authenticate transactions.
+    public const STATUS_REGISTERED = 'Registered';
+    public const STATUS_AUTHENTICATED = 'Authenticated';
 
     /**
      * The status, statusCode and statusReason are used in all transaction responses.

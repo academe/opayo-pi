@@ -418,7 +418,7 @@ class PaymentTest extends IntegrationTestCase
             $sessionKey,
             'Test Cardholder',
             $cardNumber,
-            '1225',
+            date('my', strtotime('+2 years')), // Any future expiry, MMYY.
             self::TEST_CARD_CVV
         );
 
