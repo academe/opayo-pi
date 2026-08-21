@@ -40,7 +40,7 @@ in a new repository due to the change in the composer package name.
 This package provides the data models for the [Opayo Pi](https://developer-eu.elavon.com/docs/opayo)
 (was *Sage Pay Integration*) payment gateway.
 It does not provide the transport mechanism, so you can use what PSR-18 client you like for that,
-for example Guzzle (7+ or 6+HTTPlug adapter), curl or another PSR-7 library.
+for example Guzzle 7 or 8, curl or another PSR-7 library.
 
 You can use this library as a PSR-7 message generator/consumer, or go a level down and handle all the
 data through arrays - both are supported.
@@ -127,9 +127,7 @@ $endpoint = new Endpoint(Endpoint::MODE_TEST); // or MODE_LIVE
 
 $keyRequest = new CreateSessionKey($endpoint, $auth);
 
-// PSR-18 HTTP client to send this message.
-// If using Guzzle 6, then wrap it with an adapter such as HTTPlug,
-// see https://docs.php-http.org/en/latest/clients/guzzle6-adapter.html
+// PSR-18 HTTP client to send this message (Guzzle 7 or 8 here).
 
 $client = new Client();
 
@@ -277,9 +275,16 @@ $customer = new Person(
 
 $amount = Amount::GBP()->withMinorUnit(999);
 
-// Or better to use the moneyphp/money package:
+// Or, if your application uses the moneyphp/money package (^3.0 or ^4.0,
+// installed separately), wrap a Money instance instead:
 
 $amount = new MoneyAmount(MoneyPhp::GBP(999));
+
+// Going the other way, any amount the package gives you (including the amounts
+// in a transaction response) can be converted back to a Money instance:
+
+$money = $amount->toMoney();
+$money = MoneyAmount::fromAmount($response->getTotalAmount())->toMoney();
 
 // We have a card to charge (we get the session key and captured the card identifier earlier).
 // See below for details of the various card request objects.

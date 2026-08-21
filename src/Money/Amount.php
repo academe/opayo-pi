@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Academe\Opayo\Pi\Money;
 
+use Money\Money;
 use UnexpectedValueException;
 use Exception;
 
 /**
  * Value object for the amount, in the appropriate currency.
- * This object does not use any third-party packages to represent the amount.
+ * This is the package's native money value: an integer number of minor
+ * units (e.g. pence) plus a CurrencyInterface.
+ * This object does not use any third-party packages to represent the amount,
+ * but can be converted to a moneyphp/money instance with toMoney() if that
+ * package is installed.
  */
 
 class Amount implements AmountInterface
@@ -112,18 +117,38 @@ class Amount implements AmountInterface
             : new static($currency);
     }
 
+    /**
+     * The amount in integer minor units, e.g. 999 for £9.99.
+     */
     public function getAmount(): int
     {
         return $this->amount;
     }
 
+    /**
+     * The currency this amount is in.
+     */
     public function getCurrency(): CurrencyInterface
     {
         return $this->currency;
     }
 
+    /**
+     * The ISO 4217 three-character currency code, e.g. "GBP".
+     */
     public function getCurrencyCode(): string
     {
         return $this->currency->getCode();
+    }
+
+    /**
+     * Convert to a moneyphp/money instance.
+     * Requires the optional moneyphp/money package to be installed.
+     *
+     * @throws \RuntimeException if moneyphp/money is not installed
+     */
+    public function toMoney(): Money
+    {
+        return MoneyAmount::fromAmount($this)->toMoney();
     }
 }
