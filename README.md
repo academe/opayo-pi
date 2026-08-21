@@ -276,14 +276,21 @@ $customer = new Person(
 $amount = Amount::GBP()->withMinorUnit(999);
 
 // Or, if your application uses the moneyphp/money package (^3.0 or ^4.0,
-// installed separately), wrap a Money instance instead:
+// installed separately), a Money instance can be passed straight to any
+// request constructor (CreatePayment, CreateDeferred, CreateRepeatPayment,
+// CreateRefund, CreateRelease) and is converted internally:
+
+$amount = MoneyPhp::GBP(999);
+
+// The MoneyAmount wrapper does the same conversion explicitly, if you need
+// an AmountInterface in your own code:
 
 $amount = new MoneyAmount(MoneyPhp::GBP(999));
 
 // Going the other way, any amount the package gives you (including the amounts
 // in a transaction response) can be converted back to a Money instance:
 
-$money = $amount->toMoney();
+$money = Amount::GBP(999)->toMoney();
 $money = MoneyAmount::fromAmount($response->getTotalAmount())->toMoney();
 
 // We have a card to charge (we get the session key and captured the card identifier earlier).

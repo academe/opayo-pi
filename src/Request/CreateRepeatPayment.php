@@ -11,6 +11,7 @@ use Academe\Opayo\Pi\Money\AmountInterface;
 use Academe\Opayo\Pi\Request\Model\AddressInterface;
 use Academe\Opayo\Pi\Request\Model\CredentialType;
 use Academe\Opayo\Pi\Request\Model\PersonInterface;
+use Money\Money;
 
 /**
  * The repeat payment value object to send a transaction to Sage Pay.
@@ -22,12 +23,15 @@ use Academe\Opayo\Pi\Request\Model\PersonInterface;
 
 class CreateRepeatPayment extends AbstractRequest
 {
+    use AmountNormaliserTrait;
+
     // Supports the URL "api/v1/transactions/<transactionId>"
     protected array $resource_path = ['transactions'];
 
     // Minimum mandatory data (constructor).
     protected string $transactionId;
     protected string $description;
+    protected readonly AmountInterface $amount;
 
     // Optional or overridable data.
     protected ?AddressInterface $shippingAddress = null;
@@ -58,8 +62,8 @@ class CreateRepeatPayment extends AbstractRequest
      * @param Endpoint $endpoint
      * @param Auth $auth
      * @param string $transactionId The transacation ID of the original reference payment
-     * @param string $vendorTxCode The merchant site vnedor code for the repeat payment
-     * @param AmountInterface $amount
+     * @param string $vendorTxCode The merchant site vendor code for the repeat payment
+     * @param AmountInterface|Money $amount The package's own Amount, or a moneyphp/money Money
      * @param string $description
      * @param AddressInterface|null $shippingAddress
      * @param PersonInterface|null $shippingRecipient
@@ -70,12 +74,13 @@ class CreateRepeatPayment extends AbstractRequest
         Auth $auth,
         string $transactionId,
         protected readonly string $vendorTxCode,
-        protected readonly AmountInterface $amount,
+        AmountInterface|Money $amount,
         string $description,
         ?AddressInterface $shippingAddress = null,
         ?PersonInterface $shippingRecipient = null,
         array $options = []
     ) {
+        $this->amount = self::normaliseAmount($amount);
         $this->setEndpoint($endpoint);
         $this->setAuth($auth);
         $this->setDescription($description);

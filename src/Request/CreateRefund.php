@@ -10,6 +10,7 @@ use Academe\Opayo\Pi\Model\Auth;
 use Academe\Opayo\Pi\Money\AmountInterface;
 use Academe\Opayo\Pi\Model\AddressInterface;
 use Academe\Opayo\Pi\Model\PersonInterface;
+use Money\Money;
 
 /**
  * The refund payment value object to send a transaction to Sage Pay.
@@ -18,33 +19,35 @@ use Academe\Opayo\Pi\Model\PersonInterface;
 
 class CreateRefund extends AbstractRequest
 {
+    use AmountNormaliserTrait;
+
     // Supports the URL "api/v1/transactions/<transactionId>"
     protected array $resource_path = ['transactions'];
 
     // Minimum mandatory data (constructor).
     protected string $transactionId;
     protected string $description;
+    protected readonly AmountInterface $amount;
 
     /**
-     * Repeat payment constructor.
+     * Refund constructor.
      *
      * @param Endpoint $endpoint
      * @param Auth $auth
      * @param string $transactionId The reference transaction ID.
      * @param string $vendorTxCode The new merchent site ID for this refund.
-     * @param AmountInterface $amount
+     * @param AmountInterface|Money $amount The package's own Amount, or a moneyphp/money Money
      * @param string $description
-     * @param AddressInterface|null $shippingAddress
-     * @param PersonInterface|null $shippingRecipient
      */
     public function __construct(
         Endpoint $endpoint,
         Auth $auth,
         string $transactionId,
         protected readonly string $vendorTxCode,
-        protected readonly AmountInterface $amount,
+        AmountInterface|Money $amount,
         string $description
     ) {
+        $this->amount = self::normaliseAmount($amount);
         $this->setEndpoint($endpoint);
         $this->setAuth($auth);
         $this->setDescription($description);

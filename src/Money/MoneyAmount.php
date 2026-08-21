@@ -13,8 +13,10 @@ use RuntimeException;
  *
  * This is the bridge for applications that already use moneyphp/money:
  *
- *   - In:  new MoneyAmount(Money::GBP(999)) gives an AmountInterface that can be
- *          passed to any request (CreatePayment, CreateRefund, etc.).
+ *   - In:  the request constructors (CreatePayment, CreateRefund, etc.) accept a
+ *          Money instance directly and wrap it in this class internally;
+ *          new MoneyAmount(Money::GBP(999)) does the same explicitly wherever an
+ *          AmountInterface is needed.
  *   - Out: MoneyAmount::fromAmount($response->getTotalAmount())->toMoney() turns
  *          any AmountInterface (native Amount, a response amount, or a custom
  *          implementation) back into a Money instance.

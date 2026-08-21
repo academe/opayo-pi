@@ -16,6 +16,7 @@ use Academe\Opayo\Pi\Request\Model\PersonInterface;
 use Academe\Opayo\Pi\Request\Model\AddressInterface;
 use Academe\Opayo\Pi\Request\Model\PaymentMethodInterface;
 use Academe\Opayo\Pi\Request\Model\StrongCustomerAuthentication;
+use Money\Money;
 
 /**
  * The transaction value object to send a transaction to Sage Pay.
@@ -24,6 +25,8 @@ use Academe\Opayo\Pi\Request\Model\StrongCustomerAuthentication;
 
 class CreatePayment extends AbstractRequest
 {
+    use AmountNormaliserTrait;
+
     protected array $resource_path = ['transactions'];
 
     protected string $transactionType = AbstractRequest::TRANSACTION_TYPE_PAYMENT;
@@ -84,12 +87,15 @@ class CreatePayment extends AbstractRequest
     // @deprecated removed from the API spec 2023-10-26
     public const APPLY_3D_SECURE_FORCEIGNORINGRULES        = 'ForceIgnoringRules'; // 3
 
+    /**
+     * @param AmountInterface|Money $amount The package's own Amount, or a moneyphp/money Money
+     */
     public function __construct(
         Endpoint $endpoint,
         Auth $auth,
         PaymentMethodInterface $paymentMethod,
         string $vendorTxCode,
-        AmountInterface $amount,
+        AmountInterface|Money $amount,
         string $description,
         AddressInterface $billingAddress,
         PersonInterface $customer,
@@ -106,7 +112,7 @@ class CreatePayment extends AbstractRequest
         // Payment details.
         $this->paymentMethod = $paymentMethod;
         $this->vendorTxCode = $vendorTxCode;
-        $this->amount = $amount;
+        $this->amount = self::normaliseAmount($amount);
 
         // Customer details.
         $this->billingAddress = $billingAddress->withFieldPrefix('');
