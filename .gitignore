@@ -47,3 +47,4 @@ composer.lock
 /.env
 /.phpunit.cache
 .gstack/
+.idea/
