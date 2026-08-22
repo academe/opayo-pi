@@ -12,6 +12,9 @@
  *    card in the browser using a merchant session key, and adds a hidden
  *    "card-identifier" input to the form before it submits. Card details
  *    never touch the PHP scripts.
+ *  - PayPal: no card at all; paypal.php registers the transaction with the
+ *    PayPal payment method and redirects the shopper to PayPal, who returns
+ *    them to paypal-return.php.
  */
 
 declare(strict_types=1);
@@ -21,6 +24,7 @@ require __DIR__ . '/shared.php';
 requireDottedHost();
 
 $useJs = ! empty($_GET['js']);
+$usePayPal = ! empty($_GET['paypal']);
 
 // The drop-in tokenises in the browser, so it needs a session key now.
 // In server-side mode pay.php creates its own.
@@ -28,18 +32,22 @@ $merchantSessionKey = $useJs ? createMerchantSessionKey() : null;
 
 $testExpiry = date('my', strtotime('+2 years'));
 
-pageTop($useJs ? 'Opayo JS drop-in' : 'Server-side capture');
+pageTop($usePayPal ? 'PayPal' : ($useJs ? 'Opayo JS drop-in' : 'Server-side capture'));
+
+$tab = fn (bool $active) => 'px-4 py-2 rounded-lg text-sm font-medium ' . ($active ? 'bg-blue-600 text-white' : 'bg-white text-slate-600');
 ?>
 
 <?php $account = demoAccount(); $qsAccount = 'account=' . $account; ?>
 <nav class="flex gap-2 items-center">
-    <a href="index.php?<?= $qsAccount ?>" class="px-4 py-2 rounded-lg text-sm font-medium <?= $useJs ? 'bg-white text-slate-600' : 'bg-blue-600 text-white' ?>">Server-side capture</a>
-    <a href="index.php?js=1&amp;<?= $qsAccount ?>" class="px-4 py-2 rounded-lg text-sm font-medium <?= $useJs ? 'bg-blue-600 text-white' : 'bg-white text-slate-600' ?>">Opayo JS drop-in</a>
+    <a href="index.php?<?= $qsAccount ?>" class="<?= $tab(! $useJs && ! $usePayPal) ?>">Server-side capture</a>
+    <a href="index.php?js=1&amp;<?= $qsAccount ?>" class="<?= $tab($useJs) ?>">Opayo JS drop-in</a>
+    <a href="index.php?paypal=1&amp;<?= $qsAccount ?>" class="<?= $tab($usePayPal) ?>">PayPal</a>
 
     <!-- Changing account reloads the page so the session key (JS mode)
          is created against the right account. -->
     <form method="get" class="ml-auto text-sm">
         <?php if ($useJs): ?><input type="hidden" name="js" value="1"><?php endif; ?>
+        <?php if ($usePayPal): ?><input type="hidden" name="paypal" value="1"><?php endif; ?>
         <label class="text-slate-600">Account
             <select name="account" onchange="this.form.submit()" class="rounded border-slate-300 text-sm">
                 <option value="env" <?= $account === 'env' ? 'selected' : '' ?>>Your .env account</option>
@@ -51,10 +59,62 @@ pageTop($useJs ? 'Opayo JS drop-in' : 'Server-side capture');
 
 <?php if ($account === 'env'): ?>
 <div class="bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-lg p-3">
-    Personal test accounts often have no 3D Secure simulation, so 3DS attempts are
-    rejected with "3D-Authentication failed". For the 3DS flows, switch to the
+    Personal test accounts often have no 3D Secure simulation (3DS attempts are
+    rejected with "3D-Authentication failed") and no wallets enabled (PayPal fails
+    with "Vendor not enrolled with this wallet type"). For those flows, switch to the
     public sandbox profile above (credentials published by Elavon).
 </div>
+<?php endif; ?>
+
+<?php if ($usePayPal): ?>
+<form method="post" action="paypal.php" class="bg-white rounded-xl shadow p-6 space-y-4">
+    <input type="hidden" name="account" value="<?= h($account) ?>">
+
+    <div class="grid grid-cols-2 gap-4">
+        <label class="block text-sm">
+            <span class="text-slate-600">Amount (GBP)</span>
+            <input type="text" name="amount" value="9.99" class="mt-1 w-full rounded border-slate-300">
+        </label>
+        <label class="block text-sm">
+            <span class="text-slate-600">Description</span>
+            <input type="text" name="description" value="Demo PayPal purchase" class="mt-1 w-full rounded border-slate-300">
+        </label>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4">
+        <label class="block text-sm">
+            <span class="text-slate-600">First name</span>
+            <input type="text" name="firstName" value="Sam" class="mt-1 w-full rounded border-slate-300">
+        </label>
+        <label class="block text-sm">
+            <span class="text-slate-600">Last name</span>
+            <input type="text" name="lastName" value="Jones" class="mt-1 w-full rounded border-slate-300">
+        </label>
+        <label class="block text-sm">
+            <span class="text-slate-600">Email</span>
+            <input type="email" name="email" value="sam.jones@example.com" class="mt-1 w-full rounded border-slate-300">
+        </label>
+    </div>
+
+    <p class="text-xs text-slate-500">
+        No card details: Opayo registers the transaction with
+        <code>paymentMethod.paypal = {merchantSessionKey, callbackUrl}</code> and answers with a
+        PayPal redirect URL. After the PayPal <em>sandbox</em> (buyer login needed), Opayo redirects
+        you to <code><?= h(baseUrl()) ?>/paypal-return.php?transactionId=...</code>, which fetches
+        the outcome. Requires a vendor with PayPal enabled - use the public sandbox.
+    </p>
+
+    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg">Pay with PayPal</button>
+</form>
+
+<div class="text-xs text-slate-500 space-y-1">
+    <p>Apple Pay and Google Pay cannot be exercised here: both need a real wallet token from the
+       browser (Safari on an Apple device / the Google Pay sheet) and a vendor with the wallet
+       enabled and a registered domain. The library models them to the API reference
+       (<code>ApplePayPayment</code>, <code>GooglePayPayment</code>, <code>CreateApplePaySession</code>).</p>
+</div>
+
+<?php pageBottom(); return; ?>
 <?php endif; ?>
 
 <form id="payment-form" method="post" action="pay.php" class="bg-white rounded-xl shadow p-6 space-y-4">
@@ -177,7 +237,7 @@ pageTop($useJs ? 'Opayo JS drop-in' : 'Server-side capture');
 </script>
 
 <?php if ($useJs): ?>
-<script src="https://sandbox.opayo.eu.elavon.com/api/v1/js/sagepay.js"></script>
+<script src="<?= h(opayoEndpoint()->getJavascriptUrl()) ?>"></script>
 <script>
     // The drop-in renders card fields inside #payment-form, and on submit
     // tokenises them and adds a hidden "card-identifier" input.

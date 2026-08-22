@@ -1039,111 +1039,34 @@ $card = new ReusableCard($cardIdentifier);
 $card = new ReusableCard($merchantSessionKey, $cardIdentifier);
 ```
 
-### Alternative Payment Methods
+### Alternative Payment Methods (wallets)
 
-In addition to card payments, Opayo Pi supports modern digital wallet payment methods.
-
-#### Apple Pay
-
-Apple Pay allows customers to pay using their Apple devices with biometric authentication.
-
-```php
-use Academe\Opayo\Pi\Request\Model\ApplePayPayment;
-
-// Apple Pay token received from Apple Pay JS API (client-side)
-// The token must be Base64 encoded
-$applePayToken = base64_encode($rawApplePayToken);
-
-// Create Apple Pay payment method
-$applePayment = new ApplePayPayment(
-    $_SERVER['REMOTE_ADDR'],           // Client IP address
-    $applePayToken,                     // Base64-encoded Apple Pay token
-    $sessionValidationToken             // Optional: for Opayo-managed certificates
-);
-
-// Use in payment request
-$paymentRequest = new CreatePayment(
-    $endpoint,
-    $auth,
-    $applePayment,                      // Use Apple Pay instead of card
-    'MyVendorTxCode-' . rand(10000000, 99999999),
-    $amount,
-    'Apple Pay Purchase',
-    $billingAddress,
-    $customer
-);
-
-$response = $client->sendRequest($paymentRequest);
-$payment = ResponseFactory::fromHttpResponse($response);
-```
-
-**Apple Pay Certificate Types:**
-- **Opayo-managed**: Easier setup, no Apple Developer account needed. Requires `sessionValidationToken`.
-- **Merchant-managed**: Full control, requires Apple Developer account and certificate upload.
-
-#### Google Pay
-
-Google Pay provides a seamless checkout experience across devices.
-
-```php
-use Academe\Opayo\Pi\Request\Model\GooglePayPayment;
-
-// Google Pay token received from Google Pay API (client-side)
-// The token must be Base64 encoded
-$googlePayToken = base64_encode($rawGooglePayToken);
-
-// Create Google Pay payment method
-$googlePayment = new GooglePayPayment(
-    $_SERVER['REMOTE_ADDR'],           // Client IP address
-    $googlePayToken                     // Base64-encoded Google Pay token
-);
-
-// Use in payment request
-$paymentRequest = new CreatePayment(
-    $endpoint,
-    $auth,
-    $googlePayment,                     // Use Google Pay instead of card
-    'MyVendorTxCode-' . rand(10000000, 99999999),
-    $amount,
-    'Google Pay Purchase',
-    $billingAddress,
-    $customer
-);
-
-$response = $client->sendRequest($paymentRequest);
-$payment = ResponseFactory::fromHttpResponse($response);
-```
-
-**Google Pay Benefits:**
-- No certificate management required
-- Works on Chrome, Android devices, and limited Safari support
-- Simpler integration than Apple Pay
+Opayo Pi accepts Apple Pay, Google Pay and PayPal as the `paymentMethod` of a
+`CreatePayment`. Every wallet object needs a **merchant session key** (create one
+with `CreateSessionKey` exactly as for a card payment), and the wallet must be
+enabled on your vendor in MyOpayo (Settings → Pay Methods) — otherwise the gateway
+answers `6401 Wallet not enabled for the vendor` / `1030 Vendor not enrolled with
+this wallet type`. The field names below are those of the Opayo API reference and
+have been checked against the sandbox.
 
 #### PayPal
 
-PayPal integration allows customers to pay using their PayPal account.
-
-**Note:** PayPal support in Opayo Pi is currently being rolled out. Check with Opayo support for availability.
+PayPal is a redirect flow: you register the transaction, send the shopper to
+PayPal, and Opayo brings them back to your `callbackUrl` with the `transactionId`
+appended, after which you fetch the transaction for the result. This is the one
+wallet that can be tried end to end in the sandbox (the public `sandbox` vendor
+has PayPal enabled; you need a PayPal sandbox *buyer* login to approve).
 
 ```php
 use Academe\Opayo\Pi\Request\Model\PayPalPayment;
+use Academe\Opayo\Pi\Request\FetchTransaction;
+use Academe\Opayo\Pi\Response\PayPalRedirect;
 
-// PayPal order ID and payer ID received from PayPal Checkout (client-side)
-$paypalOrderId = $paypalResponse['orderID'];
-$payerId = $paypalResponse['payerID']; // Optional
-
-// Create PayPal payment method
-$paypalPayment = new PayPalPayment(
-    $_SERVER['REMOTE_ADDR'],           // Client IP address
-    $paypalOrderId,                     // PayPal order ID
-    $payerId                            // Optional: PayPal payer ID
-);
-
-// Use in payment request
+// 1. Register the transaction with the PayPal payment method.
 $paymentRequest = new CreatePayment(
     $endpoint,
     $auth,
-    $paypalPayment,                     // Use PayPal instead of card
+    new PayPalPayment($merchantSessionKey, 'https://shop.example.com/paypal-return'),
     'MyVendorTxCode-' . rand(10000000, 99999999),
     $amount,
     'PayPal Purchase',
@@ -1151,13 +1074,92 @@ $paymentRequest = new CreatePayment(
     $customer
 );
 
-$response = $client->sendRequest($paymentRequest);
-$payment = ResponseFactory::fromHttpResponse($response);
+$response = ResponseFactory::fromHttpResponse($client->sendRequest($paymentRequest));
+
+// 2. status "Redirect" (statusCode 2023): send the shopper to PayPal (full page, not an iframe).
+if ($response instanceof PayPalRedirect) {
+    $_SESSION['transactionId'] = $response->getTransactionId(); // also: ->getOrderId()
+    header('Location: ' . $response->getRedirectUrl());
+    exit;
+}
+
+// 3. At /paypal-return: Opayo appends the transactionId to the callback URL.
+//    Fetch the transaction to learn the outcome (Ok / NotAuthed / ...).
+$transactionId = $_GET['transactionId'] ?? $_SESSION['transactionId'];
+$result = ResponseFactory::fromHttpResponse(
+    $client->sendRequest(new FetchTransaction($endpoint, $auth, $transactionId))
+);
+if ($result->isSuccessful()) { /* paid */ }
 ```
 
-**PayPal Requirements:**
-- Must be enabled in MyOpayo dashboard
-- PayPal account setup and permissions
-- Currently limited availability in Pi API
+The merchant session key expires after 400 seconds; the shopper must be redirected
+to PayPal within 20 minutes of registration. Note that `GET /transactions/{id}`
+answers `404 Transaction not found` for a PayPal transaction until PayPal has
+reported the outcome back to Opayo — it only becomes fetchable once the shopper
+has finished at PayPal (which is exactly when Opayo calls your `callbackUrl`).
 
-For more details on alternative payment methods, see [docs/payment-flows.md](docs/payment-flows.md).
+#### Apple Pay
+
+The Apple Pay token is minted by Safari on an Apple device (Apple Pay JS,
+`session.onpaymentauthorized` → `event.payment.token`) and cannot be produced
+server-side. Two certificate arrangements exist:
+
+- **Opayo manages your certificate** — register your HTTPS domain in MyOpayo; when
+  Safari fires `onvalidatemerchant`, your server calls `CreateApplePaySession` and
+  returns the merchant session to the browser, and the response's
+  `sessionValidationToken` must travel with the transaction.
+- **You manage your certificate** — Apple Developer merchant ID plus the
+  Opayo-issued CSR/certificate; no session call, no `sessionValidationToken`.
+
+```php
+use Academe\Opayo\Pi\Request\CreateApplePaySession;
+use Academe\Opayo\Pi\Request\Model\ApplePayPayment;
+use Academe\Opayo\Pi\Response\ApplePaySession;
+
+// Opayo-managed certificate only: answer Safari's onvalidatemerchant.
+$session = ResponseFactory::fromHttpResponse($client->sendRequest(
+    new CreateApplePaySession($endpoint, $auth, 'shop.example.com')
+));
+// -> json_encode($session->getMerchantSession()) back to the browser for
+//    ApplePaySession.completeMerchantValidation(); keep the token server-side:
+$sessionValidationToken = $session->getSessionValidationToken();
+
+// Then, with Apple's payment token from onpaymentauthorized (event.payment.token):
+$applePayment = ApplePayPayment::fromAppleToken(
+    $merchantSessionKey,
+    $_SERVER['REMOTE_ADDR'],
+    $appleToken,                // array/object/JSON of the token Apple gave the browser
+    $sessionValidationToken     // null for a merchant-managed certificate
+);
+// fromAppleToken() base64-encodes the paymentData node (as Opayo requires) and
+// picks up applicationData / displayName / paymentMethodType. Or build it directly:
+// new ApplePayPayment($msk, $ip, $base64PaymentData, $sessionValidationToken);
+
+$paymentRequest = new CreatePayment($endpoint, $auth, $applePayment, $vendorTxCode, $amount, 'Apple Pay', $billingAddress, $customer);
+```
+
+The sandbox has magic amounts for Apple Pay (merchant-managed certificate, Apple
+sandbox test cards): `10600` authorised, `10700` soft decline, `10800` / `10900`
+authorised with an ecommerce-type change.
+
+#### Google Pay
+
+In the Google Pay JS `tokenizationSpecification`, use `gateway: 'opayoelavon'` and
+the `gatewayMerchantId` shown in MyOpayo when you add Google Pay. The token to send
+is `paymentData.paymentMethodData.tokenizationData.token`, base64 encoded.
+
+```php
+use Academe\Opayo\Pi\Request\Model\GooglePayPayment;
+
+$googlePayment = GooglePayPayment::fromGoogleToken(
+    $merchantSessionKey,
+    $_SERVER['REMOTE_ADDR'],
+    $tokenizationDataToken      // the raw token string from the Google Pay API
+);
+// or: new GooglePayPayment($msk, $ip, base64_encode($tokenizationDataToken));
+
+$paymentRequest = new CreatePayment($endpoint, $auth, $googlePayment, $vendorTxCode, $amount, 'Google Pay', $billingAddress, $customer);
+```
+
+The demo (`demo/`) exercises the PayPal flow against the public sandbox; see
+[docs/payment-flows.md](docs/payment-flows.md) for the sequence diagrams.

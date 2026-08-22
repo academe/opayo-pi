@@ -38,6 +38,8 @@ abstract class AbstractTransaction extends AbstractResponse
     // Returned only for Authenticate transactions.
     public const STATUS_REGISTERED = 'Registered';
     public const STATUS_AUTHENTICATED = 'Authenticated';
+    // Returned for wallet (PayPal) payments: the shopper must be redirected to the wallet.
+    public const STATUS_REDIRECT = 'Redirect';
 
     /**
      * The status, statusCode and statusReason are used in all transaction responses.

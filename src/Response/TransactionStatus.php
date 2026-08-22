@@ -55,6 +55,13 @@ enum TransactionStatus: string
     case AUTHENTICATED = 'Authenticated';
 
     /**
+     * Returned for wallet (PayPal) payments, statusCode 2023: the transaction
+     * is registered and the shopper must be redirected to the wallet provider
+     * (see Response\PayPalRedirect). Not a final state.
+     */
+    case REDIRECT = 'Redirect';
+
+    /**
      * Check if this status represents a successful transaction.
      *
      * @return bool True if status is OK
@@ -105,7 +112,7 @@ enum TransactionStatus: string
      */
     public function isFinal(): bool
     {
-        return $this !== self::THREE_D_AUTH;
+        return ! in_array($this, [self::THREE_D_AUTH, self::REDIRECT], true);
     }
 
     /**
@@ -128,6 +135,7 @@ enum TransactionStatus: string
             self::ERROR => 'Transaction error',
             self::REGISTERED => 'Card details secured; 3D Secure failed or not performed',
             self::AUTHENTICATED => '3D Secure authenticated and card details secured',
+            self::REDIRECT => 'Transaction registered; redirect the shopper to the wallet provider',
         };
     }
 
@@ -142,7 +150,7 @@ enum TransactionStatus: string
     {
         return match ($this) {
             self::OK, self::AUTHENTICATED => 'success',
-            self::THREE_D_AUTH => 'info',
+            self::THREE_D_AUTH, self::REDIRECT => 'info',
             self::NOT_AUTHED, self::REJECTED, self::REGISTERED => 'warning',
             self::MALFORMED, self::INVALID, self::ERROR => 'error',
         };

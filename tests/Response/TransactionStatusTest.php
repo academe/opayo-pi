@@ -114,7 +114,7 @@ class TransactionStatusTest extends TestCase
     public function testEnumCasesCount()
     {
         $cases = TransactionStatus::cases();
-        $this->assertCount(9, $cases);
+        $this->assertCount(10, $cases);
     }
 
     public function testAllCasesAreUnique()

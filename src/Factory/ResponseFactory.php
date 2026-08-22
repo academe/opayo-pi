@@ -63,6 +63,20 @@ class ResponseFactory
             return Response\CardIdentifier::fromData($data, $httpCode);
         }
 
+        // An Apple Pay merchant session (POST /applepay/sessions).
+
+        if (Helper::dataGet($data, 'merchantSessionIdentifier') || Helper::dataGet($data, 'sessionValidationToken')) {
+            return Response\ApplePaySession::fromData($data, $httpCode);
+        }
+
+        // A PayPal redirect: the transaction is registered and the shopper
+        // must be sent to PayPal. Must be checked before the generic payment,
+        // since it carries transactionType "Payment" too.
+
+        if (Response\PayPalRedirect::isResponse($data)) {
+            return Response\PayPalRedirect::fromData($data, $httpCode);
+        }
+
         // A payment.
 
         if (Helper::dataGet($data, 'transactionId')) {

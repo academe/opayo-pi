@@ -7,23 +7,75 @@ namespace Academe\Opayo\Pi\Request\Model;
 use Academe\Opayo\Pi\Helper;
 
 /**
- * Apple Pay payment method for transactions.
+ * Apple Pay payment method for transactions (paymentMethod.applePay).
  *
- * Apple Pay tokens are obtained from the Apple Pay JS API in the browser.
- * The token must be Base64 encoded before being sent to Opayo.
+ * Wire format (Opayo Pi API reference, paymentMethodObjects/applePay):
  *
- * Two integration types are supported:
- * - Opayo-managed certificate: Requires sessionValidationToken
- * - Merchant-managed certificate: No sessionValidationToken needed
+ *   merchantSessionKey      required  the merchant session key used to initiate the transaction
+ *   clientIpAddress         required  the shopper's IPv4/IPv6 address
+ *   paymentData             required  Apple's "paymentData" object, base64 encoded, INCLUDING
+ *                                     the top-level paymentData node
+ *   sessionValidationToken  required when Opayo manages the certificate: the token returned
+ *                                     by CreateApplePaySession (POST /applepay/sessions); omit
+ *                                     for a merchant-managed certificate
+ *   applicationData         optional  from paymentData.header.applicationData
+ *   displayName             optional  from paymentMethod.displayName, e.g. "Visa 1234"
+ *   paymentMethodType       optional  from paymentMethod.type, e.g. "debit"
+ *
+ * The Apple Pay token comes from the Apple Pay JS API (session.onpaymentauthorized,
+ * event.payment.token) in Safari on an Apple device; it cannot be fabricated
+ * server-side, so this class only transports it.
  */
 
 class ApplePayPayment implements PaymentMethodInterface
 {
     public function __construct(
+        protected string $merchantSessionKey,
         protected string $clientIpAddress,
-        protected string $payload,
-        protected ?string $sessionValidationToken = null
+        protected string $paymentData,
+        protected ?string $sessionValidationToken = null,
+        protected ?string $applicationData = null,
+        protected ?string $displayName = null,
+        protected ?string $paymentMethodType = null
     ) {
+    }
+
+    /**
+     * Build from Apple's raw payment token, as delivered to the browser:
+     * the object containing paymentData, paymentMethod and transactionIdentifier.
+     * Base64-encodes the paymentData node and picks out the optional fields.
+     *
+     * @param string $merchantSessionKey
+     * @param string $clientIpAddress
+     * @param array|object|string $token Apple's payment.token (array, object or JSON)
+     * @param string|null $sessionValidationToken From CreateApplePaySession (Opayo-managed certificate)
+     */
+    public static function fromAppleToken(
+        string $merchantSessionKey,
+        string $clientIpAddress,
+        array|object|string $token,
+        ?string $sessionValidationToken = null
+    ): static {
+        if (is_string($token)) {
+            $token = json_decode($token);
+        }
+
+        // Accept either the whole payment object or its "token" member.
+        if (Helper::dataGet($token, 'token')) {
+            $token = Helper::dataGet($token, 'token');
+        }
+
+        $paymentData = Helper::dataGet($token, 'paymentData');
+
+        return new static(
+            $merchantSessionKey,
+            $clientIpAddress,
+            base64_encode(json_encode(['paymentData' => $paymentData])),
+            $sessionValidationToken,
+            Helper::dataGet($token, 'paymentData.header.applicationData'),
+            Helper::dataGet($token, 'paymentMethod.displayName'),
+            Helper::dataGet($token, 'paymentMethod.type')
+        );
     }
 
     /**
@@ -42,9 +94,14 @@ class ApplePayPayment implements PaymentMethodInterface
         }
 
         return new static(
-            Helper::dataGet($data, 'clientIpAddress'),
-            Helper::dataGet($data, 'payload'),
-            Helper::dataGet($data, 'sessionValidationToken')
+            (string)Helper::dataGet($data, 'merchantSessionKey'),
+            (string)Helper::dataGet($data, 'clientIpAddress'),
+            // "payload" was the (incorrect) name used by earlier releases of this package.
+            (string)(Helper::dataGet($data, 'paymentData') ?? Helper::dataGet($data, 'payload')),
+            Helper::dataGet($data, 'sessionValidationToken'),
+            Helper::dataGet($data, 'applicationData'),
+            Helper::dataGet($data, 'displayName'),
+            Helper::dataGet($data, 'paymentMethodType')
         );
     }
 
@@ -53,19 +110,24 @@ class ApplePayPayment implements PaymentMethodInterface
      */
     public function jsonSerialize(): mixed
     {
-        $message = [
-            'applePay' => [
-                'clientIpAddress' => $this->clientIpAddress,
-                'payload' => $this->payload,
-            ],
+        $applePay = [
+            'merchantSessionKey' => $this->merchantSessionKey,
+            'clientIpAddress' => $this->clientIpAddress,
+            'paymentData' => $this->paymentData,
         ];
 
-        // Only include sessionValidationToken for Opayo-managed certificate integration
-        if ($this->sessionValidationToken !== null) {
-            $message['applePay']['sessionValidationToken'] = $this->sessionValidationToken;
+        foreach (['sessionValidationToken', 'applicationData', 'displayName', 'paymentMethodType'] as $optional) {
+            if ($this->$optional !== null) {
+                $applePay[$optional] = $this->$optional;
+            }
         }
 
-        return $message;
+        return ['applePay' => $applePay];
+    }
+
+    public function getMerchantSessionKey(): string
+    {
+        return $this->merchantSessionKey;
     }
 
     public function getClientIpAddress(): string
@@ -73,9 +135,12 @@ class ApplePayPayment implements PaymentMethodInterface
         return $this->clientIpAddress;
     }
 
-    public function getPayload(): string
+    /**
+     * The base64-encoded Apple paymentData.
+     */
+    public function getPaymentData(): string
     {
-        return $this->payload;
+        return $this->paymentData;
     }
 
     public function getSessionValidationToken(): ?string
@@ -83,9 +148,23 @@ class ApplePayPayment implements PaymentMethodInterface
         return $this->sessionValidationToken;
     }
 
+    public function getApplicationData(): ?string
+    {
+        return $this->applicationData;
+    }
+
+    public function getDisplayName(): ?string
+    {
+        return $this->displayName;
+    }
+
+    public function getPaymentMethodType(): ?string
+    {
+        return $this->paymentMethodType;
+    }
+
     /**
-     * Create a new instance with a different session validation token.
-     * Useful for Opayo-managed certificate integration.
+     * Clone with the session validation token set (Opayo-managed certificate flow).
      */
     public function withSessionValidationToken(string $sessionValidationToken): static
     {
