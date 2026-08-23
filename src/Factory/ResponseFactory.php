@@ -11,6 +11,7 @@ use Academe\Opayo\Pi\Response;
 use Academe\Opayo\Pi\ServerRequest;
 use Academe\Opayo\Pi\Helper;
 use Teapot\StatusCode\Http;
+use UnexpectedValueException;
 
 /**
  * Factory to return the appropriate Response object given
@@ -63,9 +64,11 @@ class ResponseFactory
             return Response\CardIdentifier::fromData($data, $httpCode);
         }
 
-        // An Apple Pay merchant session (POST /applepay/sessions).
+        // An Apple Pay merchant session (POST /applepay/sessions), successful or failed.
+        // (For this call, Response\ApplePaySession::fromHttpResponse() is the more
+        // robust entry point; see the note on ApplePaySession::isResponse().)
 
-        if (Helper::dataGet($data, 'merchantSessionIdentifier') || Helper::dataGet($data, 'sessionValidationToken')) {
+        if (Response\ApplePaySession::isResponse($data)) {
             return Response\ApplePaySession::fromData($data, $httpCode);
         }
 
@@ -195,5 +198,13 @@ class ResponseFactory
         if ($httpCode == 204 && empty($data)) {
             return Response\NoContent::fromData($data, $httpCode);
         }
+
+        // Nothing matched. Say so, rather than falling off the end (which is a
+        // TypeError against the declared return type and tells the caller nothing).
+        throw new UnexpectedValueException(sprintf(
+            'Unrecognised response data (HTTP %s): %s',
+            $httpCode ?? '-',
+            substr(json_encode($data) ?: '', 0, 200)
+        ));
     }
 }

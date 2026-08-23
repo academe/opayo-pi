@@ -1117,9 +1117,14 @@ use Academe\Opayo\Pi\Request\Model\ApplePayPayment;
 use Academe\Opayo\Pi\Response\ApplePaySession;
 
 // Opayo-managed certificate only: answer Safari's onvalidatemerchant.
-$session = ResponseFactory::fromHttpResponse($client->sendRequest(
+// Use ApplePaySession::fromHttpResponse() for this call: it returns an
+// ApplePaySession, or an ErrorCollection on a 4xx (e.g. 6118 "Domain not registered").
+$session = ApplePaySession::fromHttpResponse($client->sendRequest(
     new CreateApplePaySession($endpoint, $auth, 'shop.example.com')
 ));
+if (! $session instanceof ApplePaySession || ! $session->isSuccess()) {
+    // Tell Safari the validation failed (session.abort()) and log the statusDetail.
+}
 // -> json_encode($session->getMerchantSession()) back to the browser for
 //    ApplePaySession.completeMerchantValidation(); keep the token server-side:
 $sessionValidationToken = $session->getSessionValidationToken();

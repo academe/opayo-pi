@@ -16,19 +16,31 @@ use Academe\Opayo\Pi\Helper;
  *    sessionValidationToken removed, field names as Apple expects them);
  *  - getSessionValidationToken(): to be sent with the transaction in
  *    Request\Model\ApplePayPayment, exactly as received.
+ *
+ * Prefer ApplePaySession::fromHttpResponse($response) over the generic
+ * ResponseFactory for this call: it returns this class or an ErrorCollection
+ * (4xx), and does not depend on sniffing the body shape.
  */
 
 class ApplePaySession extends AbstractResponse
 {
-    public const STATUS_OK = 'Ok';
-    public const STATUS_MALFORMED = 'Malformed';
-    public const STATUS_INVALID = 'Invalid';
-    public const STATUS_ERROR = 'Error';
+    // Same vocabulary as transactions; single source of values.
+    public const STATUS_OK = AbstractTransaction::STATUS_OK;
+    public const STATUS_MALFORMED = AbstractTransaction::STATUS_MALFORMED;
+    public const STATUS_INVALID = AbstractTransaction::STATUS_INVALID;
+    public const STATUS_ERROR = AbstractTransaction::STATUS_ERROR;
 
     protected ?string $statusCode = null;
     protected ?string $statusDetail = null;
-    protected ?string $epochTimestamp = null;
-    protected ?string $expiresAt = null;
+
+    /**
+     * Millisecond Unix timestamps. Opayo's reference shows them as strings,
+     * Apple's own merchant session uses numbers; they are kept exactly as
+     * received and passed back to Safari unchanged.
+     */
+    protected int|string|null $epochTimestamp = null;
+    protected int|string|null $expiresAt = null;
+
     protected ?string $merchantSessionIdentifier = null;
     protected ?string $nonce = null;
     protected ?string $merchantIdentifier = null;
@@ -58,6 +70,31 @@ class ApplePaySession extends AbstractResponse
         $this->sessionValidationToken = Helper::dataGet($data, 'sessionValidationToken');
 
         return $this;
+    }
+
+    /**
+     * Is this data an Apple Pay session response (successful or not)?
+     * Used by the ResponseFactory. A successful session carries the session
+     * identifiers; a failed one is a bare status block (Invalid/Malformed with
+     * a statusCode) and no transactionId. A failed session with status "Error"
+     * is indistinguishable from a bare 3D Secure status by shape, which is why
+     * fromHttpResponse() on this class is the preferred entry point.
+     */
+    public static function isResponse(mixed $data): bool
+    {
+        if (! is_array($data) && ! is_object($data)) {
+            return false;
+        }
+
+        if (Helper::dataGet($data, 'merchantSessionIdentifier') || Helper::dataGet($data, 'sessionValidationToken')) {
+            return true;
+        }
+
+        $status = Helper::dataGet($data, 'status');
+
+        return in_array($status, [static::STATUS_INVALID, static::STATUS_MALFORMED], true)
+            && Helper::dataGet($data, 'statusCode') !== null
+            && Helper::dataGet($data, 'transactionId') === null;
     }
 
     /**
@@ -116,23 +153,24 @@ class ApplePaySession extends AbstractResponse
         return $this->signature;
     }
 
-    public function getEpochTimestamp(): ?string
+    public function getEpochTimestamp(): int|string|null
     {
         return $this->epochTimestamp;
     }
 
-    public function getExpiresAt(): ?string
+    public function getExpiresAt(): int|string|null
     {
         return $this->expiresAt;
     }
 
     /**
      * The merchant session object to return to the browser for
-     * ApplePaySession.completeMerchantValidation(). Field names and case are
-     * as Apple requires; status, statusDetail and sessionValidationToken are
-     * deliberately omitted (the token must never reach the browser).
+     * ApplePaySession.completeMerchantValidation(). Field names, case and
+     * value types are as received; status, statusDetail and
+     * sessionValidationToken are deliberately omitted (the token must never
+     * reach the browser).
      *
-     * @return array<string, string>
+     * @return array<string, int|string>
      */
     public function getMerchantSession(): array
     {
@@ -153,11 +191,13 @@ class ApplePaySession extends AbstractResponse
      */
     public function jsonSerialize(): mixed
     {
-        return array_filter([
+        $status = array_filter([
             'status' => $this->status,
             'statusCode' => $this->statusCode,
             'statusDetail' => $this->statusDetail,
             'sessionValidationToken' => $this->sessionValidationToken,
-        ] + $this->getMerchantSession(), fn ($v) => $v !== null);
+        ], fn ($v) => $v !== null);
+
+        return $status + $this->getMerchantSession();
     }
 }

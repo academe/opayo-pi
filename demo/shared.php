@@ -180,7 +180,7 @@ function sendAndRecord(RequestInterface $request, string $label): mixed
 function createMerchantSessionKey(): string
 {
     $response = sendAndRecord(
-        new CreateSessionKey(opayoEndpoint(), opayoAuth(), vendorName()),
+        new CreateSessionKey(opayoEndpoint(), opayoAuth()),
         'Merchant session key'
     );
 

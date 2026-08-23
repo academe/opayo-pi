@@ -94,9 +94,66 @@ class PayPalRedirectTest extends TestCase
 
     public function testJsonRoundTrip()
     {
+        $redirect = PayPalRedirect::fromData($this->data(), 201);
+
+        $this->assertEquals($redirect, PayPalRedirect::fromData(json_encode($redirect), 201));
+
+        // Serialisation is the AbstractTransaction one (httpCode included), plus paymentMethod.paypal.
+        $json = $redirect->jsonSerialize();
+        $this->assertSame(201, $json['httpCode']);
+        $this->assertSame('Redirect', $json['status']);
+        $this->assertSame('2023', $json['statusCode']);
+        $this->assertSame($this->data()['paymentMethod'], $json['paymentMethod']);
+    }
+
+    public function testExposesPayPalModelLikeAnyTransaction()
+    {
         $redirect = PayPalRedirect::fromData($this->data());
 
-        $this->assertEquals($redirect, PayPalRedirect::fromData(json_encode($redirect)));
-        $this->assertSame($this->data(), $redirect->jsonSerialize());
+        $this->assertInstanceOf(Model\PayPal::class, $redirect->getPayPal());
+        $this->assertSame('43196520EB311462U', $redirect->getPayPal()->getOrderId());
+        $this->assertNull($redirect->getPaymentMethod(), 'no card on a PayPal transaction');
+    }
+
+    public function testCompletedPayPalPaymentKeepsOrderId()
+    {
+        // What FetchTransaction returns at the callback once PayPal has reported back.
+        $payment = ResponseFactory::fromData([
+            'statusCode' => '0000',
+            'statusDetail' => 'The Authorisation was Successful.',
+            'transactionId' => '471e3b7e-eac7-4c56-a2bb-0ef5d6d55992',
+            'transactionType' => 'Payment',
+            'status' => 'Ok',
+            'paymentMethod' => ['paypal' => ['orderId' => '43196520EB311462U']],
+            'amount' => ['totalAmount' => 999, 'saleAmount' => 999, 'surchargeAmount' => 0],
+            'currency' => 'GBP',
+        ], 200);
+
+        $this->assertInstanceOf(Payment::class, $payment);
+        $this->assertTrue($payment->isSuccessful());
+        $this->assertNull($payment->getPaymentMethod());
+        $this->assertSame('43196520EB311462U', $payment->getPayPal()->getOrderId());
+        $this->assertNull($payment->getPayPal()->getRedirectUrl());
+        $this->assertSame(
+            ['paypal' => ['orderId' => '43196520EB311462U']],
+            $payment->jsonSerialize()['paymentMethod']
+        );
+    }
+
+    public function testCardPaymentsAreUnaffected()
+    {
+        $payment = ResponseFactory::fromData([
+            'statusCode' => '0000',
+            'transactionId' => 'T',
+            'transactionType' => 'Payment',
+            'status' => 'Ok',
+            'paymentMethod' => ['card' => ['cardType' => 'Visa', 'lastFourDigits' => '0006', 'expiryDate' => '0828']],
+            'amount' => ['totalAmount' => 999, 'saleAmount' => 999, 'surchargeAmount' => 0],
+            'currency' => 'GBP',
+        ], 200);
+
+        $this->assertNull($payment->getPayPal());
+        $this->assertSame('Visa', $payment->getPaymentMethod()->getCardType());
+        $this->assertSame('Visa', $payment->jsonSerialize()['paymentMethod']->getCardType());
     }
 }

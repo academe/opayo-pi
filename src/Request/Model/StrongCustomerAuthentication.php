@@ -46,17 +46,7 @@ class StrongCustomerAuthentication implements JsonSerializable
     public const BROWSER_COLOR_DEPTH_24 = 24;
     public const BROWSER_COLOR_DEPTH_32 = 32;
     public const BROWSER_COLOR_DEPTH_48 = 48;
-
-    protected array $browserColorDepths = [
-        self::BROWSER_COLOR_DEPTH_1,
-        self::BROWSER_COLOR_DEPTH_4,
-        self::BROWSER_COLOR_DEPTH_8,
-        self::BROWSER_COLOR_DEPTH_15,
-        self::BROWSER_COLOR_DEPTH_16,
-        self::BROWSER_COLOR_DEPTH_24,
-        self::BROWSER_COLOR_DEPTH_32,
-        self::BROWSER_COLOR_DEPTH_48,
-    ];
+    // The allowed values are the cases of Enums\BrowserColorDepth (validated in setBrowserColorDepth()).
 
     /**
      * @var there are more undocumented attributes: requestSCAExemption threeDSRequestorDecReqInd threeDSRequestorChallengeInd etc.
@@ -160,6 +150,12 @@ class StrongCustomerAuthentication implements JsonSerializable
     protected function setBrowserColorDepth(int|string|BrowserColorDepth $browserColorDepth): static
     {
         if (! $browserColorDepth instanceof BrowserColorDepth) {
+            // A string must be a plain integer ("24"); do not let the (int) cast
+            // quietly turn "24px" or "8 bit" into an accepted value.
+            if (is_string($browserColorDepth) && ! ctype_digit($browserColorDepth)) {
+                throw new UnexpectedValueException('Invalid browserColorDepth value');
+            }
+
             $browserColorDepth = BrowserColorDepth::tryFrom((int)$browserColorDepth);
 
             if ($browserColorDepth === null) {

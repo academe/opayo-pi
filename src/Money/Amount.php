@@ -42,8 +42,14 @@ class Amount implements AmountInterface
      */
     public function withMajorUnit(float|string|int $amount): self
     {
-        if (is_int($amount) || is_float($amount) || (is_string($amount) && preg_match('/^[0-9]*\.[0-9]*$/', $amount))) {
-            $calculatedAmount = (float)$amount * pow(10, $this->currency->getDigits());
+        // Accept integers, floats, and decimal strings with or without a fractional
+        // part ("10", "10.", "10.50", ".50") - but not a bare ".".
+        if (
+            is_int($amount)
+            || is_float($amount)
+            || (is_string($amount) && preg_match('/^([0-9]+(\.[0-9]*)?|\.[0-9]+)$/', $amount))
+        ) {
+            $calculatedAmount = (float)$amount * pow(10, $this->currency->getMinorUnits());
 
             if (floor($calculatedAmount) != round($calculatedAmount, 6)) {
                 // Too many decimal digits for the currency.

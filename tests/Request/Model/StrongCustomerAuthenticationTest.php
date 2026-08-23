@@ -78,6 +78,28 @@ class StrongCustomerAuthenticationTest extends TestCase
         $this->assertSame(16, $body['browserColorDepth']);
     }
 
+    /**
+     * @dataProvider badColorDepthProvider
+     */
+    public function testBrowserColorDepthRejectsNonIntegerStringsAndUnknownValues(int|string $value)
+    {
+        $this->expectException(\UnexpectedValueException::class);
+
+        $this->createSca()->withBrowserColorDepth($value);
+    }
+
+    public static function badColorDepthProvider(): array
+    {
+        return [
+            'px suffix' => ['24px'],
+            'words' => ['8 bit'],
+            'float string' => ['24.0'],
+            'exponent' => ['1e1'],
+            'unknown depth' => [7],
+            'unknown depth string' => ['7'],
+        ];
+    }
+
     public function testThreeDsExemptionIndicatorOmittedByDefault()
     {
         $this->assertArrayNotHasKey(

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Academe\Opayo\Pi\Request\Model;
 
 use Academe\Opayo\Pi\Helper;
+use InvalidArgumentException;
 
 /**
  * Apple Pay payment method for transactions (paymentMethod.applePay).
@@ -60,12 +61,25 @@ class ApplePayPayment implements PaymentMethodInterface
             $token = json_decode($token);
         }
 
+        if (! is_array($token) && ! is_object($token)) {
+            throw new InvalidArgumentException(
+                'Apple Pay token must be an array, an object, or a JSON string encoding one.'
+            );
+        }
+
         // Accept either the whole payment object or its "token" member.
         if (Helper::dataGet($token, 'token')) {
             $token = Helper::dataGet($token, 'token');
         }
 
         $paymentData = Helper::dataGet($token, 'paymentData');
+
+        if (! is_array($paymentData) && ! is_object($paymentData)) {
+            throw new InvalidArgumentException(
+                'Apple Pay token has no "paymentData" object; pass the token Apple gave the browser'
+                . ' (event.payment.token), not its paymentData member.'
+            );
+        }
 
         return new static(
             $merchantSessionKey,

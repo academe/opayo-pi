@@ -135,4 +135,31 @@ class AmountTest extends TestCase
         $currency = new Currency('GBP');
         new Amount($currency, '9.99'); // String with decimal
     }
+
+    /**
+     * @dataProvider majorUnitStringProvider
+     */
+    public function testWithMajorUnitAcceptsIntegerAndDecimalStrings(string $input, int $expectedMinor)
+    {
+        $this->assertSame($expectedMinor, Amount::GBP()->withMajorUnit($input)->getAmount());
+    }
+
+    public static function majorUnitStringProvider(): array
+    {
+        return [
+            'integer string' => ['10', 1000],
+            'trailing point' => ['10.', 1000],
+            'leading point' => ['.50', 50],
+            'two decimals' => ['12.50', 1250],
+            'zero' => ['0', 0],
+        ];
+    }
+
+    public function testWithMajorUnitRejectsBarePoint()
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessageMatches('/must be a number/i');
+
+        Amount::GBP()->withMajorUnit('.');
+    }
 }

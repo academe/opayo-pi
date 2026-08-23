@@ -15,7 +15,8 @@ use Academe\Opayo\Pi\Helper;
  * an iframe). When they are done at PayPal, Opayo redirects them to the
  * callbackUrl given in the request, with the transactionId appended as a
  * query parameter; fetch the transaction (Request\FetchTransaction) to get
- * the final outcome.
+ * the final outcome. Until PayPal has reported back, that fetch answers
+ * "404 Transaction not found".
  */
 
 class PayPalRedirect extends AbstractTransaction
@@ -23,26 +24,12 @@ class PayPalRedirect extends AbstractTransaction
     public const STATUS_CODE_REDIRECT = '2023';
 
     /**
-     * The PayPal URL to redirect the shopper to.
+     * All the common fields, including paymentMethod.paypal, are read by
+     * AbstractTransaction::setData(); nothing extra is needed here.
      */
-    protected ?string $redirectUrl = null;
-
-    /**
-     * The PayPal order ID, for your records.
-     */
-    protected ?string $orderId = null;
-
     protected function setData(mixed $data): mixed
     {
-        $this->setStatuses($data);
-
-        $this->transactionId = Helper::dataGet($data, 'transactionId');
-        $this->transactionType = Helper::dataGet($data, 'transactionType');
-
-        $this->redirectUrl = Helper::dataGet($data, 'paymentMethod.paypal.redirectUrl');
-        $this->orderId = Helper::dataGet($data, 'paymentMethod.paypal.orderId');
-
-        return $this;
+        return parent::setData($data);
     }
 
     /**
@@ -50,7 +37,7 @@ class PayPalRedirect extends AbstractTransaction
      */
     public function getRedirectUrl(): ?string
     {
-        return $this->redirectUrl;
+        return $this->paypal?->getRedirectUrl();
     }
 
     /**
@@ -58,7 +45,7 @@ class PayPalRedirect extends AbstractTransaction
      */
     public function getOrderId(): ?string
     {
-        return $this->orderId;
+        return $this->paypal?->getOrderId();
     }
 
     /**
@@ -78,25 +65,5 @@ class PayPalRedirect extends AbstractTransaction
         return (is_array($data) || is_object($data))
             && (string)Helper::dataGet($data, 'statusCode') === static::STATUS_CODE_REDIRECT
             && Helper::dataGet($data, 'paymentMethod.paypal') !== null;
-    }
-
-    /**
-     * Serialisation for storage/logging/debug.
-     */
-    public function jsonSerialize(): mixed
-    {
-        return [
-            'transactionId' => $this->transactionId,
-            'transactionType' => $this->transactionType,
-            'status' => $this->status,
-            'statusCode' => $this->statusCode,
-            'statusDetail' => $this->statusDetail,
-            'paymentMethod' => [
-                'paypal' => [
-                    'redirectUrl' => $this->redirectUrl,
-                    'orderId' => $this->orderId,
-                ],
-            ],
-        ];
     }
 }

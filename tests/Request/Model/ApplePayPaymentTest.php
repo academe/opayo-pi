@@ -137,6 +137,23 @@ class ApplePayPaymentTest extends TestCase
         $this->assertSame($fromArray->jsonSerialize(), $fromJson->jsonSerialize());
     }
 
+    public function testFromAppleTokenRejectsUndecodableInput()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/JSON string/');
+
+        ApplePayPayment::fromAppleToken($this->msk, $this->clientIp, 'not json');
+    }
+
+    public function testFromAppleTokenRejectsTokenWithoutPaymentData()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/paymentData/');
+
+        // Passing the paymentData member itself instead of the token is the likely mistake.
+        ApplePayPayment::fromAppleToken($this->msk, $this->clientIp, ['version' => 'EC_v1', 'data' => 'x']);
+    }
+
     public function testFromDataRoundTrip()
     {
         $original = new ApplePayPayment(

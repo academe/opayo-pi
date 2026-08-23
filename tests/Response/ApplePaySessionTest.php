@@ -101,4 +101,76 @@ class ApplePaySessionTest extends TestCase
 
         $this->assertEquals($session, ApplePaySession::fromData(json_encode($session)));
     }
+
+    public function testNumericTimestampsArePreservedAsReceived()
+    {
+        // Apple's own merchant session carries these as numbers; Opayo's sample as strings.
+        $data = $this->data();
+        $data['epochTimestamp'] = 1570100718688;
+        $data['expiresAt'] = 1570104318688;
+
+        $session = ApplePaySession::fromData($data);
+
+        $this->assertSame(1570100718688, $session->getEpochTimestamp());
+        $this->assertSame(1570104318688, $session->getMerchantSession()['expiresAt']);
+    }
+
+    public function testIsResponseRecognisesSuccessAndFailureShapes()
+    {
+        $this->assertTrue(ApplePaySession::isResponse($this->data()));
+        $this->assertTrue(ApplePaySession::isResponse(['sessionValidationToken' => 't']));
+        $this->assertTrue(ApplePaySession::isResponse(
+            ['status' => 'Invalid', 'statusCode' => '6118', 'statusDetail' => 'Domain not registered.']
+        ));
+        $this->assertTrue(ApplePaySession::isResponse(
+            ['status' => 'Malformed', 'statusCode' => '6001', 'statusDetail' => 'x']
+        ));
+
+        // Not session responses: transactions, 3DS status blocks, errors, garbage.
+        $this->assertFalse(ApplePaySession::isResponse(
+            ['status' => 'Invalid', 'statusCode' => '6118', 'transactionId' => 'T']
+        ));
+        $this->assertFalse(ApplePaySession::isResponse(['status' => 'Authenticated']));
+        $this->assertFalse(ApplePaySession::isResponse(['errors' => []]));
+        $this->assertFalse(ApplePaySession::isResponse(null));
+        $this->assertFalse(ApplePaySession::isResponse('x'));
+    }
+
+    public function testFactoryMapsA2xxFailureBodyToApplePaySession()
+    {
+        $session = ResponseFactory::fromData(
+            ['status' => 'Invalid', 'statusCode' => '6118', 'statusDetail' => 'Domain not registered.'],
+            200
+        );
+
+        $this->assertInstanceOf(ApplePaySession::class, $session);
+        $this->assertFalse($session->isSuccess());
+        $this->assertSame('Domain not registered.', $session->getStatusDetail());
+    }
+
+    public function testFromHttpResponseGivesErrorCollectionOn4xx()
+    {
+        $response = new \GuzzleHttp\Psr7\Response(
+            422,
+            ['Content-Type' => 'application/json'],
+            json_encode(['status' => 'Invalid', 'statusCode' => '6118', 'statusDetail' => 'Domain not registered.'])
+        );
+
+        $this->assertInstanceOf(ErrorCollection::class, ApplePaySession::fromHttpResponse($response));
+    }
+
+    public function testFromHttpResponseGivesSessionOn2xx()
+    {
+        $response = new \GuzzleHttp\Psr7\Response(
+            201,
+            ['Content-Type' => 'application/json'],
+            json_encode($this->data())
+        );
+
+        $session = ApplePaySession::fromHttpResponse($response);
+
+        $this->assertInstanceOf(ApplePaySession::class, $session);
+        $this->assertSame('VALIDATION-TOKEN', $session->getSessionValidationToken());
+        $this->assertSame(201, $session->getHttpCode());
+    }
 }
