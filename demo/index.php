@@ -15,16 +15,25 @@
  *  - PayPal: no card at all; paypal.php registers the transaction with the
  *    PayPal payment method and redirects the shopper to PayPal, who returns
  *    them to paypal-return.php.
+ *  - Google Pay: the Google Pay sheet mints a token in the browser and
+ *    googlepay.php sends it as paymentMethod.googlePay. Reaches Opayo but
+ *    cannot be authorised from a TEST sheet - see googlepay.php.
  */
 
 declare(strict_types=1);
 
 require __DIR__ . '/shared.php';
 
+use Academe\Opayo\Pi\GooglePay\Configuration as GooglePayConfiguration;
+use Academe\Opayo\Pi\GooglePay\Environment as GooglePayEnvironment;
+use Academe\Opayo\Pi\Money\Amount;
+use Academe\Opayo\Pi\Money\Currency;
+
 requireDottedHost();
 
 $useJs = ! empty($_GET['js']);
 $usePayPal = ! empty($_GET['paypal']);
+$useGooglePay = ! empty($_GET['googlepay']);
 
 // The drop-in tokenises in the browser, so it needs a session key now.
 // In server-side mode pay.php creates its own.
@@ -32,30 +41,46 @@ $merchantSessionKey = $useJs ? createMerchantSessionKey() : null;
 
 $testExpiry = date('my', strtotime('+2 years'));
 
-pageTop($usePayPal ? 'PayPal' : ($useJs ? 'Opayo JS drop-in' : 'Server-side capture'));
+// The Google Pay sheet's request objects, built by the library rather than
+// hand-written in JavaScript. Opayo's own example is ~250 lines of this; the
+// three lines that are actually about Opayo are the ones filled in here.
+$googlePayClientConfig = $useGooglePay
+    ? (new GooglePayConfiguration(
+        gatewayMerchantId: googlePayMerchantId(),
+        merchantName: 'Opayo Pi Demo',
+        googleMerchantId: googlePayGoogleMerchantId() ?: null,
+        environment: GooglePayEnvironment::Test,
+    ))->clientConfiguration((new Amount(new Currency('GBP'), 0))->withMajorUnit('9.99'))
+    : null;
 
-$tab = fn (bool $active) => 'px-4 py-2 rounded-lg text-sm font-medium ' . ($active ? 'bg-blue-600 text-white' : 'bg-white text-slate-600');
+pageTop($useGooglePay ? 'Google Pay' : ($usePayPal ? 'PayPal' : ($useJs ? 'Opayo JS drop-in' : 'Server-side capture')));
+
+$tab = fn (bool $active) => 'flex items-center px-4 py-2 rounded-lg text-sm font-medium ' . ($active ? 'bg-blue-600 text-white' : 'bg-white text-slate-600');
 ?>
 
 <?php $account = demoAccount(); $qsAccount = 'account=' . $account; ?>
-<nav class="flex gap-2 items-center">
-    <a href="index.php?<?= $qsAccount ?>" class="<?= $tab(! $useJs && ! $usePayPal) ?>">Server-side capture</a>
-    <a href="index.php?js=1&amp;<?= $qsAccount ?>" class="<?= $tab($useJs) ?>">Opayo JS drop-in</a>
-    <a href="index.php?paypal=1&amp;<?= $qsAccount ?>" class="<?= $tab($usePayPal) ?>">PayPal</a>
+<div class="space-y-3">
+    <nav class="flex flex-wrap gap-2 items-stretch">
+        <a href="index.php?<?= $qsAccount ?>" class="<?= $tab(! $useJs && ! $usePayPal && ! $useGooglePay) ?>">Server-side capture</a>
+        <a href="index.php?js=1&amp;<?= $qsAccount ?>" class="<?= $tab($useJs) ?>">Opayo JS drop-in</a>
+        <a href="index.php?paypal=1&amp;<?= $qsAccount ?>" class="<?= $tab($usePayPal) ?>">PayPal</a>
+        <a href="index.php?googlepay=1&amp;<?= $qsAccount ?>" class="<?= $tab($useGooglePay) ?>">Google Pay</a>
+    </nav>
 
     <!-- Changing account reloads the page so the session key (JS mode)
          is created against the right account. -->
-    <form method="get" class="ml-auto text-sm">
+    <form method="get" class="flex items-center text-sm">
         <?php if ($useJs): ?><input type="hidden" name="js" value="1"><?php endif; ?>
         <?php if ($usePayPal): ?><input type="hidden" name="paypal" value="1"><?php endif; ?>
+        <?php if ($useGooglePay): ?><input type="hidden" name="googlepay" value="1"><?php endif; ?>
         <label class="text-slate-600">Account
-            <select name="account" onchange="this.form.submit()" class="rounded border-slate-300 text-sm">
+            <select name="account" onchange="this.form.submit()" class="ml-1 rounded border-slate-300 text-sm">
                 <option value="env" <?= $account === 'env' ? 'selected' : '' ?>>Your .env account</option>
                 <option value="sandbox" <?= $account === 'sandbox' ? 'selected' : '' ?>>Public sandbox (3DS simulation)</option>
             </select>
         </label>
     </form>
-</nav>
+</div>
 
 <?php if ($account === 'env'): ?>
 <div class="bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-lg p-3">
@@ -64,6 +89,175 @@ $tab = fn (bool $active) => 'px-4 py-2 rounded-lg text-sm font-medium ' . ($acti
     with "Vendor not enrolled with this wallet type"). For those flows, switch to the
     public sandbox profile above (credentials published by Elavon).
 </div>
+<?php endif; ?>
+
+<?php if ($useGooglePay): ?>
+<form id="googlepay-form" method="post" action="googlepay.php" class="bg-white rounded-xl shadow p-6 space-y-4">
+    <input type="hidden" name="account" value="<?= h($account) ?>">
+    <!-- Filled in by the Google Pay sheet, just before this form submits. -->
+    <input type="hidden" name="googlePayToken" id="googlePayToken">
+
+    <div class="grid grid-cols-2 gap-4">
+        <label class="block text-sm">
+            <span class="text-slate-600">Amount (GBP)</span>
+            <input type="text" name="amount" id="gp-amount" value="9.99" class="mt-1 w-full rounded border-slate-300">
+        </label>
+        <label class="block text-sm">
+            <span class="text-slate-600">Description</span>
+            <input type="text" name="description" value="Demo Google Pay purchase" class="mt-1 w-full rounded border-slate-300">
+        </label>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4">
+        <label class="block text-sm">
+            <span class="text-slate-600">First name</span>
+            <input type="text" name="firstName" value="Sam" class="mt-1 w-full rounded border-slate-300">
+        </label>
+        <label class="block text-sm">
+            <span class="text-slate-600">Last name</span>
+            <input type="text" name="lastName" value="Jones" class="mt-1 w-full rounded border-slate-300">
+        </label>
+        <label class="block text-sm">
+            <span class="text-slate-600">Email</span>
+            <input type="email" name="email" value="sam.jones@example.com" class="mt-1 w-full rounded border-slate-300">
+        </label>
+    </div>
+
+    <!-- The two knobs that decide whether the token is real. TEST always
+         yields the placeholder token; PRODUCTION needs a Google merchant ID
+         and an allowlisted origin, so it will not run on 127.0.0.1. -->
+    <div class="grid grid-cols-2 gap-4">
+        <label class="block text-sm">
+            <span class="text-slate-600">Google Pay environment</span>
+            <select id="gp-environment" class="mt-1 w-full rounded border-slate-300">
+                <option value="TEST">TEST (placeholder token)</option>
+                <option value="PRODUCTION">PRODUCTION (real token)</option>
+            </select>
+        </label>
+        <label class="block text-sm">
+            <span class="text-slate-600">gatewayMerchantId</span>
+            <input type="text" id="gp-gateway-merchant-id" value="<?= h(googlePayMerchantId()) ?>" class="mt-1 w-full rounded border-slate-300 font-mono text-xs">
+        </label>
+    </div>
+
+    <p class="text-xs text-slate-500">
+        No card fields: the Google Pay sheet tokenises against
+        <code>gateway: 'opayoelavon'</code> and this page posts
+        <code>paymentData.paymentMethodData.tokenizationData.token</code> to
+        <code>googlepay.php</code>, which sends it as
+        <code>paymentMethod.googlePay = {merchantSessionKey, clientIpAddress, payload}</code>.
+        The public sandbox vendor has the wallet enabled; a TEST sheet still stops at
+        <code>6203 Invalid Google Pay payload</code>, because Google only mints a decryptable
+        token in PRODUCTION.
+    </p>
+
+    <!-- 3D Secure device profile. Opayo's Google Pay guide recommends sending
+         strongCustomerAuthentication so a PAN_ONLY card on a device without
+         biometrics can still complete a challenge. Same fields as the card form. -->
+    <input type="hidden" name="browserColorDepth" value="24">
+    <input type="hidden" name="browserScreenHeight" value="1080">
+    <input type="hidden" name="browserScreenWidth" value="1920">
+    <input type="hidden" name="browserTz" value="0">
+    <input type="hidden" name="browserLanguage" value="en-GB">
+
+    <div id="googlepay-button" class="min-h-[44px]"></div>
+
+    <p id="googlepay-status" class="text-xs text-red-600 hidden"></p>
+</form>
+
+<script src="https://pay.google.com/gp/p/js/pay.js"></script>
+<script>
+    // Built by Academe\Opayo\Pi\GooglePay\Configuration on the server. In a
+    // real integration you would use this as-is; the demo lets you edit the
+    // environment, gatewayMerchantId and amount, so it patches those in below.
+    const OPAYO_GOOGLE_PAY = <?= json_encode($googlePayClientConfig) ?>;
+
+    // Only read in PRODUCTION, which the server config is not built for.
+    const GPAY_GOOGLE_MERCHANT_ID = <?= json_encode(googlePayGoogleMerchantId()) ?>;
+
+    const gpStatus = (message) => {
+        const el = document.getElementById('googlepay-status');
+        el.textContent = message;
+        el.classList.toggle('hidden', ! message);
+    };
+
+    /**
+     * The server config with the demo's live form values applied.
+     */
+    function gpRequests() {
+        const config = structuredClone(OPAYO_GOOGLE_PAY);
+        const environment = document.getElementById('gp-environment').value;
+
+        config.paymentDataRequest.allowedPaymentMethods[0].tokenizationSpecification
+            .parameters.gatewayMerchantId = document.getElementById('gp-gateway-merchant-id').value.trim();
+
+        config.paymentDataRequest.transactionInfo.totalPrice =
+            document.getElementById('gp-amount').value.trim();
+
+        if (environment === 'PRODUCTION') {
+            config.paymentDataRequest.merchantInfo.merchantId = GPAY_GOOGLE_MERCHANT_ID;
+        }
+
+        config.environment = environment;
+
+        return config;
+    }
+
+    // A PaymentsClient is bound to its environment, so switching the select
+    // rebuilds both the client and the button it drew.
+    function gpRenderButton() {
+        const config = gpRequests();
+        const client = new google.payments.api.PaymentsClient({environment: config.environment});
+        const container = document.getElementById('googlepay-button');
+
+        client.isReadyToPay(config.isReadyToPayRequest)
+            .then((response) => {
+                container.replaceChildren();
+
+                if (! response.result) {
+                    gpStatus('Google Pay is not available in this browser (no Google account, or an unsupported browser).');
+                    return;
+                }
+
+                gpStatus('');
+                container.appendChild(client.createButton({
+                    buttonType: 'pay',
+                    buttonSizeMode: 'fill',
+                    onClick: () => gpPay(client),
+                }));
+            })
+            .catch((error) => gpStatus('isReadyToPay failed: ' + error));
+    }
+
+    function gpPay(client) {
+        client.loadPaymentData(gpRequests().paymentDataRequest).then((paymentData) => {
+            const form = document.getElementById('googlepay-form');
+
+            // Real device values for the 3D Secure profile.
+            const depth = [1, 4, 8, 15, 16, 24, 32].includes(screen.colorDepth) ? screen.colorDepth : 24;
+            form.browserColorDepth.value = depth;
+            form.browserScreenHeight.value = screen.height;
+            form.browserScreenWidth.value = screen.width;
+            form.browserTz.value = new Date().getTimezoneOffset();
+            form.browserLanguage.value = navigator.language || 'en-GB';
+
+            // Post the whole token string; googlepay.php base64-encodes it.
+            document.getElementById('googlePayToken').value = paymentData.paymentMethodData.tokenizationData.token;
+            form.submit();
+        }).catch((error) => {
+            if (error.statusCode === 'CANCELED') {
+                gpStatus('');
+                return;
+            }
+            gpStatus('Google Pay sheet: ' + (error.statusMessage || error.statusCode || error));
+        });
+    }
+
+    document.getElementById('gp-environment').addEventListener('change', gpRenderButton);
+    gpRenderButton();
+</script>
+
+<?php pageBottom(); return; ?>
 <?php endif; ?>
 
 <?php if ($usePayPal): ?>
@@ -108,10 +302,10 @@ $tab = fn (bool $active) => 'px-4 py-2 rounded-lg text-sm font-medium ' . ($acti
 </form>
 
 <div class="text-xs text-slate-500 space-y-1">
-    <p>Apple Pay and Google Pay cannot be exercised here: both need a real wallet token from the
-       browser (Safari on an Apple device / the Google Pay sheet) and a vendor with the wallet
-       enabled and a registered domain. The library models them to the API reference
-       (<code>ApplePayPayment</code>, <code>GooglePayPayment</code>, <code>CreateApplePaySession</code>).</p>
+    <p>Google Pay has its own tab above. Apple Pay cannot be exercised here: it needs a real
+       wallet token from Safari on an Apple device signed into a sandbox-tester Apple ID, plus a
+       registered HTTPS domain. The library models it to the API reference
+       (<code>ApplePayPayment</code>, <code>CreateApplePaySession</code>).</p>
 </div>
 
 <?php pageBottom(); return; ?>

@@ -66,6 +66,21 @@ The aim is to release on the master branch as soon as a demo (and some units tes
 
 The aim is for this package to support, at the backend, all functionality that the gateway supports.
 
+### Reading the gateway documentation
+
+Elavon's developer portal is a single-page app: slow to load, prone to failing, and
+unreadable by anything that does not run JavaScript. Each page does ship its own
+markdown source in the served HTML though, so it can be pulled down and read locally:
+
+```bash
+php scripts/fetch-opayo-docs.php --list          # what pages exist
+php scripts/fetch-opayo-docs.php test-in-sandbox # one page
+php scripts/fetch-opayo-docs.php --all           # all of them
+```
+
+Pages land in `docs/vendor/opayo/` as markdown. That directory is gitignored: the
+content is Elavon's, and is fetched for reading rather than redistribution.
+
 ## Want to Help?
 
 Issues, comments, suggestions and PRs are all welcome. So far as I know, this is the first API for the
@@ -91,7 +106,7 @@ This library does provide support for the front end though, and this is noted wh
 ### Installation
 
 **Requirements:**
-- PHP 8.1 or higher (supports PHP 8.1, 8.2, and 8.3)
+- PHP 8.1 or higher
 
 Get the latest release:
 
@@ -1152,6 +1167,37 @@ authorised with an ecommerce-type change.
 In the Google Pay JS `tokenizationSpecification`, use `gateway: 'opayoelavon'` and
 the `gatewayMerchantId` shown in MyOpayo when you add Google Pay. The token to send
 is `paymentData.paymentMethodData.tokenizationData.token`, base64 encoded.
+
+The `GooglePay\Configuration` class builds the request objects the Google Pay
+JavaScript API expects, so the boilerplate does not have to be copied into every
+integration. Hand the result to your page and let the browser glue it to
+`google.payments.api.PaymentsClient`:
+
+```php
+use Academe\Opayo\Pi\GooglePay\Configuration;
+use Academe\Opayo\Pi\GooglePay\Environment;
+
+$config = new Configuration(
+    gatewayMerchantId: $gatewayMerchantId,   // MyOpayo > Settings > Pay Methods > Google Pay
+    merchantName: 'Widgets Ltd',             // shown to the shopper on the sheet
+    googleMerchantId: $googleMerchantId,     // Google Pay & Wallet Console; PRODUCTION only
+    environment: Environment::Test,
+);
+
+// {environment, isReadyToPayRequest, paymentDataRequest}, ready to json_encode.
+$clientConfig = $config->clientConfiguration($amount);
+```
+
+`Environment::Production` requires the Google merchant ID and throws without it.
+The individual pieces (`isReadyToPayRequest()`, `paymentDataRequest()`,
+`tokenizationSpecification()`, `merchantInfo()`, `transactionInfo()`) are public if
+you would rather assemble them yourself. `demo/index.php` shows the whole flow.
+
+There is no Google Pay certificate or secret issued to you: `PAYMENT_GATEWAY`
+tokenisation makes Elavon the recipient, so the `gatewayMerchantId` is an
+identifier rather than a credential and belongs in your page source.
+`docs/google-pay-key-custody.html` explains the key custody, the token layers and
+the `6401` / `6203` error codes with diagrams.
 
 ```php
 use Academe\Opayo\Pi\Request\Model\GooglePayPayment;

@@ -351,7 +351,14 @@ sequenceDiagram
 ### Google Pay Flow
 
 Google Pay needs the Google Pay sheet in a browser with a Google account; the
-token cannot be produced server-side, so this flow cannot be exercised by the demo.
+token cannot be produced server-side. The demo (`demo/index.php?googlepay=1`,
+`demo/googlepay.php`) runs this flow as far as the gateway, but cannot complete
+it: see the sandbox note below.
+
+For why no certificate or secret is issued to the merchant, what is inside the
+token, and what each error code proves about your setup, see
+[google-pay-key-custody.html](google-pay-key-custody.html) - an illustrated
+companion to this section.
 
 ```mermaid
 sequenceDiagram
@@ -385,8 +392,14 @@ sequenceDiagram
   you add Google Pay
 - **Billing address**: taken from your request, not from Google's payload;
   CV2 is not applicable
-- **Sandbox**: validates the payload (`6203 Invalid Google Pay payload` for
-  anything but a real token)
+- **Sandbox**: the public `sandbox` vendor has the wallet enabled, so a
+  `googlePay` payment reaches payload validation rather than failing enrolment.
+  It then validates the payload, and only a real token passes: Google's TEST
+  environment returns the placeholder `examplePaymentMethodToken`, which is
+  rejected with `6203 Invalid Google Pay payload` (checked bare and
+  JSON-wrapped). A personal test vendor fails earlier, with `6401 Wallet not
+  enabled for the vendor`, until Opayo enables the wallet on it - they ask for
+  your Google merchant ID to do so, after which that vendor also reaches `6203`.
 
 ---
 

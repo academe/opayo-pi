@@ -39,7 +39,7 @@ hostname), and the demo redirects you accordingly.
 
 - `shared.php` — env loading, auth/endpoint/client helpers, the wire-data
   recorder and the two-column page layout.
-- `index.php` — the payment form (card capture modes and PayPal).
+- `index.php` — the payment form (card capture modes, PayPal and Google Pay).
 - `pay.php` — tokenises (if needed), creates the payment, and either shows
   the result or hands the browser to the 3D Secure challenge.
 - `notification.php` — receives the challenge result and completes the
@@ -47,19 +47,61 @@ hostname), and the demo redirects you accordingly.
 - `paypal.php` — registers a PayPal payment and redirects to PayPal.
 - `paypal-return.php` — the PayPal callback: fetches the transaction by the
   `transactionId` Opayo appends to the URL and shows the result.
+- `googlepay.php` — takes the token the Google Pay sheet minted in the browser
+  and sends it as `paymentMethod.googlePay`.
 
 ## Wallets
 
-Only PayPal can be exercised here. Apple Pay and Google Pay both need a real
-wallet token minted in the browser (Safari on an Apple device signed into a
-sandbox-tester Apple ID; the Google Pay sheet with a Google account), plus a
-vendor with the wallet enabled in MyOpayo and, for Apple Pay, a registered
-HTTPS domain (Opayo-managed certificate) or an Apple merchant certificate
-(merchant-managed). Personal test vendors answer `6401 Wallet not enabled for
-the vendor`; the shared sandbox vendor has no domain you can register. The
-library models them to the API reference (`ApplePayPayment`,
-`GooglePayPayment`, `CreateApplePaySession` / `ApplePaySession`), and the
-sandbox magic amounts for Apple Pay are listed in `docs/TESTING-GUIDE.md`.
+Every wallet needs the vendor to have it enabled in MyOpayo, otherwise the
+gateway answers `6401 Wallet not enabled for the vendor`. The public `sandbox`
+profile has both PayPal and Google Pay enabled. Personal test accounts have
+neither by default, but Opayo will enable Google Pay on request - they ask for
+your Google merchant ID from the Google Pay & Wallet Console to do it. Once
+enabled, your own vendor reaches the same point the sandbox does (`6203`), so
+enrolment is worth doing even though it does not on its own make the flow
+completable.
+
+**PayPal** runs end to end here — it is a redirect, so no token has to be minted
+in the browser.
+
+**Google Pay** has a tab, and gets as far as the gateway reading the payload.
+The Google Pay sheet only mints a real, encrypted token in its `PRODUCTION`
+environment; in `TEST` it returns the fixed placeholder
+`examplePaymentMethodToken`, which Opayo rejects with `6203 Invalid Google Pay
+payload` (verified against the sandbox, both bare and JSON-wrapped). So the tab
+demonstrates the whole integration — sheet, token, `merchantSessionKey`,
+`paymentMethod.googlePay`, and the wire data for all of it — but cannot be
+authorised. Going further needs a Google merchant ID from the Google Pay &
+Wallet Console and an allowlisted HTTPS origin, neither of which applies to
+`127.0.0.1`. Note the sheet opens a popup, so a headless browser cannot complete
+it either; use a real browser signed into a Google account.
+
+There is no Google Pay certificate or secret to ask Elavon for, and no test
+credential that would change the above. Opayo Pi uses Google's
+`tokenizationSpecification.type = PAYMENT_GATEWAY` with `gateway: 'opayoelavon'`,
+which means Google encrypts the card data to *Elavon's* key: they are the
+recipient, and the merchant is only a courier for an opaque blob. All you get is
+the `gatewayMerchantId`, which is an identifier rather than a secret - it is
+fine in page source, and this demo puts it there. Merchant-held key material
+exists only in the other mode, `type: DIRECT`, where you generate a P-256 key
+pair and register the public half in the Google Pay & Wallet Console; the Opayo
+API does not accept that shape. This is the opposite of Apple Pay below, which
+does have a certificate story, and is why the question comes up.
+`docs/google-pay-key-custody.html` walks through all of this with diagrams.
+
+**Apple Pay** has no tab. Beyond the wallet being enabled it needs Safari on an
+Apple device signed into a sandbox-tester Apple ID, plus a registered HTTPS
+domain (Opayo-managed certificate) or an Apple merchant certificate
+(merchant-managed), and the shared sandbox vendor has no domain you can
+register. The library still models it to the API reference (`ApplePayPayment`,
+`CreateApplePaySession` / `ApplePaySession`), and the sandbox magic amounts are
+listed in `docs/TESTING-GUIDE.md`.
+
+Two optional `.env` settings feed the Google Pay tab; both have workable
+defaults, and the field on the form overrides the first:
+
+    OPAYO_GOOGLE_PAY_MERCHANT_ID=   # gatewayMerchantId from MyOpayo (defaults to the vendor name)
+    GOOGLE_PAY_MERCHANT_ID=         # Google merchant ID, only read in PRODUCTION
 
 ## Test cards
 

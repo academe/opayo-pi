@@ -575,11 +575,11 @@ vendor/bin/phpunit --testsuite=all
 
 ## Wallets (Apple Pay, Google Pay, PayPal)
 
-Wallets must be enabled on the vendor in MyOpayo (Settings > Pay Methods). Personal
-test vendors answer `6401 Wallet not enabled for the vendor` (Apple/Google Pay) or
-`1030 Vendor not enrolled with this wallet type` (PayPal). Of the sandbox profiles,
-only the public `sandbox` vendor has PayPal enabled; neither has Apple or Google Pay
-you can use.
+Wallets must be enabled on the vendor in MyOpayo (Settings > Pay Methods). A vendor
+without the wallet answers `6401 Wallet not enabled for the vendor` (Apple/Google Pay)
+or `1030 Vendor not enrolled with this wallet type` (PayPal). The public `sandbox`
+profile has PayPal and Google Pay enabled; Opayo will enable Google Pay on a personal
+test vendor on request, and asks for your Google merchant ID to do it.
 
 - **PayPal** - testable end to end: the demo's PayPal tab registers the payment,
   the sandbox returns a `Redirect` (2023) to `https://www.sandbox.paypal.com/...`,
@@ -593,4 +593,12 @@ you can use.
   is registered on the vendor.
 - **Google Pay** - needs a real token from the Google Pay sheet (gateway
   `opayoelavon`, gatewayMerchantId from MyOpayo); the sandbox validates the payload
-  (`6203 Invalid Google Pay payload` otherwise).
+  (`6203 Invalid Google Pay payload` otherwise). **There is no way to complete this
+  in the sandbox.** Google's TEST environment always returns the fixed placeholder
+  `examplePaymentMethodToken` rather than an encrypted one, and the sandbox rejects
+  it. Note that Opayo publishes sandbox magic amounts for Apple Pay (above) but
+  nothing equivalent for Google Pay - their own "Test in Sandbox" page has an Apple
+  Pay section and no Google Pay section at all. Some gateways make this testable by
+  having their sandbox accept the placeholder string; Opayo has not. So an enrolled
+  vendor gets you from `6401` to `6203` and no further. See
+  `docs/google-pay-key-custody.html` for why, and what a real verification needs.
