@@ -581,16 +581,27 @@ or `1030 Vendor not enrolled with this wallet type` (PayPal). The public `sandbo
 profile has PayPal and Google Pay enabled; Opayo will enable Google Pay on a personal
 test vendor on request, and asks for your Google merchant ID to do it.
 
-- **PayPal** - testable end to end: the demo's PayPal tab registers the payment,
+The demo (`demo/index.php`) offers all of these on one checkout page, each panel
+posting to a single `pay.php`; an unavailable method shows why rather than
+disappearing.
+
+- **PayPal** - testable end to end: the demo's PayPal panel registers the payment,
   the sandbox returns a `Redirect` (2023) to `https://www.sandbox.paypal.com/...`,
   and approving there needs a PayPal *sandbox buyer* account
   (developer.paypal.com > Sandbox > Accounts). Opayo then redirects to your
   `callbackUrl?transactionId=...`; fetch the transaction for the outcome (before PayPal reports back, the fetch answers `404 Transaction not found`).
-- **Apple Pay** - needs Safari on an Apple device with a sandbox-tester Apple ID
-  and a merchant-managed certificate (sandbox). Magic amounts: `10600` authorised,
-  `10700` soft decline, `10800` / `10900` authorised with ecommerce-type change.
-  `POST /applepay/sessions` returns `6118 Domain not registered` until the domain
-  is registered on the vendor.
+- **Apple Pay** - **not completable on the sandbox with this demo.** Elavon
+  confirmed (Sept 2026) that test supports only the *merchant-managed* certificate
+  mode; the demo implements the *Opayo-managed* flow (`apple-session.php` →
+  `CreateApplePaySession`), which is production-only, so on test it returns
+  `4006 The TxType requested is not supported on this account`. The readiness
+  probe otherwise surfaces `6118 Domain not registered` / `6125 Invalid
+  domainName field` (a host with a port). Merchant-managed testing needs an Apple
+  Developer account, an Apple Merchant ID, Opayo's CSR signed by Apple, and a
+  merchant-validation call made directly to Apple - not built here, and not
+  confirmed to cover web (vs In-App) on test. See `docs/CREDENTIALS-AND-SETUP.md`.
+  Sandbox magic amounts, when you can get there: `10600` authorised, `10700`
+  soft decline, `10800` / `10900` authorised with ecommerce-type change.
 - **Google Pay** - needs a real token from the Google Pay sheet (gateway
   `opayoelavon`, gatewayMerchantId from MyOpayo); the sandbox validates the payload
   (`6203 Invalid Google Pay payload` otherwise). **There is no way to complete this

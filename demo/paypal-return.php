@@ -25,7 +25,7 @@ if ($transactionId === null) {
     pageTop('PayPal return');
     echo '<div class="bg-white rounded-xl shadow p-6 text-sm text-red-600">'
         . 'No transactionId on the callback URL and none in the session; cannot look up the transaction. '
-        . '<a class="text-blue-600 hover:underline" href="index.php?paypal=1">Start again</a>.</div>';
+        . '<a class="text-blue-600 hover:underline" href="index.php">Start again</a>.</div>';
     pageBottom();
     exit;
 }
@@ -87,6 +87,6 @@ if ($response instanceof ErrorCollection) {
     echo '</div>';
 }
 ?>
-<a href="index.php?paypal=1" class="inline-block text-sm text-blue-600 hover:underline">&larr; Make another PayPal payment</a>
+<a href="index.php" class="inline-block text-sm text-blue-600 hover:underline">&larr; Make another PayPal payment</a>
 <?php
 pageBottom();

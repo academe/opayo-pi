@@ -259,18 +259,30 @@ function applePayReadiness(): array
     }
 
     // A failure comes back as an ErrorCollection. Quote what Opayo actually
-    // said rather than guessing a code: on 127.0.0.1 the host carries a port
-    // and you get "6125 Invalid domainName field"; on a bare unregistered
-    // domain you get "6118 Domain not registered". Both are correct outcomes
-    // for a demo that is not yet served from a registered HTTPS domain.
+    // said, then add the fix for the specific code: these failures look alike
+    // ("no session") but have completely different causes and remedies. Getting
+    // this right matters because the codes form a sequence an integrator walks
+    // through: port -> unregistered domain -> the account/cert-mode wall.
     [$code, $description] = firstError($response);
+
+    $hint = match ((string) $code) {
+        '6125' => 'The served host carries a port (e.g. 127.0.0.1:8000), which is not a valid Apple Pay'
+                . ' domain. Serve the demo from a real HTTPS domain - see demo/README.md,'
+                . ' "Running it publicly (for Apple Pay / wallets)".',
+        '6118' => 'The domain is not registered in MyOpayo > Settings > Pay Methods > Apple Pay.'
+                . ' Register ' . applePayDomain() . ' there, or correct OPAYO_APPLE_PAY_DOMAIN in .env.',
+        '4006' => 'The domain is fine; this account cannot open an Opayo-managed Apple Pay session.'
+                . ' Elavon have confirmed the sandbox only supports the merchant-managed certificate mode,'
+                . ' not the Opayo-managed path this demo uses, so 4006 is the expected and terminal result'
+                . ' on a test account. It is verifiable only on a live account. See docs/CREDENTIALS-AND-SETUP.md.',
+        '6401' => 'Apple Pay is not enabled for this vendor. Ask Opayo to enable it in MyOpayo.',
+        default => 'See docs/CREDENTIALS-AND-SETUP.md for the Apple Pay setup and the error-code table.',
+    };
 
     return [
         'available' => false,
         'reason' => 'Opayo will not open a merchant session' . ($code ? " ($code)" : ''),
-        'detail' => ($description ?: 'Register the domain in MyOpayo > Settings > Pay Methods > Apple Pay.')
-                  . ' Expected until the demo is served from a registered HTTPS domain'
-                  . ' (OPAYO_APPLE_PAY_DOMAIN); 127.0.0.1 with a port is not a valid domain.',
+        'detail' => trim(($description ? $description . ' ' : '') . $hint),
     ];
 }
 
@@ -612,6 +624,50 @@ function explainKnownFailures(string $detail): void
 }
 
 /**
+ * Answer a payment with JSON instead of a page, for the Apple Pay flow.
+ *
+ * Apple Pay must call session.completePayment() with the real outcome from
+ * inside onpaymentauthorized, so the browser cannot do a full-page POST: it
+ * posts by fetch, reads {approved, resultUrl}, completes the sheet, then goes
+ * to result.php. The rendered outcome and the wire log are stashed in the
+ * session so result.php can show exactly what a normal result page would.
+ */
+function respondJson(mixed $response, string $vendorTxCode): void
+{
+    ob_start();
+    if ($response instanceof \Academe\Opayo\Pi\Response\ErrorCollection) {
+        renderErrors($response, 'The payment request was rejected.');
+        $approved = false;
+    } elseif ($response instanceof \Academe\Opayo\Pi\Response\Secure3Dv2Redirect) {
+        // Not expected for a device-authenticated Apple Pay token; surface it
+        // honestly rather than trying to run a challenge from a closed sheet.
+        echo '<div class="bg-white rounded-xl shadow p-6 space-y-2">'
+            . '<h2 class="text-lg font-semibold text-amber-600">Unexpected 3D Secure challenge</h2>'
+            . '<p class="text-sm text-slate-700">Opayo returned a 3DAuth for this wallet token. Apple Pay '
+            . 'tokens are device-authenticated, so this is not expected; the demo does not run a challenge '
+            . 'from the Apple Pay sheet. See the wire panel.</p>'
+            . '<a href="index.php" class="inline-block text-sm text-blue-600 hover:underline">&larr; Back to checkout</a>'
+            . '</div>';
+        $approved = false;
+    } else {
+        renderResult($response);
+        echo '<a href="index.php" class="inline-block text-sm text-blue-600 hover:underline">&larr; Back to checkout</a>';
+        $approved = method_exists($response, 'isSuccessful') && $response->isSuccessful();
+    }
+
+    $_SESSION['demoResultHtml'] = ob_get_clean();
+    $_SESSION['demoResultWire'] = $GLOBALS['wire'];
+
+    header('Content-Type: application/json');
+    echo json_encode([
+        'approved' => $approved,
+        'status' => method_exists($response, 'getStatus') ? (string)$response->getStatus() : null,
+        'transactionId' => method_exists($response, 'getTransactionId') ? $response->getTransactionId() : null,
+        'resultUrl' => 'result.php',
+    ]);
+}
+
+/**
  * A 3D Secure v2 challenge: an auto-described form the browser POSTs to the
  * issuer's ACS, which returns to notification.php.
  */
@@ -685,4 +741,73 @@ function renderPayPalRedirect(\Academe\Opayo\Pi\Response\PayPalRedirect $respons
         </p>
     </div>
     PP;
+}
+
+// ---------------------------------------------------------------------------
+// Checkout helpers shared by the method partials (demo/methods/*.php).
+// ---------------------------------------------------------------------------
+
+/**
+ * The order the shopper is paying for. index.php renders one visible, editable
+ * copy; each method form carries these as hidden inputs (a small script on the
+ * page mirrors edits into every form) so whichever button is used posts the
+ * same order to pay.php.
+ *
+ * @return array<string, string>
+ */
+function defaultOrder(): array
+{
+    return [
+        'amount' => '9.99',
+        'description' => 'Demo purchase',
+        'firstName' => 'Sam',
+        'lastName' => 'Jones',
+        'email' => 'sam.jones@example.com',
+    ];
+}
+
+/**
+ * Hidden order inputs for a method form, plus the account so the payment runs
+ * against the same profile the page is showing.
+ *
+ * @param array<string, string> $order
+ */
+function orderHiddenInputs(array $order): string
+{
+    $html = '<input type="hidden" name="account" value="' . h(demoAccount()) . '">';
+    foreach ($order as $name => $value) {
+        $html .= '<input type="hidden" name="' . h($name) . '" value="' . h($value)
+            . '" data-order="' . h($name) . '">';
+    }
+
+    return $html;
+}
+
+/**
+ * The browser fields for the strongCustomerAuthentication object, as hidden
+ * inputs. Every method form includes them; one script on the page fills them
+ * with real values before submit.
+ */
+function browserHiddenInputs(): string
+{
+    return '<input type="hidden" name="browserColorDepth" value="24" data-browser>'
+        . '<input type="hidden" name="browserScreenHeight" value="1080" data-browser>'
+        . '<input type="hidden" name="browserScreenWidth" value="1920" data-browser>'
+        . '<input type="hidden" name="browserTz" value="0" data-browser>'
+        . '<input type="hidden" name="browserLanguage" value="en-GB" data-browser>';
+}
+
+/**
+ * The greyed box a panel shows when its method cannot run right now. Never
+ * hides the method - the reader still sees it exists and why it is unavailable.
+ *
+ * @param array{available: bool, reason: ?string, detail: ?string} $readiness
+ */
+function methodPlaceholder(array $readiness): string
+{
+    $reason = h($readiness['reason'] ?? 'Not available');
+    $detail = $readiness['detail'] ? '<p class="mt-1 text-slate-500">' . h($readiness['detail']) . '</p>' : '';
+
+    return '<div class="border border-dashed border-slate-300 bg-slate-50 rounded-lg p-4 text-sm text-slate-600">'
+        . '<span class="font-medium">' . $reason . '</span>' . $detail . '</div>';
 }

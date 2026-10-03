@@ -108,6 +108,13 @@ $request = new CreatePayment(
 
 $response = sendAndRecord($request, 'Payment');
 
+// Apple Pay posts by fetch and needs the outcome as JSON so it can complete the
+// payment sheet with the real status; it then navigates to result.php.
+if (($_POST['resultFormat'] ?? '') === 'json') {
+    respondJson($response, $vendorTxCode);
+    exit;
+}
+
 // Step 3: Opayo decides the next step, not the payment method.
 if ($response instanceof Secure3Dv2Redirect) {
     $_SESSION['transactionId'] = $response->getTransactionId();
