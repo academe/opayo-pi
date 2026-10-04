@@ -605,11 +605,12 @@ disappearing.
 - **Google Pay** - needs a real token from the Google Pay sheet (gateway
   `opayoelavon`, gatewayMerchantId from MyOpayo); the sandbox validates the payload
   (`6203 Invalid Google Pay payload` otherwise). **There is no way to complete this
-  in the sandbox.** Google's TEST environment always returns the fixed placeholder
-  `examplePaymentMethodToken` rather than an encrypted one, and the sandbox rejects
-  it. Note that Opayo publishes sandbox magic amounts for Apple Pay (above) but
-  nothing equivalent for Google Pay - their own "Test in Sandbox" page has an Apple
-  Pay section and no Google Pay section at all. Some gateways make this testable by
-  having their sandbox accept the placeholder string; Opayo has not. So an enrolled
-  vendor gets you from `6401` to `6203` and no further. See
+  in the sandbox.** The sheet in Google's TEST environment returns a genuine token,
+  signed with Google's test key and addressed to `gateway:opayoelavon`; the sandbox
+  creates a transaction for it, then rejects it with `6203`. Note that Opayo
+  publishes sandbox magic amounts for Apple Pay (above) but nothing equivalent for
+  Google Pay - their own "Test in Sandbox" page has an Apple Pay section and no
+  Google Pay section at all. Some gateways make this testable by having their
+  sandbox accept Google's TEST tokens; Opayo's does not. So an enrolled vendor gets
+  you from `6401` to `6203` and no further. See
   `docs/google-pay-key-custody.html` for why, and what a real verification needs.

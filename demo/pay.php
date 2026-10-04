@@ -1,102 +1,102 @@
 <?php
 
 /**
- * The one payment endpoint. Every method - card, Google Pay, Apple Pay,
- * PayPal - arrives here and follows the same three steps:
- *
- *   1. Turn the posted credential into a payment method (the ONE place the
- *      method matters).
- *   2. Build and send a single CreatePayment, always with an SCA object.
- *   3. Act on the response type: Opayo decides the next step, not the method.
- *
- * This is the thesis of docs/wallets-handover.md made into code: the token is
- * the boundary; after it, the flow is identical.
+ * The pay endpoint. Every payment method posts here, and every method follows
+ * the same steps; only step 2 differs between them.
  */
 
 declare(strict_types=1);
 
-require __DIR__ . '/shared.php';
+require __DIR__ . '/bootstrap.php';
 
-use Academe\Opayo\Pi\Request\CreateCardIdentifier;
+use Academe\Opayo\Pi\Checkout\BrowserData;
+use Academe\Opayo\Pi\Checkout\OutcomeKind;
+use Academe\Opayo\Pi\Checkout\PaymentOutcome;
+use Academe\Opayo\Pi\Factory\ResponseFactory;
+use Academe\Opayo\Pi\Money\Amount;
+use Academe\Opayo\Pi\Money\Currency;
 use Academe\Opayo\Pi\Request\CreatePayment;
 use Academe\Opayo\Pi\Request\Enums\EntryMethod;
 use Academe\Opayo\Pi\Request\Model\Address;
+use Academe\Opayo\Pi\Request\Model\ApplePayPayment;
+use Academe\Opayo\Pi\Request\Model\GooglePayPayment;
+use Academe\Opayo\Pi\Request\Model\PayPalPayment;
 use Academe\Opayo\Pi\Request\Model\Person;
-use Academe\Opayo\Pi\Response\CardIdentifier;
-use Academe\Opayo\Pi\Response\ErrorCollection;
-use Academe\Opayo\Pi\Response\PayPalRedirect;
-use Academe\Opayo\Pi\Response\Secure3Dv2Redirect;
-use Academe\Opayo\Pi\Money\Amount;
-use Academe\Opayo\Pi\Money\Currency;
+use Academe\Opayo\Pi\Request\Model\SingleUseCard;
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: index.php');
+    header('Location: checkout.php');
     exit;
 }
 
-$clientIp = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+$json = ($_POST['resultFormat'] ?? '') === 'json';
 
-// The card drop-in tokenised in the browser and posts its own session key.
-// Everything else (server-side card, wallets, PayPal) needs one made here.
-$sessionKey = $_POST['merchantSessionKey'] ?? null;
-if (! $sessionKey) {
-    $sessionKey = createMerchantSessionKey();
-}
-
-// Server-side card capture: tokenise the posted PAN into a card-identifier
-// first, so the factory below sees the same shape the drop-in produces.
-if (! empty($_POST['cardNumber']) && empty($_POST['card-identifier'])) {
-    $response = sendAndRecord(new CreateCardIdentifier(
-        opayoEndpoint(),
-        opayoAuth(),
-        $sessionKey,
-        $_POST['cardholderName'],
-        $_POST['cardNumber'],
-        $_POST['cardExpiry'],
-        ($_POST['cardCvv'] ?? '') ?: null
-    ), 'Card identifier');
-
-    if (! $response instanceof CardIdentifier) {
-        pageTop('Card error');
-        renderErrors($response, 'The card could not be tokenised.');
-        pageBottom();
-        exit;
+$refuse = static function (string $reason) use ($json): never {
+    http_response_code(400);
+    if ($json) {
+        header('Content-Type: application/json');
+        exit(json_encode(['approved' => false, 'error' => $reason]));
     }
+    exit($reason);
+};
 
-    $_POST['card-identifier'] = $response->getCardIdentifier();
+// 1. Which method is this, and does this site offer it? Check here, not just
+//    in the page: the server decides what it accepts.
+$method = postedMethod($_POST);
+if ($method === null || ! in_array($method, $enabledMethods, true)) {
+    $refuse('This payment method is not offered.');
 }
 
-// Step 1: one credential -> one payment method.
+// The shopper's address, not the tunnel's or proxy's: see clientIp().
+$clientIp = clientIp($_SERVER);
+
+// The card drop-in made its session key at checkout (it tokenised the card
+// with it); every other method needs a fresh one.
+$sessionKey = ($_POST['merchantSessionKey'] ?? '') ?: merchantSessionKey($client, $endpoint, $auth);
+
+// 2. The payment method: the only line that differs between methods.
 try {
-    $paymentMethod = paymentMethodFromRequest($_POST, $sessionKey, $clientIp);
+    $paymentMethod = match ($method) {
+        'card' => new SingleUseCard($sessionKey, $_POST['card-identifier']),
+        'googlepay' => GooglePayPayment::fromGoogleToken($sessionKey, $clientIp, $_POST['googlePayToken']),
+        'applepay' => ApplePayPayment::fromAppleToken(
+            $sessionKey,
+            $clientIp,
+            $_POST['applePayToken'],
+            ($_POST['appleSessionValidationToken'] ?? '') ?: null
+        ),
+        'paypal' => new PayPalPayment($sessionKey, $baseUrl . '/paypal-return.php'),
+    };
 } catch (InvalidArgumentException $e) {
-    pageTop('Payment error');
-    echo '<div class="bg-white rounded-xl shadow p-6 space-y-3">'
-        . '<h2 class="text-lg font-semibold text-red-600">Nothing to pay with</h2>'
-        . '<p class="text-sm text-slate-700">' . h($e->getMessage()) . '</p>'
-        . '<a href="index.php" class="inline-block text-sm text-blue-600 hover:underline">&larr; Back to checkout</a>'
-        . '</div>';
-    pageBottom();
-    exit;
+    // A token the package cannot read, e.g. not what the wallet gave the browser.
+    $refuse('The payment details could not be read: ' . $e->getMessage());
 }
 
-// Step 2: one request for every method. SCA is always sent (a Google PAN_ONLY
-// token may still be challenged). apply3DSecure is card-only: forcing it on a
-// device-authenticated wallet token would be wrong.
-$vendorTxCode = 'DEMO-' . uniqid() . '-' . time();
+// 3. 3D Secure data from the shopper's browser, sent for every method: a
+//    wallet token can be challenged too.
+$strongCustomerAuthentication = BrowserData::fromArray($_POST)->toStrongCustomerAuthentication(
+    $baseUrl . '/notification.php',
+    $clientIp,
+    $_SERVER['HTTP_ACCEPT'] ?? '',
+    $_SERVER['HTTP_USER_AGENT'] ?? ''
+);
 
 $options = [
     'entryMethod' => EntryMethod::Ecommerce,
-    'strongCustomerAuthentication' => scaFromRequest($_POST, baseUrl() . '/notification.php', $clientIp),
+    'strongCustomerAuthentication' => $strongCustomerAuthentication,
 ];
 
-if (! empty($_POST['card-identifier']) && ! empty($_POST['use3ds'])) {
-    $options['apply3DSecure'] = CreatePayment::APPLY_3D_SECURE_FORCE;
+// Card only: wallet tokens are already authenticated on the device.
+if ($method === 'card') {
+    $options['apply3DSecure'] = $config['apply3DSecure'];
 }
 
+// Your own order reference; it must be unique per attempt.
+$vendorTxCode = 'DEMO-' . bin2hex(random_bytes(8));
+
 $request = new CreatePayment(
-    opayoEndpoint(),
-    opayoAuth(),
+    $endpoint,
+    $auth,
     $paymentMethod,
     $vendorTxCode,
     (new Amount(new Currency('GBP'), 0))->withMajorUnit($_POST['amount'] ?? '9.99'),
@@ -106,41 +106,50 @@ $request = new CreatePayment(
     options: $options
 );
 
-$response = sendAndRecord($request, 'Payment');
+// 4. Send it, and find out what happens next.
+$outcome = PaymentOutcome::fromResponse(
+    ResponseFactory::fromHttpResponse($client->sendRequest($request))
+);
 
-// Apple Pay posts by fetch and needs the outcome as JSON so it can complete the
-// payment sheet with the real status; it then navigates to result.php.
-if (($_POST['resultFormat'] ?? '') === 'json') {
-    respondJson($response, $vendorTxCode);
-    exit;
+$_SESSION['paymentMethod'] = $method;
+
+// Apple Pay posted by fetch: answer with JSON so the sheet can close with the
+// real result, then the page goes to complete.php.
+if ($json) {
+    $_SESSION['outcome'] = $outcome->summary();
+    header('Content-Type: application/json');
+    exit(json_encode(['approved' => $outcome->summary()['successful'], 'completeUrl' => 'complete.php']));
 }
 
-// Step 3: Opayo decides the next step, not the payment method.
-if ($response instanceof Secure3Dv2Redirect) {
-    $_SESSION['transactionId'] = $response->getTransactionId();
-    $_SESSION['vendorTxCode'] = $vendorTxCode;
+// 5. Act on the outcome. Identical for every method.
+if ($outcome->kind === OutcomeKind::Challenge) {
+    // Send the browser to the card issuer, who returns it to notification.php.
+    // Record the transaction against your order, and give the issuer your order
+    // reference to hand back: the return may arrive without the session cookie.
+    rememberTransaction($orderStore, $vendorTxCode, $outcome->transactionId());
+    $fields = $outcome->formFields(base64_encode($vendorTxCode));
 
-    pageTop('3D Secure challenge');
-    renderAcsRedirect($response, $vendorTxCode);
+    pageTop('3D Secure');
+    echo '<section class="bg-white rounded-xl shadow p-6 space-y-4">'
+        . '<h2 class="text-lg font-semibold text-slate-800">Your card issuer wants to check it is you</h2>'
+        . '<form method="post" action="' . h($outcome->acsUrl()) . '">';
+    foreach ($fields as $name => $value) {
+        echo '<input type="hidden" name="' . h($name) . '" value="' . h($value) . '">';
+    }
+    // A real site would usually submit this form automatically.
+    echo '<button class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg">Continue to 3D Secure</button>'
+        . '</form></section>';
     pageBottom();
     exit;
 }
 
-if ($response instanceof PayPalRedirect) {
-    $_SESSION['paypalTransactionId'] = $response->getTransactionId();
-    $_SESSION['vendorTxCode'] = $vendorTxCode;
-
-    pageTop('PayPal redirect');
-    renderPayPalRedirect($response);
-    pageBottom();
+if ($outcome->kind === OutcomeKind::Redirect) {
+    // PayPal: the shopper approves there, then comes back to paypal-return.php.
+    $_SESSION['transactionId'] = $outcome->transactionId();
+    header('Location: ' . $outcome->redirectUrl());
     exit;
 }
 
-pageTop('Payment result');
-if ($response instanceof ErrorCollection) {
-    renderErrors($response, 'The payment request was rejected.');
-} else {
-    renderResult($response);
-    echo '<a href="index.php" class="inline-block text-sm text-blue-600 hover:underline">&larr; Back to checkout</a>';
-}
-pageBottom();
+// Finished or Rejected: show the result (redirect first, so a refresh cannot pay twice).
+$_SESSION['outcome'] = $outcome->summary();
+header('Location: complete.php');

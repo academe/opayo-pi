@@ -394,10 +394,12 @@ sequenceDiagram
   CV2 is not applicable
 - **Sandbox**: the public `sandbox` vendor has the wallet enabled, so a
   `googlePay` payment reaches payload validation rather than failing enrolment.
-  It then validates the payload, and only a real token passes: Google's TEST
-  environment returns the placeholder `examplePaymentMethodToken`, which is
-  rejected with `6203 Invalid Google Pay payload` (checked bare and
-  JSON-wrapped). A personal test vendor fails earlier, with `6401 Wallet not
+  It then checks the payload. The sheet in Google's TEST environment returns a
+  genuine token (signed with Google's test key, addressed to
+  `gateway:opayoelavon`); the sandbox creates a transaction for it and then
+  rejects it with `6203 Invalid Google Pay payload`, because it does not accept
+  TEST tokens. Malformed or made-up payloads fail earlier, without a
+  transaction. A personal test vendor fails earlier still, with `6401 Wallet not
   enabled for the vendor`, until Opayo enables the wallet on it - they ask for
   your Google merchant ID to do so, after which that vendor also reaches `6203`.
 

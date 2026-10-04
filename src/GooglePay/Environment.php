@@ -11,11 +11,11 @@ namespace Academe\Opayo\Pi\GooglePay;
  * a TEST sheet can be pointed at either Opayo endpoint, and so can a
  * PRODUCTION one.
  *
- * TEST never returns a chargeable token. Whichever card the shopper picks,
- * the sheet returns the fixed placeholder "examplePaymentMethodToken", which
- * Opayo rejects with "6203 Invalid Google Pay payload" - it has nothing to
- * decrypt. Only PRODUCTION mints a real, encrypted token, and it needs a
- * Google merchant ID and an allowlisted HTTPS origin.
+ * TEST never returns a chargeable token. The sheet returns a genuine,
+ * encrypted token signed with Google's test key, which Opayo's sandbox
+ * rejects with "6203 Invalid Google Pay payload": it does not accept TEST
+ * tokens. Only PRODUCTION tokens can be charged, and they need a Google
+ * merchant ID, an allowlisted HTTPS origin and a live Opayo account.
  */
 enum Environment: string
 {

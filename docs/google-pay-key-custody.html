@@ -619,7 +619,7 @@
       <p>A Google Pay transaction has to get through two independent checks at Opayo, and the error code tells you precisely which one stopped you. This is genuinely useful diagnostic information, because the two failures mean opposite things about your setup.</p>
       <p><strong>Door one is enrolment.</strong> Is this wallet switched on for this vendor in MyOpayo? Fail and you get <code>6401 Wallet not enabled for the vendor</code> — the payload is never even examined. Your <code>.env</code> account lands here.</p>
       <p><strong>Door two is the payload.</strong> Can Elavon decrypt what you sent? Fail and you get <code>6203 Invalid Google Pay payload</code>. Reaching this door is good news: it means enrolment passed and the gateway actually tried to open the envelope. The public <code>sandbox</code> vendor lands here.</p>
-      <p>And here is why the demo stops: Google's TEST environment never encrypts anything. It returns a fixed placeholder string regardless of which card the shopper picks, by design, so that test integrations cannot move money. A constant string is not a cryptogram, so it fails door two every time — no matter which vendor, which credentials, or which certificate you might imagine obtaining.</p>
+      <p>And here is why the demo stops: a token from Google's TEST environment is genuine but not chargeable. The TEST sheet returns a real, encrypted token, addressed to <code>gateway:opayoelavon</code> but signed with Google's <em>test</em> key, by design, so that test integrations cannot move money. Opayo's sandbox gets far enough to create a transaction for it, then refuses it with <code>6203</code>: it does not accept TEST tokens. So the demo fails door two every time, no matter which vendor, which credentials, or which certificate you might imagine obtaining.</p>
     </div>
 
     <figure>
@@ -714,10 +714,16 @@
             <td class="code tag-warn">6203</td>
             <td>two</td>
           </tr>
+          <tr>
+            <td class="code">academe1</td>
+            <td class="code">genuine TEST token from the Google Pay sheet</td>
+            <td class="code tag-warn">6203</td>
+            <td>two, after a transaction was created</td>
+          </tr>
         </tbody>
       </table>
     </div>
-    <p class="col" style="font-size:14.5px;color:var(--ink-2)">Measured against the Opayo sandbox using the demo's own request path, 2 and 4 September 2026. <code>academe</code> and <code>academe1</code> are two vendors on the same account; the wallet was enabled on the second one only. Enrolling buys you exactly one door.</p>
+    <p class="col" style="font-size:14.5px;color:var(--ink-2)">Measured against the Opayo sandbox using the demo's own request path, 2 and 4 September 2026, and 4 October 2026 for the genuine token. <code>academe</code> and <code>academe1</code> are two vendors on the same account; the wallet was enabled on the second one only. Enrolling buys you exactly one door. The placeholder string is turned away before any transaction exists; the genuine TEST token gets further, to a transaction, and is then refused.</p>
   </section>
 
   <section>
@@ -772,10 +778,10 @@
       <ul class="verified">
         <li><span class="yes">measured</span><span>Both sandbox responses above, sent through the demo's own code path.</span></li>
         <li><span class="yes">measured</span><span>The Google Pay sheet opens a popup, so a headless browser cannot complete it. COOP blocks the call and the promise simply never settles.</span></li>
-        <li><span class="no">from docs</span><span>That a TEST sheet returns a constant placeholder. Google documents it; I never obtained a token from the sheet myself.</span></li>
-        <li><span class="no">from docs</span><span>The internal shape of an <code>opayoelavon</code> payload, and that Elavon registered the key with Google. Standard for the processor model, but unobserved here.</span></li>
+        <li><span class="yes">measured</span><span>What a TEST sheet returns: a genuine <code>ECv2</code> token, not a placeholder. Taken from the sheet in a real browser on 4 October 2026, its intermediate key verifies against Google's published TEST root key (not the PRODUCTION one), and its signature verifies for the recipient <code>gateway:opayoelavon</code>.</span></li>
+        <li><span class="yes">measured</span><span>That Google encrypts to Opayo, not to you: the token's signed message is addressed to <code>gateway:opayoelavon</code>. Its contents stay encrypted to Elavon's key; I can't read them, and neither can you.</span></li>
         <li><span class="yes">measured</span><span>That enrolment moves a vendor from <code>6401</code> to <code>6203</code> and no further. Confirmed on a vendor Opayo had just enabled Google Pay on.</span></li>
-        <li><span class="no">untested</span><span>Whether a PRODUCTION Google token would decrypt against Opayo's <em>test</em> endpoint. I'd expect not, since the demo pins <code>Endpoint::MODE_TEST</code>, but I haven't tried it.</span></li>
+        <li><span class="no">untested</span><span>Whether a PRODUCTION Google token would decrypt against Opayo's <em>test</em> endpoint. I'd expect not, but I haven't tried it.</span></li>
       </ul>
     </div>
   </section>

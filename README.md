@@ -47,6 +47,11 @@ data through arrays - both are supported.
 
 > This package has been updated to use the new Elavon URLs, that will be mandatory from March 2024.
 
+**Getting started:** [docs/INTEGRATION.md](docs/INTEGRATION.md) walks through adding card, Google Pay,
+Apple Pay and PayPal payments to your application: the front-end code, the back-end config and the
+endpoints to host. [docs/CREDENTIALS-AND-SETUP.md](docs/CREDENTIALS-AND-SETUP.md) explains where each
+credential comes from. To run the demo, clone this repository: the demo is not included in Composer installs.
+
 ## Package Development
 
 The Opayo Pi payment gateway is a RESTful API run by by [Elavon](https://developer.elavon.com/products/opayo/v1/api-reference).

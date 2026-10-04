@@ -143,10 +143,11 @@ Each is the sandbox path; the production delta is called out at the end of each.
    `OPAYO_GOOGLE_PAY_MERCHANT_ID` (or let it default to the vendor name).
 3. The sheet renders and produces a token. **Opayo supports Google Pay for live
    testing only** (their words, September 2026): there is no sandbox path that
-   completes. Google's TEST environment returns a fixed placeholder token that
-   Opayo cannot decrypt, so the sandbox stops at `6203 Invalid Google Pay
-   payload`. Reaching `6203` proves your integration is correct up to the token;
-   it cannot go further on test.
+   completes. The sheet in Google's TEST environment returns a genuine token,
+   signed with Google's test key and addressed to `gateway:opayoelavon`; the
+   sandbox creates a transaction for it, then rejects it with `6203 Invalid
+   Google Pay payload`. Reaching `6203` proves your integration is correct up
+   to the token; it cannot go further on test.
 
 **Production (the only way to complete Google Pay):** a Google merchant ID in
 `GOOGLE_PAY_MERCHANT_ID`, the sheet switched to `PRODUCTION`, an allowlisted
