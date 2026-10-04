@@ -51,3 +51,4 @@ composer.lock
 
 # Vendor documentation pulled by scripts/fetch-opayo-docs.php
 /docs/vendor/
+/docs/superpowers/
