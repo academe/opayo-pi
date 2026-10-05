@@ -40,12 +40,20 @@ in a new repository due to the change in the composer package name.
 This package provides the data models for the [Opayo Pi](https://developer-eu.elavon.com/docs/opayo)
 (was *Sage Pay Integration*) payment gateway.
 It does not provide the transport mechanism, so you can use what PSR-18 client you like for that,
-for example Guzzle (7+ or 6+HTTPlug adapter), curl or another PSR-7 library.
+for example Guzzle 7 or 8, curl or another PSR-7 library.
 
 You can use this library as a PSR-7 message generator/consumer, or go a level down and handle all the
 data through arrays - both are supported.
 
 > This package has been updated to use the new Elavon URLs, that will be mandatory from March 2024.
+
+**Getting started:** [docs/INTEGRATION.md](docs/INTEGRATION.md) walks through adding card, Google Pay,
+Apple Pay and PayPal payments to your application: the front-end code, the back-end config and the
+endpoints to host. [docs/CREDENTIALS-AND-SETUP.md](docs/CREDENTIALS-AND-SETUP.md) explains where each
+credential comes from. To run the demo, clone this repository: the demo is not included in Composer installs.
+
+**Using an AI coding agent?** Point it at [AGENTS.md](AGENTS.md), which tells it where to look and what
+the sandbox can and cannot do.
 
 ## Package Development
 
@@ -65,6 +73,21 @@ The `PSR7` branch is now in maintenance mode only, and won't have any major chan
 The aim is to release on the master branch as soon as a demo (and some units tests) are up and running.
 
 The aim is for this package to support, at the backend, all functionality that the gateway supports.
+
+### Reading the gateway documentation
+
+Elavon's developer portal is a single-page app: slow to load, prone to failing, and
+unreadable by anything that does not run JavaScript. Each page does ship its own
+markdown source in the served HTML though, so it can be pulled down and read locally:
+
+```bash
+php scripts/fetch-opayo-docs.php --list          # what pages exist
+php scripts/fetch-opayo-docs.php test-in-sandbox # one page
+php scripts/fetch-opayo-docs.php --all           # all of them
+```
+
+Pages land in `docs/vendor/opayo/` as markdown. That directory is gitignored: the
+content is Elavon's, and is fetched for reading rather than redistribution.
 
 ## Want to Help?
 
@@ -91,20 +114,11 @@ This library does provide support for the front end though, and this is noted wh
 ### Installation
 
 **Requirements:**
-- PHP 8.1 or higher (supports PHP 8.1, 8.2, and 8.3)
+- PHP 8.1 or higher
 
 Get the latest release:
 
-    composer.phar require academe/opayo-pi
-
-Until this library has been released to packagist, include the VCS in `composer.json`:
-
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/academe/SagePay-Integration.git"
-        }
-    ]
+    composer require academe/opayo-pi
 
 ### Create a Session Key
 
@@ -136,9 +150,7 @@ $endpoint = new Endpoint(Endpoint::MODE_TEST); // or MODE_LIVE
 
 $keyRequest = new CreateSessionKey($endpoint, $auth);
 
-// PSR-18 HTTP client to send this message.
-// If using Guzzle 6, then wrap it with an adapter such as HTTPlug,
-// see https://docs.php-http.org/en/latest/clients/guzzle6-adapter.html
+// PSR-18 HTTP client to send this message (Guzzle 7 or 8 here).
 
 $client = new Client();
 
@@ -286,9 +298,23 @@ $customer = new Person(
 
 $amount = Amount::GBP()->withMinorUnit(999);
 
-// Or better to use the moneyphp/money package:
+// Or, if your application uses the moneyphp/money package (^3.0 or ^4.0,
+// installed separately), a Money instance can be passed straight to any
+// request constructor (CreatePayment, CreateDeferred, CreateRepeatPayment,
+// CreateRefund, CreateRelease) and is converted internally:
+
+$amount = MoneyPhp::GBP(999);
+
+// The MoneyAmount wrapper does the same conversion explicitly, if you need
+// an AmountInterface in your own code:
 
 $amount = new MoneyAmount(MoneyPhp::GBP(999));
+
+// Going the other way, any amount the package gives you (including the amounts
+// in a transaction response) can be converted back to a Money instance:
+
+$money = Amount::GBP(999)->toMoney();
+$money = MoneyAmount::fromAmount($response->getTotalAmount())->toMoney();
 
 // We have a card to charge (we get the session key and captured the card identifier earlier).
 // See below for details of the various card request objects.
@@ -395,8 +421,24 @@ A previous transaction can be used as a base for a repeat payment.
 You can amend the shipping details and the amount (with no limit)
 but not the payee details or address.
 
+Two things are required by the gateway:
+
+1. The *original* payment must have been flagged for credential-on-file
+   reuse by sending a `credentialType` of `cofUsage` `First` and
+   `initiatedType` `CIT` (see [Saving and Reusing Cards](#saving-and-reusing-cards)
+   below). Use `CredentialType::createForNewReusableCard()`.
+   A CIT `credentialType` also requires the full
+   `strongCustomerAuthentication` object on that original payment, and if
+   3D Secure is being bypassed (`apply3DSecure` `Disable`), a
+   `threeDSExemptionIndicator` as well.
+2. The *repeat* itself must carry a `credentialType` of `cofUsage`
+   `Subsequent` and `initiatedType` `MIT`: repeats are always classed as
+   Merchant Initiated Transactions, and no 3D Secure authentication is
+   needed. `CredentialType::createForRepeatPayment()` builds this.
+
 ```php
 use Academe\Opayo\Pi\Request\CreateRepeatPayment;
+use Academe\Opayo\Pi\Request\Model\CredentialType;
 
 $repeat_payment = new CreateRepeatPayment(
     $endpoint,
@@ -406,9 +448,32 @@ $repeat_payment = new CreateRepeatPayment(
     $amount, // Not limited by the original amount.
     'My Repeat Purchase Description',
     null, // Optional shipping address
-    null // Optional shipping recipient
+    null, // Optional shipping recipient
+    [
+        'credentialType' => CredentialType::createForRepeatPayment(),
+    ]
+);
+
+// Or immutably:
+
+$repeat_payment = $repeat_payment->withCredentialType(
+    CredentialType::createForRepeatPayment()
 );
 ```
+
+The `mitType` defaults to `Unscheduled` (irregular intervals, fixed or
+variable amount). For a fixed-schedule subscription use `Recurring`, which
+additionally requires the date of the final payment (`YYYYMMDD`) and the
+frequency in days:
+
+```php
+use Academe\Opayo\Pi\Request\Enums\MitType;
+
+CredentialType::createForRepeatPayment(MitType::Recurring, '20270301', 28);
+```
+
+Check with your acquirer which MIT types they support; `Unscheduled` and
+`Recurring` are typically supported by all.
 
 All other options remain the same as for the original transaction
 (though it does appear that giftAid can now be set in the API).
@@ -997,111 +1062,34 @@ $card = new ReusableCard($cardIdentifier);
 $card = new ReusableCard($merchantSessionKey, $cardIdentifier);
 ```
 
-### Alternative Payment Methods
+### Alternative Payment Methods (wallets)
 
-In addition to card payments, Opayo Pi supports modern digital wallet payment methods.
-
-#### Apple Pay
-
-Apple Pay allows customers to pay using their Apple devices with biometric authentication.
-
-```php
-use Academe\Opayo\Pi\Request\Model\ApplePayPayment;
-
-// Apple Pay token received from Apple Pay JS API (client-side)
-// The token must be Base64 encoded
-$applePayToken = base64_encode($rawApplePayToken);
-
-// Create Apple Pay payment method
-$applePayment = new ApplePayPayment(
-    $_SERVER['REMOTE_ADDR'],           // Client IP address
-    $applePayToken,                     // Base64-encoded Apple Pay token
-    $sessionValidationToken             // Optional: for Opayo-managed certificates
-);
-
-// Use in payment request
-$paymentRequest = new CreatePayment(
-    $endpoint,
-    $auth,
-    $applePayment,                      // Use Apple Pay instead of card
-    'MyVendorTxCode-' . rand(10000000, 99999999),
-    $amount,
-    'Apple Pay Purchase',
-    $billingAddress,
-    $customer
-);
-
-$response = $client->sendRequest($paymentRequest);
-$payment = ResponseFactory::fromHttpResponse($response);
-```
-
-**Apple Pay Certificate Types:**
-- **Opayo-managed**: Easier setup, no Apple Developer account needed. Requires `sessionValidationToken`.
-- **Merchant-managed**: Full control, requires Apple Developer account and certificate upload.
-
-#### Google Pay
-
-Google Pay provides a seamless checkout experience across devices.
-
-```php
-use Academe\Opayo\Pi\Request\Model\GooglePayPayment;
-
-// Google Pay token received from Google Pay API (client-side)
-// The token must be Base64 encoded
-$googlePayToken = base64_encode($rawGooglePayToken);
-
-// Create Google Pay payment method
-$googlePayment = new GooglePayPayment(
-    $_SERVER['REMOTE_ADDR'],           // Client IP address
-    $googlePayToken                     // Base64-encoded Google Pay token
-);
-
-// Use in payment request
-$paymentRequest = new CreatePayment(
-    $endpoint,
-    $auth,
-    $googlePayment,                     // Use Google Pay instead of card
-    'MyVendorTxCode-' . rand(10000000, 99999999),
-    $amount,
-    'Google Pay Purchase',
-    $billingAddress,
-    $customer
-);
-
-$response = $client->sendRequest($paymentRequest);
-$payment = ResponseFactory::fromHttpResponse($response);
-```
-
-**Google Pay Benefits:**
-- No certificate management required
-- Works on Chrome, Android devices, and limited Safari support
-- Simpler integration than Apple Pay
+Opayo Pi accepts Apple Pay, Google Pay and PayPal as the `paymentMethod` of a
+`CreatePayment`. Every wallet object needs a **merchant session key** (create one
+with `CreateSessionKey` exactly as for a card payment), and the wallet must be
+enabled on your vendor in MyOpayo (Settings → Pay Methods). Otherwise the gateway
+answers `6401 Wallet not enabled for the vendor` / `1030 Vendor not enrolled with
+this wallet type`. The field names below are those of the Opayo API reference and
+have been checked against the sandbox.
 
 #### PayPal
 
-PayPal integration allows customers to pay using their PayPal account.
-
-**Note:** PayPal support in Opayo Pi is currently being rolled out. Check with Opayo support for availability.
+PayPal is a redirect flow: you register the transaction, send the shopper to
+PayPal, and Opayo brings them back to your `callbackUrl` with the `transactionId`
+appended, after which you fetch the transaction for the result. This is the one
+wallet that can be tried end to end in the sandbox (the public `sandbox` vendor
+has PayPal enabled; you need a PayPal sandbox *buyer* login to approve).
 
 ```php
 use Academe\Opayo\Pi\Request\Model\PayPalPayment;
+use Academe\Opayo\Pi\Request\FetchTransaction;
+use Academe\Opayo\Pi\Response\PayPalRedirect;
 
-// PayPal order ID and payer ID received from PayPal Checkout (client-side)
-$paypalOrderId = $paypalResponse['orderID'];
-$payerId = $paypalResponse['payerID']; // Optional
-
-// Create PayPal payment method
-$paypalPayment = new PayPalPayment(
-    $_SERVER['REMOTE_ADDR'],           // Client IP address
-    $paypalOrderId,                     // PayPal order ID
-    $payerId                            // Optional: PayPal payer ID
-);
-
-// Use in payment request
+// 1. Register the transaction with the PayPal payment method.
 $paymentRequest = new CreatePayment(
     $endpoint,
     $auth,
-    $paypalPayment,                     // Use PayPal instead of card
+    new PayPalPayment($merchantSessionKey, 'https://shop.example.com/paypal-return'),
     'MyVendorTxCode-' . rand(10000000, 99999999),
     $amount,
     'PayPal Purchase',
@@ -1109,13 +1097,128 @@ $paymentRequest = new CreatePayment(
     $customer
 );
 
-$response = $client->sendRequest($paymentRequest);
-$payment = ResponseFactory::fromHttpResponse($response);
+$response = ResponseFactory::fromHttpResponse($client->sendRequest($paymentRequest));
+
+// 2. status "Redirect" (statusCode 2023): send the shopper to PayPal (full page, not an iframe).
+if ($response instanceof PayPalRedirect) {
+    $_SESSION['transactionId'] = $response->getTransactionId(); // also: ->getOrderId()
+    header('Location: ' . $response->getRedirectUrl());
+    exit;
+}
+
+// 3. At /paypal-return: Opayo appends the transactionId to the callback URL.
+//    Fetch the transaction to learn the outcome (Ok / NotAuthed / ...).
+$transactionId = $_GET['transactionId'] ?? $_SESSION['transactionId'];
+$result = ResponseFactory::fromHttpResponse(
+    $client->sendRequest(new FetchTransaction($endpoint, $auth, $transactionId))
+);
+if ($result->isSuccessful()) { /* paid */ }
 ```
 
-**PayPal Requirements:**
-- Must be enabled in MyOpayo dashboard
-- PayPal account setup and permissions
-- Currently limited availability in Pi API
+The merchant session key expires after 400 seconds; the shopper must be redirected
+to PayPal within 20 minutes of registration. Note that `GET /transactions/{id}`
+answers `404 Transaction not found` for a PayPal transaction until PayPal has
+reported the outcome back to Opayo. It only becomes fetchable once the shopper
+has finished at PayPal (which is exactly when Opayo calls your `callbackUrl`).
 
-For more details on alternative payment methods, see [docs/payment-flows.md](docs/payment-flows.md).
+#### Apple Pay
+
+The Apple Pay token is minted by Safari on an Apple device (Apple Pay JS,
+`session.onpaymentauthorized` → `event.payment.token`) and cannot be produced
+server-side. Two certificate arrangements exist:
+
+- **Opayo manages your certificate**: register your HTTPS domain in MyOpayo; when
+  Safari fires `onvalidatemerchant`, your server calls `CreateApplePaySession` and
+  returns the merchant session to the browser, and the response's
+  `sessionValidationToken` must travel with the transaction.
+- **You manage your certificate**: Apple Developer merchant ID plus the
+  Opayo-issued CSR/certificate; no session call, no `sessionValidationToken`.
+
+```php
+use Academe\Opayo\Pi\Request\CreateApplePaySession;
+use Academe\Opayo\Pi\Request\Model\ApplePayPayment;
+use Academe\Opayo\Pi\Response\ApplePaySession;
+
+// Opayo-managed certificate only: answer Safari's onvalidatemerchant.
+// Use ApplePaySession::fromHttpResponse() for this call: it returns an
+// ApplePaySession, or an ErrorCollection on a 4xx (e.g. 6118 "Domain not registered").
+$session = ApplePaySession::fromHttpResponse($client->sendRequest(
+    new CreateApplePaySession($endpoint, $auth, 'shop.example.com')
+));
+if (! $session instanceof ApplePaySession || ! $session->isSuccess()) {
+    // Tell Safari the validation failed (session.abort()) and log the statusDetail.
+}
+// -> json_encode($session->getMerchantSession()) back to the browser for
+//    ApplePaySession.completeMerchantValidation(); keep the token server-side:
+$sessionValidationToken = $session->getSessionValidationToken();
+
+// Then, with Apple's payment token from onpaymentauthorized (event.payment.token):
+$applePayment = ApplePayPayment::fromAppleToken(
+    $merchantSessionKey,
+    $_SERVER['REMOTE_ADDR'],
+    $appleToken,                // array/object/JSON of the token Apple gave the browser
+    $sessionValidationToken     // null for a merchant-managed certificate
+);
+// fromAppleToken() base64-encodes the paymentData node (as Opayo requires) and
+// picks up applicationData / displayName / paymentMethodType. Or build it directly:
+// new ApplePayPayment($msk, $ip, $base64PaymentData, $sessionValidationToken);
+
+$paymentRequest = new CreatePayment($endpoint, $auth, $applePayment, $vendorTxCode, $amount, 'Apple Pay', $billingAddress, $customer);
+```
+
+The sandbox has magic amounts for Apple Pay (merchant-managed certificate, Apple
+sandbox test cards): `10600` authorised, `10700` soft decline, `10800` / `10900`
+authorised with an ecommerce-type change.
+
+#### Google Pay
+
+In the Google Pay JS `tokenizationSpecification`, use `gateway: 'opayoelavon'` and
+the `gatewayMerchantId` shown in MyOpayo when you add Google Pay. The token to send
+is `paymentData.paymentMethodData.tokenizationData.token`, base64 encoded.
+
+The `GooglePay\Configuration` class builds the request objects the Google Pay
+JavaScript API expects, so the boilerplate does not have to be copied into every
+integration. Hand the result to your page and let the browser glue it to
+`google.payments.api.PaymentsClient`:
+
+```php
+use Academe\Opayo\Pi\GooglePay\Configuration;
+use Academe\Opayo\Pi\GooglePay\Environment;
+
+$config = new Configuration(
+    gatewayMerchantId: $gatewayMerchantId,   // MyOpayo > Settings > Pay Methods > Google Pay
+    merchantName: 'Widgets Ltd',             // shown to the shopper on the sheet
+    googleMerchantId: $googleMerchantId,     // Google Pay & Wallet Console; PRODUCTION only
+    environment: Environment::Test,
+);
+
+// {environment, isReadyToPayRequest, paymentDataRequest}, ready to json_encode.
+$clientConfig = $config->clientConfiguration($amount);
+```
+
+`Environment::Production` requires the Google merchant ID and throws without it.
+The individual pieces (`isReadyToPayRequest()`, `paymentDataRequest()`,
+`tokenizationSpecification()`, `merchantInfo()`, `transactionInfo()`) are public if
+you would rather assemble them yourself. `demo/index.php` shows the whole flow.
+
+There is no Google Pay certificate or secret issued to you: `PAYMENT_GATEWAY`
+tokenisation makes Elavon the recipient, so the `gatewayMerchantId` is an
+identifier rather than a credential and belongs in your page source.
+`docs/google-pay-key-custody.html` explains the key custody, the token layers and
+the `6401` / `6203` error codes with diagrams.
+
+```php
+use Academe\Opayo\Pi\Request\Model\GooglePayPayment;
+
+$googlePayment = GooglePayPayment::fromGoogleToken(
+    $merchantSessionKey,
+    $_SERVER['REMOTE_ADDR'],
+    $tokenizationDataToken      // the raw token string from the Google Pay API
+);
+// or: new GooglePayPayment($msk, $ip, base64_encode($tokenizationDataToken));
+
+$paymentRequest = new CreatePayment($endpoint, $auth, $googlePayment, $vendorTxCode, $amount, 'Google Pay', $billingAddress, $customer);
+```
+
+The demo (`demo/`) exercises the PayPal flow against the public sandbox; see
+[docs/payment-flows.md](docs/payment-flows.md) for the sequence diagrams.

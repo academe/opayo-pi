@@ -6,6 +6,10 @@ namespace Academe\Opayo\Pi\Request\Model;
 
 use UnexpectedValueException;
 use JsonSerializable;
+use Academe\Opayo\Pi\Request\Enums\BrowserColorDepth;
+use Academe\Opayo\Pi\Request\Enums\ChallengeWindowSize;
+use Academe\Opayo\Pi\Request\Enums\ThreeDSExemptionIndicator;
+use Academe\Opayo\Pi\Request\Enums\TransType;
 
 /**
  * Use to provide strong customer authentication details for 3D Secure v2.
@@ -42,23 +46,13 @@ class StrongCustomerAuthentication implements JsonSerializable
     public const BROWSER_COLOR_DEPTH_24 = 24;
     public const BROWSER_COLOR_DEPTH_32 = 32;
     public const BROWSER_COLOR_DEPTH_48 = 48;
-
-    protected array $browserColorDepths = [
-        self::BROWSER_COLOR_DEPTH_1,
-        self::BROWSER_COLOR_DEPTH_4,
-        self::BROWSER_COLOR_DEPTH_8,
-        self::BROWSER_COLOR_DEPTH_15,
-        self::BROWSER_COLOR_DEPTH_16,
-        self::BROWSER_COLOR_DEPTH_24,
-        self::BROWSER_COLOR_DEPTH_32,
-        self::BROWSER_COLOR_DEPTH_48,
-    ];
+    // The allowed values are the cases of Enums\BrowserColorDepth (validated in setBrowserColorDepth()).
 
     /**
      * @var there are more undocumented attributes: requestSCAExemption threeDSRequestorDecReqInd threeDSRequestorChallengeInd etc.
      */
     protected ?bool $browserJavaEnabled = null;
-    protected ?string $browserColorDepth = null;
+    protected ?int $browserColorDepth = null;
     protected ?int $browserScreenHeight = null;
     protected ?int $browserScreenWidth = null;
     protected ?int $browserTz = null; // Time-zone offset in minutes between UTC and the Cardholder browser local time. (really!)
@@ -97,6 +91,9 @@ class StrongCustomerAuthentication implements JsonSerializable
      * @todo actually a bunch more fields are mandatory, depending on the values
      * of others. For example window size and tz is required if javascript is enabled.
      */
+    protected readonly string $challengeWindowSize;
+    protected readonly string $transType;
+
     public function __construct(
         protected readonly string $notificationUrl,
         protected readonly string $browserIp,
@@ -104,10 +101,15 @@ class StrongCustomerAuthentication implements JsonSerializable
         protected readonly bool $browserJavascriptEnabled,
         protected readonly string $browserLanguage,
         protected readonly string $browserUserAgent,
-        protected readonly string $challengeWindowSize,
-        protected readonly string $transType,
+        string|ChallengeWindowSize $challengeWindowSize,
+        string|TransType $transType,
         array $additionalOptions = []
     ) {
+        $this->challengeWindowSize = $challengeWindowSize instanceof ChallengeWindowSize
+            ? $challengeWindowSize->value : $challengeWindowSize;
+        $this->transType = $transType instanceof TransType
+            ? $transType->value : $transType;
+
         foreach ($additionalOptions as $name => $value) {
             $method = 'set' . ucfirst($name);
 
@@ -138,26 +140,39 @@ class StrongCustomerAuthentication implements JsonSerializable
     }
 
     /**
-     * @param string $browserColorDepth
+     * The value is stored and serialized as an integer, as the gateway
+     * expects. Numeric strings are accepted for backwards compatibility.
+     *
+     * @param int|string|BrowserColorDepth $browserColorDepth
      * @return $this
      * @throws UnexpectedValueException
      */
-    protected function setBrowserColorDepth(string $browserColorDepth): static
+    protected function setBrowserColorDepth(int|string|BrowserColorDepth $browserColorDepth): static
     {
-        if (! in_array($browserColorDepth, $this->browserColorDepths)) {
-            throw new UnexpectedValueException('Invalid browserColorDepth value');
+        if (! $browserColorDepth instanceof BrowserColorDepth) {
+            // A string must be a plain integer ("24"); do not let the (int) cast
+            // quietly turn "24px" or "8 bit" into an accepted value.
+            if (is_string($browserColorDepth) && ! ctype_digit($browserColorDepth)) {
+                throw new UnexpectedValueException('Invalid browserColorDepth value');
+            }
+
+            $browserColorDepth = BrowserColorDepth::tryFrom((int)$browserColorDepth);
+
+            if ($browserColorDepth === null) {
+                throw new UnexpectedValueException('Invalid browserColorDepth value');
+            }
         }
 
-        $this->browserColorDepth = $browserColorDepth;
+        $this->browserColorDepth = $browserColorDepth->value;
         return $this;
     }
 
     /**
-     * @param string $browserColorDepth
+     * @param int|string|BrowserColorDepth $browserColorDepth
      * @return static
      * @throws UnexpectedValueException
      */
-    public function withBrowserColorDepth(string $browserColorDepth): static
+    public function withBrowserColorDepth(int|string|BrowserColorDepth $browserColorDepth): static
     {
         $clone = clone $this;
         return $clone->setBrowserColorDepth($browserColorDepth);
@@ -201,6 +216,32 @@ class StrongCustomerAuthentication implements JsonSerializable
     {
         $clone = clone $this;
         return $clone->setBrowserScreenWidth($browserScreenWidth);
+    }
+
+    /**
+     * The reason for bypassing 3D Secure; required by the gateway when
+     * apply3DSecure is Disable and the credentialType initiatedType is CIT.
+     *
+     * @param string|ThreeDSExemptionIndicator $threeDsExemptionIndicator
+     * @return $this
+     */
+    protected function setThreeDsExemptionIndicator(
+        string|ThreeDSExemptionIndicator $threeDsExemptionIndicator
+    ): static {
+        $this->threeDsExemptionIndicator = $threeDsExemptionIndicator instanceof ThreeDSExemptionIndicator
+            ? $threeDsExemptionIndicator->value : $threeDsExemptionIndicator;
+        return $this;
+    }
+
+    /**
+     * @param string|ThreeDSExemptionIndicator $threeDsExemptionIndicator
+     * @return static
+     */
+    public function withThreeDsExemptionIndicator(
+        string|ThreeDSExemptionIndicator $threeDsExemptionIndicator
+    ): static {
+        $clone = clone $this;
+        return $clone->setThreeDsExemptionIndicator($threeDsExemptionIndicator);
     }
 
     /**
@@ -259,6 +300,10 @@ class StrongCustomerAuthentication implements JsonSerializable
 
         if ($this->browserTz !== null) {
             $attributes['browserTZ'] = $this->browserTz;
+        }
+
+        if ($this->threeDsExemptionIndicator !== null) {
+            $attributes['threeDSExemptionIndicator'] = $this->threeDsExemptionIndicator;
         }
 
         return $attributes;

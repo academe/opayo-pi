@@ -93,12 +93,12 @@ Unit tests are fast, isolated tests that don't require external services.
 
 ### Characteristics
 
-- ✅ No API calls or network requests
-- ✅ No database connections
-- ✅ Use mocks/stubs for dependencies
-- ✅ Fast execution (milliseconds)
-- ✅ Deterministic results
-- ✅ Run in CI/CD without setup
+- No API calls or network requests
+- No database connections
+- Use mocks/stubs for dependencies
+- Fast execution (milliseconds)
+- Deterministic results
+- Run in CI/CD without setup
 
 ### Example Unit Test
 
@@ -144,7 +144,7 @@ Integration tests verify the library works correctly with the real Opayo API.
 
 **Step 1: Get Opayo Test Credentials**
 
-1. Sign up for a test account at [Opayo Test Environment](https://test.opayo.eu.elavon.com/)
+1. Sign up for a test account at [Opayo test MySagePay portal](https://sandbox.opayo.eu.elavon.com/mysagepay/)
 2. Get your credentials:
    - Vendor Name
    - Integration Key
@@ -178,14 +178,14 @@ vendor/bin/phpunit --testsuite=integration
 
 Integration tests verify:
 
-- ✅ Session key creation (`SessionKeyTest`)
-- ✅ Card tokenization and identifier creation (`CardIdentifierTest`)
-- ✅ Payment transaction processing (`PaymentTest`)
-- ✅ Multiple currencies (GBP, USD)
-- ✅ Shipping address handling
-- ✅ 3D Secure flows
-- ✅ Error handling with invalid data
-- ✅ API response parsing
+- Session key creation (`SessionKeyTest`)
+- Card tokenization and identifier creation (`CardIdentifierTest`)
+- Payment transaction processing (`PaymentTest`)
+- Multiple currencies (GBP, USD)
+- Shipping address handling
+- 3D Secure flows
+- Error handling with invalid data
+- API response parsing
 
 ### Opayo Test Cards
 
@@ -475,24 +475,24 @@ script:
 
 ### DO
 
-- ✅ Write unit tests for all public methods
-- ✅ Use integration tests sparingly (slow, flaky)
-- ✅ Keep tests fast and focused
-- ✅ Use descriptive test names
-- ✅ Test edge cases and error conditions
-- ✅ Use data providers for multiple inputs
-- ✅ Clean up after integration tests
-- ✅ Run unit tests before every commit
+- Write unit tests for all public methods
+- Use integration tests sparingly (slow, flaky)
+- Keep tests fast and focused
+- Use descriptive test names
+- Test edge cases and error conditions
+- Use data providers for multiple inputs
+- Clean up after integration tests
+- Run unit tests before every commit
 
 ### DON'T
 
-- ❌ Commit `.env` file (credentials!)
-- ❌ Write integration tests for simple logic
-- ❌ Test private methods directly
-- ❌ Share state between tests
-- ❌ Hard-code test credentials
-- ❌ Ignore failed tests
-- ❌ Skip writing tests for bug fixes
+- Commit `.env` file (credentials!)
+- Write integration tests for simple logic
+- Test private methods directly
+- Share state between tests
+- Hard-code test credentials
+- Ignore failed tests
+- Skip writing tests for bug fixes
 
 ---
 
@@ -572,3 +572,45 @@ vendor/bin/phpunit --testsuite=all
 **Last Updated:** 2025-11
 **PHPUnit Version:** 10.5+
 **PHP Version:** 8.1+
+
+## Wallets (Apple Pay, Google Pay, PayPal)
+
+Wallets must be enabled on the vendor in MyOpayo (Settings > Pay Methods). A vendor
+without the wallet answers `6401 Wallet not enabled for the vendor` (Apple/Google Pay)
+or `1030 Vendor not enrolled with this wallet type` (PayPal). The public `sandbox`
+profile has PayPal and Google Pay enabled; Opayo will enable Google Pay on a personal
+test vendor on request, and asks for your Google merchant ID to do it.
+
+The demo (`demo/index.php`) offers all of these on one checkout page, each panel
+posting to a single `pay.php`; an unavailable method shows why rather than
+disappearing.
+
+- **PayPal** - testable end to end: the demo's PayPal panel registers the payment,
+  the sandbox returns a `Redirect` (2023) to `https://www.sandbox.paypal.com/...`,
+  and approving there needs a PayPal *sandbox buyer* account
+  (developer.paypal.com > Sandbox > Accounts). Opayo then redirects to your
+  `callbackUrl?transactionId=...`; fetch the transaction for the outcome (before PayPal reports back, the fetch answers `404 Transaction not found`).
+- **Apple Pay** - **not completable on the sandbox with this demo.** Elavon
+  confirmed (Sept 2026) that test supports only the *merchant-managed* certificate
+  mode; the demo implements the *Opayo-managed* flow (`apple-session.php` →
+  `CreateApplePaySession`), which is production-only, so on test it returns
+  `4006 The TxType requested is not supported on this account`. The readiness
+  probe otherwise surfaces `6118 Domain not registered` / `6125 Invalid
+  domainName field` (a host with a port). Merchant-managed testing needs an Apple
+  Developer account, an Apple Merchant ID, Opayo's CSR signed by Apple, and a
+  merchant-validation call made directly to Apple - not built here, and not
+  confirmed to cover web (vs In-App) on test. See `docs/CREDENTIALS-AND-SETUP.md`.
+  Sandbox magic amounts, when you can get there: `10600` authorised, `10700`
+  soft decline, `10800` / `10900` authorised with ecommerce-type change.
+- **Google Pay** - needs a real token from the Google Pay sheet (gateway
+  `opayoelavon`, gatewayMerchantId from MyOpayo); the sandbox validates the payload
+  (`6203 Invalid Google Pay payload` otherwise). **There is no way to complete this
+  in the sandbox.** The sheet in Google's TEST environment returns a genuine token,
+  signed with Google's test key and addressed to `gateway:opayoelavon`; the sandbox
+  creates a transaction for it, then rejects it with `6203`. Note that Opayo
+  publishes sandbox magic amounts for Apple Pay (above) but nothing equivalent for
+  Google Pay - their own "Test in Sandbox" page has an Apple Pay section and no
+  Google Pay section at all. Some gateways make this testable by having their
+  sandbox accept Google's TEST tokens; Opayo's does not. So an enrolled vendor gets
+  you from `6401` to `6203` and no further. See
+  `docs/google-pay-key-custody.html` for why, and what a real verification needs.

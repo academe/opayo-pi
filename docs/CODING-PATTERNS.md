@@ -36,7 +36,7 @@ namespace Academe\Opayo\Pi\Example;
 
 ### Constructor Property Promotion ⚡ ALWAYS PREFER THIS
 
-**IMPORTANT:** Constructor property promotion should be used whenever possible. This is a core pattern in this codebase and significantly reduces boilerplate code.
+Use constructor property promotion wherever possible. It is used throughout this codebase and removes a lot of boilerplate.
 
 ```php
 // ✅ GOOD: Modern constructor promotion
@@ -84,17 +84,17 @@ class OldStyle
 ```
 
 **When to use constructor property promotion:**
-- ✅ **Simple assignment** - Property is directly assigned from parameter
-- ✅ **Value objects** - Classes that hold data
-- ✅ **Payment methods** - All PaymentMethodInterface implementations
-- ✅ **With `readonly`** - For immutable objects
-- ✅ **With default values** - For optional parameters
-- ✅ **Multiple properties** - Even with 5+ properties
+- **Simple assignment** - Property is directly assigned from parameter
+- **Value objects** - Classes that hold data
+- **Payment methods** - All PaymentMethodInterface implementations
+- **With `readonly`** - For immutable objects
+- **With default values** - For optional parameters
+- **Multiple properties** - Even with 5+ properties
 
 **When NOT to use (exceptions only):**
-- ❌ **Complex initialization** - Properties need transformation or validation
-- ❌ **Conditional logic** - Different assignment based on conditions
-- ❌ **Dependencies** - One property depends on another's value
+- **Complex initialization** - Properties need transformation or validation
+- **Conditional logic** - Different assignment based on conditions
+- **Dependencies** - One property depends on another's value
 
 **Examples where NOT to use:**
 ```php
@@ -209,7 +209,7 @@ const OLD_STYLE = 'value';
 **IMPORTANT:** Use PHP 8.1+ enums for representing fixed sets of values (status codes, types, modes, etc.). Enums provide type safety, autocomplete, and encapsulate domain logic.
 
 ```php
-// ✅ EXCELLENT: Backed enum with helper methods
+// ✅ GOOD: Backed enum with helper methods
 enum TransactionStatus: string
 {
     case OK = 'Ok';
@@ -300,17 +300,17 @@ class AbstractTransaction
 ```
 
 **When to use enums:**
-- ✅ **Fixed API values** - Transaction statuses, payment methods, etc.
-- ✅ **Configuration options** - Entry methods, challenge window sizes
-- ✅ **Internal types** - Instruction types, credential types
-- ✅ **Domain concepts** - When the set of values has business meaning
+- **Fixed API values** - Transaction statuses, payment methods, etc.
+- **Configuration options** - Entry methods, challenge window sizes
+- **Internal types** - Instruction types, credential types
+- **Domain concepts** - When the set of values has business meaning
 
 **Benefits:**
-- 🎯 Type safety and IDE autocomplete
-- 🔍 Exhaustive match expression checking
-- 📚 Self-documenting code
-- 🛠️ Encapsulate domain logic in helper methods
-- ♻️ Easy refactoring across codebase
+- Type safety and IDE autocomplete
+- Exhaustive match expression checking
+- Self-documenting code
+- Encapsulate domain logic in helper methods
+- Easy refactoring across codebase
 
 See [ENUM-MIGRATION-GUIDE.md](ENUM-MIGRATION-GUIDE.md) for detailed examples and migration strategies.
 

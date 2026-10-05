@@ -38,11 +38,18 @@ class Currency implements CurrencyInterface
         return new static($method);
     }
 
+    /**
+     * The ISO 4217 three-character currency code, e.g. "GBP".
+     */
     public function getCode(): string
     {
         return $this->code;
     }
 
+    /**
+     * The number of decimal digits in the minor unit, e.g. 2 for GBP
+     * (100 pence to the pound) and 0 for JPY.
+     */
     public function getMinorUnits(): int
     {
         return $this->allCurrencies->getByAlpha3($this->code)['exp'];
@@ -57,9 +64,9 @@ class Currency implements CurrencyInterface
     }
 
     /**
-     * The symbols will be one or more UTF-8 characters.
-     * getName and getSymbol are handy for display and logging, but not essential,
-     * so they are not a part of the interface.
+     * The English name of the currency, e.g. "Pound Sterling".
+     * Handy for display and logging, but not essential,
+     * so it is not a part of the interface.
      */
     public function getName(): string
     {

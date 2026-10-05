@@ -46,3 +46,10 @@ composer.lock
 # Development/testing
 /.env
 /.phpunit.cache
+.gstack/
+.idea/
+.superpowers/
+
+# Vendor documentation pulled by scripts/fetch-opayo-docs.php
+/docs/vendor/
+/docs/superpowers/

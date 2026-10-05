@@ -4,130 +4,76 @@ namespace Academe\Opayo\Pi\Request\Model;
 
 use PHPUnit\Framework\TestCase;
 
+/**
+ * paymentMethod.googlePay wire format, per the Opayo Pi API reference:
+ * merchantSessionKey, clientIpAddress, payload (base64 of the Google token).
+ */
 class GooglePayPaymentTest extends TestCase
 {
+    protected string $msk = 'MSK-0123456789';
     protected string $clientIp = '192.168.1.100';
     protected string $payload = 'base64EncodedGooglePayTokenHere==';
 
-    public function testConstruct()
+    public function testSerialisation()
     {
-        $payment = new GooglePayPayment($this->clientIp, $this->payload);
+        $payment = new GooglePayPayment($this->msk, $this->clientIp, $this->payload);
 
-        $data = $payment->jsonSerialize();
-
-        $this->assertArrayHasKey('googlePay', $data);
-        $this->assertEquals($this->clientIp, $data['googlePay']['clientIpAddress']);
-        $this->assertEquals($this->payload, $data['googlePay']['payload']);
+        $this->assertSame([
+            'googlePay' => [
+                'merchantSessionKey' => $this->msk,
+                'clientIpAddress' => $this->clientIp,
+                'payload' => $this->payload,
+            ],
+        ], $payment->jsonSerialize());
     }
 
     public function testGetters()
     {
-        $payment = new GooglePayPayment($this->clientIp, $this->payload);
+        $payment = new GooglePayPayment($this->msk, $this->clientIp, $this->payload);
 
-        $this->assertEquals($this->clientIp, $payment->getClientIpAddress());
-        $this->assertEquals($this->payload, $payment->getPayload());
+        $this->assertSame($this->msk, $payment->getMerchantSessionKey());
+        $this->assertSame($this->clientIp, $payment->getClientIpAddress());
+        $this->assertSame($this->payload, $payment->getPayload());
     }
 
-    public function testJsonSerialize()
+    public function testFromGoogleTokenBase64Encodes()
     {
-        $payment = new GooglePayPayment($this->clientIp, $this->payload);
+        // paymentData.paymentMethodData.tokenizationData.token is itself a JSON string.
+        $token = '{"signature":"MEUC...","protocolVersion":"ECv2","signedMessage":"{...}"}';
 
-        $data = $payment->jsonSerialize();
+        $payment = GooglePayPayment::fromGoogleToken($this->msk, $this->clientIp, $token);
 
-        $this->assertIsArray($data);
-        $this->assertArrayHasKey('googlePay', $data);
-        $this->assertIsArray($data['googlePay']);
-        $this->assertCount(2, $data['googlePay']);
+        $this->assertSame(base64_encode($token), $payment->getPayload());
+        $this->assertSame($token, base64_decode($payment->jsonSerialize()['googlePay']['payload']));
     }
 
-    public function testFromDataWithJsonString()
+    public function testFromDataRoundTrip()
     {
-        $json = json_encode([
-            'googlePay' => [
-                'clientIpAddress' => $this->clientIp,
-                'payload' => $this->payload,
-            ]
-        ]);
+        $original = new GooglePayPayment($this->msk, $this->clientIp, $this->payload);
 
-        $payment = GooglePayPayment::fromData($json);
-        $data = $payment->jsonSerialize();
-
-        $this->assertEquals($this->clientIp, $data['googlePay']['clientIpAddress']);
-        $this->assertEquals($this->payload, $data['googlePay']['payload']);
+        $this->assertSame(
+            $original->jsonSerialize(),
+            GooglePayPayment::fromData(json_encode($original->jsonSerialize()))->jsonSerialize()
+        );
     }
 
-    public function testFromDataWithArray()
+    public function testFromDataWithoutWrapper()
     {
-        $arrayData = [
-            'googlePay' => [
-                'clientIpAddress' => $this->clientIp,
-                'payload' => $this->payload,
-            ]
-        ];
-
-        $payment = GooglePayPayment::fromData($arrayData);
-        $data = $payment->jsonSerialize();
-
-        $this->assertEquals($this->clientIp, $data['googlePay']['clientIpAddress']);
-        $this->assertEquals($this->payload, $data['googlePay']['payload']);
-    }
-
-    public function testFromDataWithObject()
-    {
-        $objectData = (object)[
-            'googlePay' => (object)[
-                'clientIpAddress' => $this->clientIp,
-                'payload' => $this->payload,
-            ]
-        ];
-
-        $payment = GooglePayPayment::fromData($objectData);
-        $data = $payment->jsonSerialize();
-
-        $this->assertEquals($this->clientIp, $data['googlePay']['clientIpAddress']);
-        $this->assertEquals($this->payload, $data['googlePay']['payload']);
-    }
-
-    public function testFromDataWithoutGooglePayWrapper()
-    {
-        $arrayData = [
+        $payment = GooglePayPayment::fromData([
+            'merchantSessionKey' => $this->msk,
             'clientIpAddress' => $this->clientIp,
             'payload' => $this->payload,
-        ];
+        ]);
 
-        $payment = GooglePayPayment::fromData($arrayData);
-        $data = $payment->jsonSerialize();
-
-        $this->assertEquals($this->clientIp, $data['googlePay']['clientIpAddress']);
-        $this->assertEquals($this->payload, $data['googlePay']['payload']);
+        $this->assertSame($this->msk, $payment->getMerchantSessionKey());
+        $this->assertSame($this->payload, $payment->getPayload());
     }
 
     public function testImplementsPaymentMethodInterface()
     {
-        $payment = new GooglePayPayment($this->clientIp, $this->payload);
-
-        $this->assertInstanceOf(PaymentMethodInterface::class, $payment);
-    }
-
-    public function testWithDifferentIpAddress()
-    {
-        $newIp = '10.0.0.1';
-        $payment = new GooglePayPayment($newIp, $this->payload);
-
-        $this->assertEquals($newIp, $payment->getClientIpAddress());
-
-        $data = $payment->jsonSerialize();
-        $this->assertEquals($newIp, $data['googlePay']['clientIpAddress']);
-    }
-
-    public function testWithLongPayload()
-    {
-        $longPayload = base64_encode(str_repeat('GooglePayTokenData', 100));
-        $payment = new GooglePayPayment($this->clientIp, $longPayload);
-
-        $this->assertEquals($longPayload, $payment->getPayload());
-
-        $data = $payment->jsonSerialize();
-        $this->assertEquals($longPayload, $data['googlePay']['payload']);
+        $this->assertInstanceOf(
+            PaymentMethodInterface::class,
+            new GooglePayPayment($this->msk, $this->clientIp, $this->payload)
+        );
     }
 }

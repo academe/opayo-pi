@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Who Holds the Key</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+  :root {
+    --ground: #EBEFF1;
+    --surface: #FFFFFF;
+    --ink: #141F27;
+    --ink-2: #4E6270;
+    --rule: #CBD5DB;
+    --accent: #0B6E6E;
+    --accent-soft: #DCEAEA;
+    --warn: #9C3A2C;
+    --warn-soft: #F4E4E0;
+    --code-bg: #E2E9EC;
+    --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --body: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --measure: 600px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0F161B;
+      --surface: #171F26;
+      --ink: #DFE7EC;
+      --ink-2: #93A5B1;
+      --rule: #2B3843;
+      --accent: #3FADA3;
+      --accent-soft: #12312F;
+      --warn: #D97A66;
+      --warn-soft: #33201C;
+      --code-bg: #1E2831;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0F161B;
+    --surface: #171F26;
+    --ink: #DFE7EC;
+    --ink-2: #93A5B1;
+    --rule: #2B3843;
+    --accent: #3FADA3;
+    --accent-soft: #12312F;
+    --warn: #D97A66;
+    --warn-soft: #33201C;
+    --code-bg: #1E2831;
+  }
+
+  html { color-scheme: light dark; }
+  img { max-width: 100%; }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 56px 28px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 44px;
+  }
+
+  .col {
+    max-width: var(--measure);
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    max-width: var(--measure);
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-bottom: 34px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .kicker {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(38px, 6.4vw, 62px);
+    line-height: 1.02;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  .standfirst {
+    font-size: 20px;
+    line-height: 1.5;
+    color: var(--ink-2);
+    margin: 0;
+    text-wrap: pretty;
+  }
+
+  .provenance {
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--ink-2);
+    margin: 0;
+    padding-left: 14px;
+    border-left: 2px solid var(--rule);
+  }
+
+  /* ---------- sections ---------- */
+
+  section {
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+  }
+
+  .eyebrow {
+    max-width: var(--measure);
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .eyebrow .num {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+  }
+
+  .eyebrow .field {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-2);
+    background: var(--code-bg);
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(26px, 3.4vw, 34px);
+    line-height: 1.14;
+    letter-spacing: -0.016em;
+    text-wrap: balance;
+    margin: 0;
+    max-width: var(--measure);
+    margin-inline: auto;
+    width: 100%;
+  }
+
+  h3 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 19px;
+    line-height: 1.25;
+    letter-spacing: -0.008em;
+    margin: 8px 0 0;
+  }
+
+  p { margin: 0; text-wrap: pretty; }
+
+  strong { font-weight: 600; }
+
+  em { font-style: italic; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.86em;
+    background: var(--code-bg);
+    padding: 1.5px 5px;
+    border-radius: 3px;
+    word-break: break-word;
+  }
+
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+  ul { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 8px; }
+  li::marker { color: var(--accent); }
+
+  /* ---------- figures ---------- */
+
+  figure {
+    margin: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .figwrap {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    padding: 24px 20px;
+    overflow-x: auto;
+  }
+
+  figure svg {
+    display: block;
+    width: 100%;
+    min-width: 640px;
+    height: auto;
+    color: var(--ink);
+  }
+
+  figcaption {
+    max-width: var(--measure);
+    margin: 0 auto;
+    width: 100%;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+
+  figcaption b {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  /* svg helpers */
+  .s-box { fill: var(--surface); stroke: currentColor; stroke-width: 1.4; }
+  .s-box-key { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.8; }
+  .s-box-warn { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 1.5; }
+  .s-line { stroke: currentColor; stroke-width: 1.4; fill: none; }
+  .s-line-warn { stroke: var(--warn); stroke-width: 1.4; fill: none; }
+  .s-seal { stroke: var(--ink-2); stroke-width: 1.2; stroke-dasharray: 5 4; fill: none; }
+  .s-t { fill: currentColor; font-family: "Archivo", sans-serif; font-size: 13px; font-weight: 600; }
+  .s-m { fill: var(--ink-2); font-family: "IBM Plex Mono", monospace; font-size: 10.5px; }
+  .s-lbl { fill: var(--ink-2); font-family: "IBM Plex Mono", monospace; font-size: 10.5px; }
+  .s-acc { fill: var(--accent); font-family: "IBM Plex Mono", monospace; font-size: 10.5px; font-weight: 500; }
+  .s-warn { fill: var(--warn); font-family: "IBM Plex Mono", monospace; font-size: 10.5px; font-weight: 500; }
+  .s-warn-t { fill: var(--warn); font-family: "Archivo", sans-serif; font-size: 12.5px; font-weight: 600; }
+
+  /* ---------- table ---------- */
+
+  .tablewrap {
+    max-width: var(--measure);
+    margin: 0 auto;
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    background: var(--surface);
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 460px;
+    font-size: 14.5px;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+
+  thead th {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    font-weight: 500;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  td.code { font-family: var(--mono); font-size: 12.5px; }
+  .tag-warn { color: var(--warn); font-weight: 600; }
+  .tag-ok { color: var(--accent); font-weight: 600; }
+
+  /* ---------- callout ---------- */
+
+  .callout {
+    max-width: var(--measure);
+    margin: 0 auto;
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .callout h3 { margin-top: 0; }
+
+  .callout.caveat { border-left-color: var(--warn); }
+
+  .verified {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 15px;
+  }
+
+  .verified li {
+    display: grid;
+    grid-template-columns: 92px 1fr;
+    gap: 12px;
+    align-items: baseline;
+  }
+
+  .verified span {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding-top: 3px;
+  }
+
+  .verified .yes { color: var(--accent); }
+  .verified .no { color: var(--warn); }
+
+  footer {
+    max-width: var(--measure);
+    margin: 0 auto;
+    width: 100%;
+    padding-top: 28px;
+    border-top: 1px solid var(--rule);
+    font-size: 14px;
+    color: var(--ink-2);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header class="masthead">
+    <p class="kicker">Opayo Pi · Google Pay</p>
+    <h1>Who Holds the Key</h1>
+    <p class="standfirst">Why Elavon has no Google Pay certificate to give you, why your server never sees a card number, and why a TEST token can never be charged, whatever credentials you obtain.</p>
+    <p class="provenance">Written against opayo-pi demo/methods/googlepay.php<br>Sandbox behaviour measured 2 September to 4 October 2026</p>
+  </header>
+
+  <section>
+    <div class="eyebrow"><span class="num">01</span><span class="field">the question</span></div>
+    <h2>Why there is no Google Pay certificate</h2>
+    <div class="col">
+      <p>Most secured integrations work the same way: the provider issues you a key, a certificate or a shared secret, and you keep it safe on your server. Apple Pay works like that, and Opayo does issue certificates for it.</p>
+      <p>Google Pay gives you only a <code>gatewayMerchantId</code>, which you paste into client-side JavaScript where anyone can read it. Nothing is missing. The key is held by Elavon, and that also explains the <code>6203</code> error the sandbox returns.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow"><span class="num">02</span><span class="field">the custody chain</span></div>
+    <h2>You carry the token; you cannot open it</h2>
+    <div class="col">
+      <p>Google holds the shopper's card and Elavon needs it. You pass it from one to the other, and the design ensures you cannot read it on the way.</p>
+      <p>Google encrypts the card data addressed to <em>Elavon</em>, using a public key Elavon registered with Google when they onboarded as a payment processor. The payload is sealed from then on. Your browser handles it, your PHP handles it and the demo's wire panel logs it, but none of them can open it. Only the holder of the matching private key can, and that is Elavon.</p>
+    </div>
+
+    <figure>
+      <div class="figwrap">
+        <svg viewBox="0 76 1000 208" role="img" aria-label="A left-to-right flow: Google Pay encrypts the card data to Elavon's public key, passes the sealed token through the shopper's browser and your server, both of which cannot open it, to Opayo and Elavon, who hold the private key and decrypt it.">
+          <defs>
+            <marker id="arw1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+
+          <!-- sealed region -->
+          <rect class="s-seal" x="272" y="104" width="456" height="132" rx="6"></rect>
+          <text class="s-lbl" x="500" y="94" text-anchor="middle">sealed: nobody here can open it</text>
+
+          <!-- boxes -->
+          <rect class="s-box" x="35" y="130" width="150" height="80" rx="4"></rect>
+          <text class="s-t" x="110" y="163" text-anchor="middle">Google Pay</text>
+          <text class="s-lbl" x="110" y="182" text-anchor="middle">holds the card</text>
+
+          <rect class="s-box" x="295" y="130" width="150" height="80" rx="4"></rect>
+          <text class="s-t" x="370" y="163" text-anchor="middle">Browser</text>
+          <text class="s-lbl" x="370" y="182" text-anchor="middle">the sheet</text>
+
+          <rect class="s-box" x="555" y="130" width="150" height="80" rx="4"></rect>
+          <text class="s-t" x="630" y="163" text-anchor="middle">Your server</text>
+          <text class="s-lbl" x="630" y="182" text-anchor="middle">pay.php</text>
+
+          <rect class="s-box-key" x="815" y="130" width="150" height="80" rx="4"></rect>
+          <text class="s-t" x="890" y="163" text-anchor="middle">Opayo / Elavon</text>
+          <text class="s-acc" x="890" y="182" text-anchor="middle">private key</text>
+
+          <!-- arrows -->
+          <line class="s-line" x1="185" y1="170" x2="288" y2="170" marker-end="url(#arw1)"></line>
+          <text class="s-lbl" x="236" y="161" text-anchor="middle">token</text>
+
+          <line class="s-line" x1="445" y1="170" x2="548" y2="170" marker-end="url(#arw1)"></line>
+          <text class="s-lbl" x="496" y="161" text-anchor="middle">POST</text>
+
+          <line class="s-line" x1="705" y1="170" x2="808" y2="170" marker-end="url(#arw1)"></line>
+          <text class="s-lbl" x="756" y="161" text-anchor="middle">base64</text>
+
+          <!-- annotations -->
+          <text class="s-acc" x="110" y="256" text-anchor="middle">encrypts to</text>
+          <text class="s-acc" x="110" y="270" text-anchor="middle">Elavon's public key</text>
+
+          <text class="s-lbl" x="370" y="256" text-anchor="middle">passes it on</text>
+          <text class="s-lbl" x="630" y="256" text-anchor="middle">passes it on</text>
+
+          <text class="s-acc" x="890" y="256" text-anchor="middle">decrypts,</text>
+          <text class="s-acc" x="890" y="270" text-anchor="middle">then authorises</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 1</b>The card data is encrypted once, at Google, addressed to Elavon. Everything between them, including your PHP, moves a string it cannot read. A key would be no use to you anywhere in that chain, which is why none is issued.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="eyebrow"><span class="num">03</span><span class="field">tokenizationSpecification.type</span></div>
+    <h2>Two modes, and only one of them has a certificate</h2>
+    <div class="col">
+      <p>Google offers two ways to say who the token is encrypted for. The choice decides whether you hold any key at all.</p>
+      <p><strong>PAYMENT_GATEWAY</strong> is what Opayo Pi uses. You can see it in the demo's <code>tokenizationSpecification</code>, with <code>gateway: 'opayoelavon'</code>. The gateway is the recipient. The <code>gatewayMerchantId</code> alongside it is not a credential. It is a label that tells Elavon which of their merchants the payment belongs to once they've decrypted it. It is safe in page source, which is where the demo puts it.</p>
+      <p><strong>DIRECT</strong> is the other mode, and the one that works the way you might expect. There you generate a NIST P-256 key pair yourself, register the public half in the Google Pay &amp; Wallet Console, and decrypt the payload on your own server. Google's cryptography guide for this mode says it is "valid for merchants only and not for payment service providers."</p>
+      <p>Opayo Pi cannot use DIRECT. <code>GooglePayPayment::$payload</code> is base64 of the gateway token, and the API expects that shape. The mode that would give you a key is the one the gateway does not accept.</p>
+      <h3>Two identifiers, and neither one is a key</h3>
+      <p>Enabling the wallet involves a second ID, and it is easy to mistake it for the credential you were expecting. Opayo asks for your Google merchant ID before they will switch Google Pay on. They are recording which Google business your vendor belongs to. It is an identity check, and no secret comes back to you.</p>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th></th><th>gatewayMerchantId</th><th>Google merchant ID</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Comes from</td><td>Opayo, when the wallet is enabled</td><td>Google Pay &amp; Wallet Console</td></tr>
+          <tr><td>Identifies you to</td><td>Elavon</td><td>Google</td></tr>
+          <tr><td>Where it goes</td><td>the sheet's tokenization spec</td><td>the sheet's merchant info in PRODUCTION, and to Opayo at enrolment</td></tr>
+          <tr><td>Secret?</td><td><span class="tag-warn">no</span></td><td><span class="tag-warn">no</span></td></tr>
+          <tr><td>Decrypts anything?</td><td><span class="tag-warn">no</span></td><td><span class="tag-warn">no</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <figure>
+      <div class="figwrap">
+        <svg viewBox="0 14 1020 286" role="img" aria-label="Two panels comparing tokenization modes. In PAYMENT_GATEWAY the private key sits at Elavon and you receive only a gatewayMerchantId. In DIRECT the private key sits on your server and you register a public key with Google, but Opayo does not accept this mode.">
+          <defs>
+            <marker id="arw2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+
+          <!-- divider -->
+          <line x1="510" y1="18" x2="510" y2="312" stroke="currentColor" stroke-width="1" opacity="0.28"></line>
+
+          <!-- PANEL A -->
+          <text class="s-t" x="25" y="34">PAYMENT_GATEWAY</text>
+          <text class="s-acc" x="25" y="52">what Opayo Pi uses</text>
+
+          <rect class="s-box" x="25" y="94" width="110" height="66" rx="4"></rect>
+          <text class="s-t" x="80" y="132" text-anchor="middle">Google</text>
+
+          <rect class="s-box" x="195" y="94" width="110" height="66" rx="4"></rect>
+          <text class="s-t" x="250" y="125" text-anchor="middle">You</text>
+          <text class="s-lbl" x="250" y="143" text-anchor="middle">courier</text>
+
+          <rect class="s-box-key" x="365" y="94" width="110" height="66" rx="4"></rect>
+          <text class="s-t" x="420" y="125" text-anchor="middle">Elavon</text>
+          <text class="s-acc" x="420" y="143" text-anchor="middle">private key</text>
+
+          <line class="s-line" x1="135" y1="127" x2="188" y2="127" marker-end="url(#arw2)"></line>
+          <line class="s-line" x1="305" y1="127" x2="358" y2="127" marker-end="url(#arw2)"></line>
+
+          <text class="s-lbl" x="25" y="205">you hold</text>
+          <text class="s-warn" x="25" y="222">nothing secret</text>
+          <text class="s-lbl" x="25" y="248">you are given</text>
+          <text class="s-acc" x="25" y="265">gatewayMerchantId</text>
+          <text class="s-lbl" x="25" y="282">an identifier, not a key</text>
+
+          <!-- PANEL B -->
+          <text class="s-t" x="545" y="34">DIRECT</text>
+          <text class="s-warn" x="545" y="52">not accepted by Opayo Pi</text>
+
+          <rect class="s-box" x="545" y="94" width="110" height="66" rx="4"></rect>
+          <text class="s-t" x="600" y="132" text-anchor="middle">Google</text>
+
+          <rect class="s-box-key" x="715" y="94" width="110" height="66" rx="4"></rect>
+          <text class="s-t" x="770" y="125" text-anchor="middle">You</text>
+          <text class="s-acc" x="770" y="143" text-anchor="middle">private key</text>
+
+          <rect class="s-box" x="885" y="94" width="110" height="66" rx="4"></rect>
+          <text class="s-t" x="940" y="132" text-anchor="middle">Elavon</text>
+
+          <line class="s-line" x1="655" y1="127" x2="708" y2="127" marker-end="url(#arw2)"></line>
+          <line class="s-line" x1="825" y1="127" x2="878" y2="127" marker-end="url(#arw2)"></line>
+
+          <text class="s-lbl" x="545" y="205">you hold</text>
+          <text class="s-acc" x="545" y="222">a P-256 key pair</text>
+          <text class="s-lbl" x="545" y="248">you register</text>
+          <text class="s-acc" x="545" y="265">the public key</text>
+          <text class="s-lbl" x="545" y="282">in the Google Pay &amp; Wallet Console</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 2</b>The two modes differ only in who holds the private key. In DIRECT it is on your server, so you get a certificate, but Opayo's API does not accept that mode. There is no third mode where you hold a key <em>and</em> the gateway decrypts.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="eyebrow"><span class="num">04</span><span class="field">paymentMethod.googlePay.payload</span></div>
+    <h2>What the sealed envelope contains</h2>
+    <div class="col">
+      <p>The token your JavaScript pulls out of <code>paymentData.paymentMethodData.tokenizationData.token</code> is a JSON string wrapping several layers. Your server treats it as one opaque blob and base64-encodes the whole thing (that is all <code>fromGoogleToken()</code> does). Knowing what is inside explains what "invalid payload" means.</p>
+      <p>The innermost layer holds the payment details, and it is not always a card number. Which it is depends on <code>allowedAuthMethods</code>, the array the demo sets to both values:</p>
+      <ul>
+        <li><code>PAN_ONLY</code>: a card saved to the Google account. The payload carries the real card number and expiry. Nothing has replaced the card, so the transaction still needs whatever authentication a keyed card would.</li>
+        <li><code>CRYPTOGRAM_3DS</code>: a card provisioned to the device. The payload carries a network token (a DPAN, a stand-in number issued by Visa or Mastercard) plus a one-shot cryptogram. The real card number never leaves the network, and the cryptogram proves the device authenticated the shopper.</li>
+      </ul>
+      <p>Accepting both is normal, and it means the shopper's saved cards and their device-provisioned cards all appear in the sheet.</p>
+    </div>
+
+    <figure>
+      <div class="figwrap">
+        <svg viewBox="0 40 900 352" role="img" aria-label="Nested layers of the token: an outer JSON string containing protocolVersion, signature, intermediateSigningKey and signedMessage; the signedMessage containing encryptedMessage, ephemeralPublicKey and tag; and the encrypted message containing either a card number or a network token with a cryptogram. Your server can read only the outermost layer.">
+          <!-- outer -->
+          <rect class="s-box" x="40" y="54" width="700" height="324" rx="5"></rect>
+          <text class="s-m" x="56" y="76">the token string</text>
+
+          <rect class="s-box" x="64" y="92" width="140" height="42" rx="3"></rect>
+          <text class="s-m" x="134" y="118" text-anchor="middle">protocolVersion</text>
+
+          <rect class="s-box" x="216" y="92" width="120" height="42" rx="3"></rect>
+          <text class="s-m" x="276" y="118" text-anchor="middle">signature</text>
+
+          <rect class="s-box" x="348" y="92" width="180" height="42" rx="3"></rect>
+          <text class="s-m" x="438" y="118" text-anchor="middle">intermediateSigningKey</text>
+
+          <!-- signedMessage -->
+          <rect class="s-box" x="64" y="152" width="652" height="206" rx="4"></rect>
+          <text class="s-m" x="80" y="174">signedMessage</text>
+
+          <rect class="s-box" x="88" y="188" width="150" height="40" rx="3"></rect>
+          <text class="s-m" x="163" y="213" text-anchor="middle">ephemeralPublicKey</text>
+
+          <rect class="s-box" x="250" y="188" width="70" height="40" rx="3"></rect>
+          <text class="s-m" x="285" y="213" text-anchor="middle">tag</text>
+
+          <!-- encryptedMessage -->
+          <rect class="s-box-key" x="88" y="244" width="604" height="96" rx="4"></rect>
+          <text class="s-acc" x="104" y="266">encryptedMessage: opens only with Elavon's private key</text>
+          <text class="s-t" x="104" y="292">card number + expiry</text>
+          <text class="s-lbl" x="290" y="292">(PAN_ONLY)</text>
+          <text class="s-t" x="104" y="317">or network token + cryptogram</text>
+          <text class="s-lbl" x="330" y="317">(CRYPTOGRAM_3DS)</text>
+
+          <!-- readability bracket -->
+          <path class="s-line" d="M 762 54 L 778 54 L 778 134 L 762 134"></path>
+          <text class="s-lbl" x="788" y="92">you can read</text>
+          <text class="s-lbl" x="788" y="107">this much</text>
+
+          <path class="s-line" d="M 762 244 L 778 244 L 778 340 L 762 340" stroke="var(--accent)"></path>
+          <text class="s-acc" x="788" y="296">Elavon only</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 3</b>Layers of the token. Your server reads the outer string and nothing more. This is Google's documented envelope. The outer layer of a genuine <code>opayoelavon</code> token, taken from the TEST sheet on 4 October 2026, matched it.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="eyebrow"><span class="num">05</span><span class="field">6401 / 6203</span></div>
+    <h2>Two doors: 6401 and 6203</h2>
+    <div class="col">
+      <p>A Google Pay transaction has to pass two separate checks at Opayo, and the error code tells you which one stopped it. The two failures mean opposite things about your setup.</p>
+      <p><strong>Door one is enrolment.</strong> Is this wallet switched on for this vendor in MyOpayo? Fail and you get <code>6401 Wallet not enabled for the vendor</code>. The payload is not examined. A vendor without the wallet enabled stops here.</p>
+      <p><strong>Door two is the payload.</strong> Can Elavon decrypt what you sent? Fail and you get <code>6203 Invalid Google Pay payload</code>. Reaching this door means enrolment passed and the gateway tried to read the token. The public <code>sandbox</code> vendor stops here.</p>
+      <p>The demo stops here because a token from Google's TEST environment is genuine but not chargeable. The TEST sheet returns a real, encrypted token, addressed to <code>gateway:opayoelavon</code> but signed with Google's <em>test</em> key, by design, so that test integrations cannot move money. Opayo's sandbox gets far enough to create a transaction for it, then refuses it with <code>6203</code>: it does not accept TEST tokens. So the demo fails at door two every time, whichever vendor or credentials you use.</p>
+    </div>
+
+    <figure>
+      <div class="figwrap">
+        <svg viewBox="0 78 920 240" role="img" aria-label="A transaction passes two checks. First, is the wallet enabled for the vendor; failing gives 6401. Second, does the payload decrypt; failing gives 6203. Only then is it authorised. A TEST sheet always fails the second check.">
+          <defs>
+            <marker id="arw3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="currentColor"></path>
+            </marker>
+            <marker id="arw3w" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="var(--warn)"></path>
+            </marker>
+          </defs>
+
+          <rect class="s-box" x="20" y="96" width="130" height="66" rx="4"></rect>
+          <text class="s-t" x="85" y="124" text-anchor="middle">POST</text>
+          <text class="s-lbl" x="85" y="142" text-anchor="middle">/transactions</text>
+
+          <!-- door 1 -->
+          <rect class="s-box" x="212" y="88" width="160" height="82" rx="4"></rect>
+          <text class="s-m" x="292" y="110" text-anchor="middle">door 1</text>
+          <text class="s-t" x="292" y="132" text-anchor="middle">Wallet enabled</text>
+          <text class="s-t" x="292" y="150" text-anchor="middle">for this vendor?</text>
+
+          <!-- door 2 -->
+          <rect class="s-box" x="434" y="88" width="160" height="82" rx="4"></rect>
+          <text class="s-m" x="514" y="110" text-anchor="middle">door 2</text>
+          <text class="s-t" x="514" y="132" text-anchor="middle">Does the payload</text>
+          <text class="s-t" x="514" y="150" text-anchor="middle">decrypt?</text>
+
+          <rect class="s-box-key" x="656" y="96" width="150" height="66" rx="4"></rect>
+          <text class="s-t" x="731" y="124" text-anchor="middle">Authorised</text>
+          <text class="s-acc" x="731" y="142" text-anchor="middle">real money</text>
+
+          <line class="s-line" x1="150" y1="129" x2="205" y2="129" marker-end="url(#arw3)"></line>
+          <line class="s-line" x1="372" y1="129" x2="427" y2="129" marker-end="url(#arw3)"></line>
+          <text class="s-acc" x="399" y="120" text-anchor="middle">yes</text>
+          <line class="s-line" x1="594" y1="129" x2="649" y2="129" marker-end="url(#arw3)"></line>
+          <text class="s-acc" x="621" y="120" text-anchor="middle">yes</text>
+
+          <!-- failures -->
+          <line class="s-line-warn" x1="292" y1="170" x2="292" y2="222" marker-end="url(#arw3w)"></line>
+          <text class="s-warn" x="302" y="196">no</text>
+          <rect class="s-box-warn" x="204" y="226" width="176" height="58" rx="4"></rect>
+          <text class="s-warn-t" x="292" y="248" text-anchor="middle">6401</text>
+          <text class="s-warn" x="292" y="266" text-anchor="middle">wallet not enabled</text>
+          <text class="s-lbl" x="292" y="302" text-anchor="middle">a vendor without the wallet</text>
+
+          <line class="s-line-warn" x1="514" y1="170" x2="514" y2="222" marker-end="url(#arw3w)"></line>
+          <text class="s-warn" x="524" y="196">no</text>
+          <rect class="s-box-warn" x="426" y="226" width="176" height="58" rx="4"></rect>
+          <text class="s-warn-t" x="514" y="248" text-anchor="middle">6203</text>
+          <text class="s-warn" x="514" y="266" text-anchor="middle">invalid payload</text>
+          <text class="s-lbl" x="514" y="302" text-anchor="middle">every enrolled vendor tried</text>
+
+          <!-- TEST annotation -->
+          <path class="s-line-warn" d="M 700 210 L 700 250 L 612 250" marker-end="url(#arw3w)" stroke-dasharray="5 4"></path>
+          <text class="s-warn" x="712" y="206">a TEST sheet always</text>
+          <text class="s-warn" x="712" y="221">lands here</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 4</b>The two doors, and where each account stops. Getting <code>6203</code> instead of <code>6401</code> shows that enrolment is correct and the gateway read your payload. The demo always ends on the dashed path.</figcaption>
+    </figure>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Vendor</th><th>Token sent</th><th>Response</th><th>Door reached</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="code">sandbox</td>
+            <td class="code">examplePaymentMethodToken</td>
+            <td class="code tag-warn">6203</td>
+            <td>two</td>
+          </tr>
+          <tr>
+            <td class="code">sandbox</td>
+            <td class="code">same, JSON-wrapped</td>
+            <td class="code tag-warn">6203</td>
+            <td>two</td>
+          </tr>
+          <tr>
+            <td class="code">academe</td>
+            <td class="code">examplePaymentMethodToken</td>
+            <td class="code tag-warn">6401</td>
+            <td>one</td>
+          </tr>
+          <tr>
+            <td class="code">academe1</td>
+            <td class="code">examplePaymentMethodToken</td>
+            <td class="code tag-warn">6203</td>
+            <td>two</td>
+          </tr>
+          <tr>
+            <td class="code">academe1</td>
+            <td class="code">genuine TEST token from the Google Pay sheet</td>
+            <td class="code tag-warn">6203</td>
+            <td>two, after a transaction was created</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="col" style="font-size:14.5px;color:var(--ink-2)">Measured against the Opayo sandbox using the demo's own request path, 2 and 4 September 2026, and 4 October 2026 for the genuine token. <code>academe</code> and <code>academe1</code> are two vendors on the same account; the wallet was enabled on the second one only. Enrolling gets you past the first door only. The placeholder string is turned away before any transaction exists; the genuine TEST token gets further, to a transaction, and is then refused.</p>
+  </section>
+
+  <section>
+    <div class="eyebrow"><span class="num">06</span><span class="field">contrast</span></div>
+    <h2>Why Apple Pay leads you to expect a certificate</h2>
+    <div class="col">
+      <p>Expecting a certificate is reasonable, because Apple Pay has one. In one of Apple's arrangements the merchant handles a certificate, and Opayo supports both.</p>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th></th><th>Google Pay</th><th>Apple Pay</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Who decrypts</td>
+            <td>Elavon, always</td>
+            <td>Opayo or you, depending on setup</td>
+          </tr>
+          <tr>
+            <td>You receive</td>
+            <td><span class="tag-warn">nothing secret</span></td>
+            <td>a merchant certificate, if merchant-managed</td>
+          </tr>
+          <tr>
+            <td>Domain registration</td>
+            <td>only for PRODUCTION, via Google</td>
+            <td>required, HTTPS</td>
+          </tr>
+          <tr>
+            <td>In this demo</td>
+            <td>reaches door two</td>
+            <td>stops at merchant validation (<code>4006</code>)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow"><span class="num">07</span><span class="field">what would actually work</span></div>
+    <h2>The only route past door two</h2>
+    <div class="col">
+      <p>A <code>PRODUCTION</code> PaymentsClient is the only way to obtain a token that decrypts. That needs two things: a Google merchant ID, and an allowlisted HTTPS origin.</p>
+      <p>If Opayo has enabled the wallet on your vendor, you already hold the first, because supplying it is part of their enrolment. That leaves the origin, and <code>127.0.0.1</code> does not qualify. You need the sheet running on a real registered domain over HTTPS.</p>
+      <p>One question is still open: whether a PRODUCTION token decrypts against Opayo's <em>test</em> endpoint. If it does, you can test with a real token and no money moving. If it does not, verification means live credentials, a real card, and a refund.</p>
+      <p>The demo supports this: set <code>GOOGLE_PAY_ENVIRONMENT=PRODUCTION</code> and <code>GOOGLE_PAY_MERCHANT_ID</code> in <code>.env</code>.</p>
+    </div>
+
+    <div class="callout caveat">
+      <h3>What was measured, and what was not</h3>
+      <ul class="verified">
+        <li><span class="yes">measured</span><span>Both sandbox responses above, sent through the demo's own code path.</span></li>
+        <li><span class="yes">measured</span><span>The Google Pay sheet opens a popup, so a headless browser cannot complete it. COOP blocks the call and the promise never settles.</span></li>
+        <li><span class="yes">measured</span><span>What a TEST sheet returns: a genuine <code>ECv2</code> token, not a placeholder. Taken from the sheet in a real browser on 4 October 2026, its intermediate key verifies against Google's published TEST root key (not the PRODUCTION one), and its signature verifies for the recipient <code>gateway:opayoelavon</code>.</span></li>
+        <li><span class="yes">measured</span><span>That Google encrypts to Opayo, not to you: the token's signed message is addressed to <code>gateway:opayoelavon</code>. Its contents stay encrypted to Elavon's key; Nobody but Elavon can read them.</span></li>
+        <li><span class="yes">measured</span><span>That enrolment moves a vendor from <code>6401</code> to <code>6203</code> and no further. Confirmed on a vendor Opayo had just enabled Google Pay on.</span></li>
+        <li><span class="no">untested</span><span>Whether a PRODUCTION Google token would decrypt against Opayo's <em>test</em> endpoint. Probably not, but it has not been tried.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <p>Sources: Google Pay API <a href="https://developers.google.com/pay/api/web/reference/response-objects">response objects</a> and <a href="https://developers.google.com/pay/api/web/guides/resources/payment-data-cryptography">payment data cryptography</a>; Elavon's <a href="https://developer.elavon.com/products/en-uk/opayo/v1/google-pay-1">Opayo Google Pay guide</a>.</p>
+    <p>Code referenced: <code>demo/methods/googlepay.php</code>, <code>demo/pay.php</code>, <code>src/Request/Model/GooglePayPayment.php</code>.</p>
+    <p>Part of the opayo-pi documentation. See <a href="payment-flows.md">payment-flows.md</a> for the full Google Pay sequence, and <a href="../demo/README.md">demo/README.md</a> for running the demo.</p>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -35,6 +35,11 @@ abstract class AbstractTransaction extends AbstractResponse
     public const STATUS_MALFORMED = 'Malformed';
     public const STATUS_INVALID = 'Invalid';
     public const STATUS_ERROR = 'Error';
+    // Returned only for Authenticate transactions.
+    public const STATUS_REGISTERED = 'Registered';
+    public const STATUS_AUTHENTICATED = 'Authenticated';
+    // Returned for wallet (PayPal) payments: the shopper must be redirected to the wallet.
+    public const STATUS_REDIRECT = 'Redirect';
 
     /**
      * The status, statusCode and statusReason are used in all transaction responses.
@@ -54,6 +59,7 @@ abstract class AbstractTransaction extends AbstractResponse
 
     protected ?Secure3D $secure3D = null;
     protected ?Model\Card $paymentMethod = null;
+    protected ?Model\PayPal $paypal = null;
 
     protected ?CurrencyInterface $currency = null;
 
@@ -239,6 +245,14 @@ abstract class AbstractTransaction extends AbstractResponse
                 // Create a PaymentMethod object from the array data.
                 $this->paymentMethod = Model\Card::fromData($card);
             }
+
+            // Wallet payment: PayPal responses carry the order ID (and, on the
+            // initial Redirect response, the redirect URL) here instead of a card.
+            $paypal = Helper::dataGet($paymentMethod, 'paypal');
+
+            if ($paypal) {
+                $this->paypal = Model\PayPal::fromData($paypal);
+            }
         }
     }
 
@@ -375,6 +389,16 @@ abstract class AbstractTransaction extends AbstractResponse
     }
 
     /**
+     * The paymentMethod.paypal object, when the transaction was paid with PayPal
+     * (orderId; plus redirectUrl on the initial Redirect response). Null for card
+     * and other wallet payments.
+     */
+    public function getPayPal(): ?Model\PayPal
+    {
+        return $this->paypal;
+    }
+
+    /**
      * Sage Pay unique Authorisation Code for a successfully authorised
      * transaction. Only present if Status is OK (or Ok).
      * @return int|null
@@ -446,6 +470,10 @@ abstract class AbstractTransaction extends AbstractResponse
 
         if ($paymentMethod = $this->getPaymentMethod()) {
             $return['paymentMethod'] = $paymentMethod;
+        }
+
+        if (($paypal = $this->getPayPal()) && ! isset($return['paymentMethod'])) {
+            $return['paymentMethod'] = ['paypal' => $paypal->jsonSerialize()];
         }
 
         if ($secure3D = $this->get3DSecure()) {

@@ -7,22 +7,30 @@ namespace Academe\Opayo\Pi\Request\Model;
 use Academe\Opayo\Pi\Helper;
 
 /**
- * PayPal payment method for transactions.
+ * PayPal payment method for transactions (paymentMethod.paypal).
  *
- * Note: PayPal integration with Opayo Pi is currently being rolled out.
- * This implementation follows the expected pattern based on other alternative
- * payment methods. The exact API structure may need adjustment when
- * official documentation is released.
+ * Wire format (Opayo Pi API reference, paymentMethodObjects/paypal):
  *
- * PayPal tokens are obtained from the PayPal Checkout SDK.
+ *   merchantSessionKey  required  a merchant session key created for this transaction
+ *   callbackUrl         required  where Opayo sends the shopper's browser back to after
+ *                                 PayPal, with the Opayo transactionId appended as a
+ *                                 query parameter
+ *
+ * Flow: POST the transaction -> Opayo answers status "Redirect" (statusCode 2023)
+ * with paymentMethod.paypal.redirectUrl (see Response\PayPalRedirect) -> send the
+ * shopper's browser to it (full page, not an iframe) -> PayPal returns them to
+ * Opayo, which redirects to callbackUrl -> fetch the transaction by ID to get the
+ * outcome (Request\FetchTransaction).
+ *
+ * The vendor must have PayPal enabled in MyOpayo (Settings > Pay Methods); the
+ * public "sandbox" test vendor has it enabled.
  */
 
 class PayPalPayment implements PaymentMethodInterface
 {
     public function __construct(
-        protected string $clientIpAddress,
-        protected string $paypalOrderId,
-        protected ?string $payerId = null
+        protected string $merchantSessionKey,
+        protected string $callbackUrl
     ) {
     }
 
@@ -42,9 +50,8 @@ class PayPalPayment implements PaymentMethodInterface
         }
 
         return new static(
-            Helper::dataGet($data, 'clientIpAddress'),
-            Helper::dataGet($data, 'paypalOrderId') ?? Helper::dataGet($data, 'orderId'),
-            Helper::dataGet($data, 'payerId')
+            (string)Helper::dataGet($data, 'merchantSessionKey'),
+            (string)Helper::dataGet($data, 'callbackUrl')
         );
     }
 
@@ -53,42 +60,21 @@ class PayPalPayment implements PaymentMethodInterface
      */
     public function jsonSerialize(): mixed
     {
-        $message = [
+        return [
             'paypal' => [
-                'clientIpAddress' => $this->clientIpAddress,
-                'paypalOrderId' => $this->paypalOrderId,
+                'merchantSessionKey' => $this->merchantSessionKey,
+                'callbackUrl' => $this->callbackUrl,
             ],
         ];
-
-        if ($this->payerId !== null) {
-            $message['paypal']['payerId'] = $this->payerId;
-        }
-
-        return $message;
     }
 
-    public function getClientIpAddress(): string
+    public function getMerchantSessionKey(): string
     {
-        return $this->clientIpAddress;
+        return $this->merchantSessionKey;
     }
 
-    public function getPaypalOrderId(): string
+    public function getCallbackUrl(): string
     {
-        return $this->paypalOrderId;
-    }
-
-    public function getPayerId(): ?string
-    {
-        return $this->payerId;
-    }
-
-    /**
-     * Create a new instance with a payer ID.
-     */
-    public function withPayerId(string $payerId): static
-    {
-        $clone = clone $this;
-        $clone->payerId = $payerId;
-        return $clone;
+        return $this->callbackUrl;
     }
 }

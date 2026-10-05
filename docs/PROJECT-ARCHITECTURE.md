@@ -73,7 +73,7 @@ Value objects representing business concepts:
 Money/
 ├── Amount              # Monetary amount with currency
 ├── Currency            # ISO 4217 currency code
-├── MoneyAmount         # Money.php library wrapper
+├── MoneyAmount         # moneyphp/money bridge (in: wrap Money; out: fromAmount()/toMoney())
 └── AmountInterface     # Amount abstraction
 
 Model/

@@ -1,0 +1,6 @@
+# Keep Composer installs (GitHub dist archives) to the package itself.
+# The demo and tests are available by cloning the repository.
+/demo           export-ignore
+/tests          export-ignore
+/phpunit.xml    export-ignore
+/.env.example   export-ignore

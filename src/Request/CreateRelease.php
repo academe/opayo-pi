@@ -7,6 +7,7 @@ namespace Academe\Opayo\Pi\Request;
 use Academe\Opayo\Pi\Money\AmountInterface;
 use Academe\Opayo\Pi\Model\Auth;
 use Academe\Opayo\Pi\Model\Endpoint;
+use Money\Money;
 
 /**
  * The "release" instruction request.
@@ -15,20 +16,26 @@ use Academe\Opayo\Pi\Model\Endpoint;
 
 class CreateRelease extends AbstractInstruction
 {
+    use AmountNormaliserTrait;
+
     protected string $instructionType = AbstractRequest::INSTRUCTION_TYPE_RELEASE;
+
+    private readonly AmountInterface $amount;
 
     /**
      * @param Endpoint $endpoint
      * @param Auth $auth
-     * @param string $transactionId The ID of the transaction to void
-     * @param AmountInterface $amount An amount is required, UP TO the total amount deferred.
+     * @param string $transactionId The ID of the transaction to release
+     * @param AmountInterface|Money $amount An amount is required, UP TO the total amount deferred.
+     *        Either the package's own Amount, or a moneyphp/money Money.
      */
     public function __construct(
         Endpoint $endpoint,
         Auth $auth,
         string $transactionId,
-        private readonly AmountInterface $amount
+        AmountInterface|Money $amount
     ) {
+        $this->amount = self::normaliseAmount($amount);
         parent::__construct($endpoint, $auth, $transactionId);
     }
 

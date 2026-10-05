@@ -8,11 +8,15 @@ use UnexpectedValueException;
 use Academe\Opayo\Pi\Model\Auth;
 use Academe\Opayo\Pi\Model\Endpoint;
 use Academe\Opayo\Pi\Money\AmountInterface;
+use Academe\Opayo\Pi\Request\Enums\Apply3DSecure;
+use Academe\Opayo\Pi\Request\Enums\ApplyAvsCvcCheck;
+use Academe\Opayo\Pi\Request\Enums\EntryMethod;
 use Academe\Opayo\Pi\Request\Model\CredentialType;
 use Academe\Opayo\Pi\Request\Model\PersonInterface;
 use Academe\Opayo\Pi\Request\Model\AddressInterface;
 use Academe\Opayo\Pi\Request\Model\PaymentMethodInterface;
 use Academe\Opayo\Pi\Request\Model\StrongCustomerAuthentication;
+use Money\Money;
 
 /**
  * The transaction value object to send a transaction to Sage Pay.
@@ -21,6 +25,8 @@ use Academe\Opayo\Pi\Request\Model\StrongCustomerAuthentication;
 
 class CreatePayment extends AbstractRequest
 {
+    use AmountNormaliserTrait;
+
     protected array $resource_path = ['transactions'];
 
     protected string $transactionType = AbstractRequest::TRANSACTION_TYPE_PAYMENT;
@@ -81,12 +87,15 @@ class CreatePayment extends AbstractRequest
     // @deprecated removed from the API spec 2023-10-26
     public const APPLY_3D_SECURE_FORCEIGNORINGRULES        = 'ForceIgnoringRules'; // 3
 
+    /**
+     * @param AmountInterface|Money $amount The package's own Amount, or a moneyphp/money Money
+     */
     public function __construct(
         Endpoint $endpoint,
         Auth $auth,
         PaymentMethodInterface $paymentMethod,
         string $vendorTxCode,
-        AmountInterface $amount,
+        AmountInterface|Money $amount,
         string $description,
         AddressInterface $billingAddress,
         PersonInterface $customer,
@@ -103,7 +112,7 @@ class CreatePayment extends AbstractRequest
         // Payment details.
         $this->paymentMethod = $paymentMethod;
         $this->vendorTxCode = $vendorTxCode;
-        $this->amount = $amount;
+        $this->amount = self::normaliseAmount($amount);
 
         // Customer details.
         $this->billingAddress = $billingAddress->withFieldPrefix('');
@@ -122,8 +131,13 @@ class CreatePayment extends AbstractRequest
         $this->setOptions($options);
     }
 
-    public function setEntryMethod(string $entryMethod): static
+    public function setEntryMethod(string|EntryMethod $entryMethod): static
     {
+        if ($entryMethod instanceof EntryMethod) {
+            $this->entryMethod = $entryMethod->value;
+            return $this;
+        }
+
         // Get the value from the class constants.
         $value = $this->constantValue('ENTRY_METHOD', $entryMethod);
 
@@ -139,7 +153,7 @@ class CreatePayment extends AbstractRequest
         return $this;
     }
 
-    public function withEntryMethod(string $entryMethod): static
+    public function withEntryMethod(string|EntryMethod $entryMethod): static
     {
         $copy = clone $this;
         return $copy->setEntryMethod($entryMethod);
@@ -179,8 +193,13 @@ class CreatePayment extends AbstractRequest
         return $copy->setGiftAid($giftAid);
     }
 
-    protected function setApplyAvsCvcCheck(string $applyAvsCvcCheck): static
+    protected function setApplyAvsCvcCheck(string|ApplyAvsCvcCheck $applyAvsCvcCheck): static
     {
+        if ($applyAvsCvcCheck instanceof ApplyAvsCvcCheck) {
+            $this->applyAvsCvcCheck = $applyAvsCvcCheck->value;
+            return $this;
+        }
+
         // Get the value from the class constants.
         $value = $this->constantValue('APPLY_AVS_CVC_CHECK', $applyAvsCvcCheck);
 
@@ -196,7 +215,7 @@ class CreatePayment extends AbstractRequest
         return $this;
     }
 
-    public function withApplyAvsCvcCheck(string $applyAvsCvcCheck): static
+    public function withApplyAvsCvcCheck(string|ApplyAvsCvcCheck $applyAvsCvcCheck): static
     {
         $copy = clone $this;
         return $copy->setApplyAvsCvcCheck($applyAvsCvcCheck);
@@ -207,8 +226,13 @@ class CreatePayment extends AbstractRequest
         return static::constantList('APPLY_AVS_CVC_CHECK');
     }
 
-    protected function setApply3DSecure(string $apply3DSecure): static
+    protected function setApply3DSecure(string|Apply3DSecure $apply3DSecure): static
     {
+        if ($apply3DSecure instanceof Apply3DSecure) {
+            $this->apply3DSecure = $apply3DSecure->value;
+            return $this;
+        }
+
         // Get the value from the class constants.
         $value = $this->constantValue('APPLY_3D_SECURE', $apply3DSecure);
 
@@ -224,7 +248,7 @@ class CreatePayment extends AbstractRequest
         return $this;
     }
 
-    public function withApply3DSecure(string $apply3DSecure): static
+    public function withApply3DSecure(string|Apply3DSecure $apply3DSecure): static
     {
         $copy = clone $this;
         return $copy->setApply3DSecure($apply3DSecure);

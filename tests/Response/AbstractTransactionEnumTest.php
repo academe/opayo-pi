@@ -8,7 +8,7 @@ class AbstractTransactionEnumTest extends TestCase
 {
     protected function createMockTransaction(array $data = []): AbstractTransaction
     {
-        return new class($data) extends AbstractTransaction {
+        return new class ($data) extends AbstractTransaction {
             public function __construct(array $data = [])
             {
                 parent::__construct($data, 200);
@@ -44,6 +44,39 @@ class AbstractTransactionEnumTest extends TestCase
         $this->assertEquals(TransactionStatus::MALFORMED->value, AbstractTransaction::STATUS_MALFORMED);
         $this->assertEquals(TransactionStatus::INVALID->value, AbstractTransaction::STATUS_INVALID);
         $this->assertEquals(TransactionStatus::ERROR->value, AbstractTransaction::STATUS_ERROR);
+    }
+
+    public function testAuthenticateStatusesFromCurrentSpec()
+    {
+        // Registered and Authenticated are returned when the transactionType
+        // is Authenticate (per the current Opayo API reference).
+        $this->assertEquals('Registered', AbstractTransaction::STATUS_REGISTERED);
+        $this->assertEquals('Authenticated', AbstractTransaction::STATUS_AUTHENTICATED);
+
+        $this->assertEquals(TransactionStatus::REGISTERED->value, AbstractTransaction::STATUS_REGISTERED);
+        $this->assertEquals(TransactionStatus::AUTHENTICATED->value, AbstractTransaction::STATUS_AUTHENTICATED);
+    }
+
+    public function testAuthenticatedStatusBehaviour()
+    {
+        $transaction = $this->createMockTransaction(['status' => 'Authenticated']);
+
+        $this->assertSame(TransactionStatus::AUTHENTICATED, $transaction->getStatusEnum());
+        $this->assertTrue($transaction->getStatusEnum()->isSuccess());
+        $this->assertFalse($transaction->getStatusEnum()->isError());
+        $this->assertSame('success', $transaction->getStatusEnum()->severity());
+    }
+
+    public function testRegisteredStatusBehaviour()
+    {
+        $transaction = $this->createMockTransaction(['status' => 'Registered']);
+
+        $this->assertSame(TransactionStatus::REGISTERED, $transaction->getStatusEnum());
+        // Card details secured, but 3D Secure failed or was not performed:
+        // successful as an Authenticate outcome, flagged as a warning.
+        $this->assertTrue($transaction->getStatusEnum()->isSuccess());
+        $this->assertFalse($transaction->getStatusEnum()->isError());
+        $this->assertSame('warning', $transaction->getStatusEnum()->severity());
     }
 
     public function testGetStatusEnumReturnsEnum()

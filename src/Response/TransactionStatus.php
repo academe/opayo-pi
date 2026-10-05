@@ -30,6 +30,8 @@ namespace Academe\Opayo\Pi\Response;
  */
 enum TransactionStatus: string
 {
+    use Enums\TryFromInsensitive;
+
     case OK = 'Ok';
     case NOT_AUTHED = 'NotAuthed';
     case REJECTED = 'Rejected';
@@ -39,36 +41,25 @@ enum TransactionStatus: string
     case ERROR = 'Error';
 
     /**
-     * Create enum from string value (case-insensitive).
-     *
-     * This provides more flexibility than the built-in tryFrom() by handling
-     * different capitalizations that might come from various sources.
-     *
-     * @param string|null $value The status string from API or storage
-     * @return self|null The enum case, or null if value doesn't match
+     * Returned only when the transactionType is Authenticate:
+     * the 3D Secure checks failed or were not performed, but the card
+     * details are still secured at Opayo (no liability shift).
      */
-    public static function tryFromInsensitive(?string $value): ?self
-    {
-        if ($value === null) {
-            return null;
-        }
+    case REGISTERED = 'Registered';
 
-        // Try exact match first (most common case, fastest path)
-        $case = self::tryFrom($value);
-        if ($case !== null) {
-            return $case;
-        }
+    /**
+     * Returned only when the transactionType is Authenticate:
+     * the 3D Secure checks were performed successfully and the card
+     * details secured at Opayo.
+     */
+    case AUTHENTICATED = 'Authenticated';
 
-        // Try case-insensitive match
-        $upperValue = strtoupper($value);
-        foreach (self::cases() as $case) {
-            if (strtoupper($case->value) === $upperValue) {
-                return $case;
-            }
-        }
-
-        return null;
-    }
+    /**
+     * Returned for wallet (PayPal) payments, statusCode 2023: the transaction
+     * is registered and the shopper must be redirected to the wallet provider
+     * (see Response\PayPalRedirect). Not a final state.
+     */
+    case REDIRECT = 'Redirect';
 
     /**
      * Check if this status represents a successful transaction.
@@ -77,7 +68,15 @@ enum TransactionStatus: string
      */
     public function isSuccess(): bool
     {
-        return $this === self::OK;
+        // Registered and Authenticated are successful Authenticate outcomes:
+        // in both cases the card details were secured at Opayo. A Registered
+        // authentication carries no 3D Secure liability shift, which is
+        // reflected in its severity() of 'warning'.
+        return in_array($this, [
+            self::OK,
+            self::REGISTERED,
+            self::AUTHENTICATED,
+        ], true);
     }
 
     /**
@@ -113,7 +112,7 @@ enum TransactionStatus: string
      */
     public function isFinal(): bool
     {
-        return $this !== self::THREE_D_AUTH;
+        return ! in_array($this, [self::THREE_D_AUTH, self::REDIRECT], true);
     }
 
     /**
@@ -134,6 +133,9 @@ enum TransactionStatus: string
             self::MALFORMED => 'Malformed request',
             self::INVALID => 'Invalid request',
             self::ERROR => 'Transaction error',
+            self::REGISTERED => 'Card details secured; 3D Secure failed or not performed',
+            self::AUTHENTICATED => '3D Secure authenticated and card details secured',
+            self::REDIRECT => 'Transaction registered; redirect the shopper to the wallet provider',
         };
     }
 
@@ -147,9 +149,9 @@ enum TransactionStatus: string
     public function severity(): string
     {
         return match ($this) {
-            self::OK => 'success',
-            self::THREE_D_AUTH => 'info',
-            self::NOT_AUTHED, self::REJECTED => 'warning',
+            self::OK, self::AUTHENTICATED => 'success',
+            self::THREE_D_AUTH, self::REDIRECT => 'info',
+            self::NOT_AUTHED, self::REJECTED, self::REGISTERED => 'warning',
             self::MALFORMED, self::INVALID, self::ERROR => 'error',
         };
     }

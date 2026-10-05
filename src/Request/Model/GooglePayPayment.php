@@ -7,18 +7,35 @@ namespace Academe\Opayo\Pi\Request\Model;
 use Academe\Opayo\Pi\Helper;
 
 /**
- * Google Pay payment method for transactions.
+ * Google Pay payment method for transactions (paymentMethod.googlePay).
  *
- * Google Pay tokens are obtained from the Google Pay API in the browser.
- * The token must be Base64 encoded before being sent to Opayo.
+ * Wire format (Opayo Pi API reference, paymentMethodObjects/googlePay):
+ *
+ *   merchantSessionKey  required  the merchant session key used to initiate the transaction
+ *   clientIpAddress     required  the shopper's IPv4/IPv6 address
+ *   payload             required  paymentData.paymentMethodData.tokenizationData.token from
+ *                                 the Google Pay API, base64 encoded
+ *
+ * The Google Pay JS tokenizationSpecification must use gateway "opayoelavon"
+ * and the gatewayMerchantId shown in MyOpayo (Settings > Pay Methods > Google Pay).
  */
 
 class GooglePayPayment implements PaymentMethodInterface
 {
     public function __construct(
+        protected string $merchantSessionKey,
         protected string $clientIpAddress,
         protected string $payload
     ) {
+    }
+
+    /**
+     * Build from the raw token string returned by the Google Pay API
+     * (paymentData.paymentMethodData.tokenizationData.token), base64-encoding it.
+     */
+    public static function fromGoogleToken(string $merchantSessionKey, string $clientIpAddress, string $token): static
+    {
+        return new static($merchantSessionKey, $clientIpAddress, base64_encode($token));
     }
 
     /**
@@ -37,8 +54,9 @@ class GooglePayPayment implements PaymentMethodInterface
         }
 
         return new static(
-            Helper::dataGet($data, 'clientIpAddress'),
-            Helper::dataGet($data, 'payload')
+            (string)Helper::dataGet($data, 'merchantSessionKey'),
+            (string)Helper::dataGet($data, 'clientIpAddress'),
+            (string)Helper::dataGet($data, 'payload')
         );
     }
 
@@ -49,10 +67,16 @@ class GooglePayPayment implements PaymentMethodInterface
     {
         return [
             'googlePay' => [
+                'merchantSessionKey' => $this->merchantSessionKey,
                 'clientIpAddress' => $this->clientIpAddress,
                 'payload' => $this->payload,
             ],
         ];
+    }
+
+    public function getMerchantSessionKey(): string
+    {
+        return $this->merchantSessionKey;
     }
 
     public function getClientIpAddress(): string
@@ -60,6 +84,9 @@ class GooglePayPayment implements PaymentMethodInterface
         return $this->clientIpAddress;
     }
 
+    /**
+     * The base64-encoded Google Pay token.
+     */
     public function getPayload(): string
     {
         return $this->payload;

@@ -214,7 +214,7 @@ class CardIdentifierTest extends IntegrationTestCase
             $sessionKey,
             'Test Cardholder',
             self::INVALID_CARD, // Invalid card number
-            '1225',
+            date('my', strtotime('+2 years')), // Any future expiry, MMYY.
             self::TEST_CARD_CVV
         );
 
@@ -269,7 +269,7 @@ class CardIdentifierTest extends IntegrationTestCase
             $sessionKey,
             'Test Cardholder',
             self::TEST_CARD_VISA,
-            '1225',
+            date('my', strtotime('+2 years')), // Any future expiry, MMYY.
             null // No CVV
         );
 
