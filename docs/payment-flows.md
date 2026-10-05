@@ -272,14 +272,14 @@ sequenceDiagram
 ```
 
 **Key PayPal Details:**
-- **Request**: `PayPalPayment($merchantSessionKey, $callbackUrl)` — nothing else;
+- **Request**: `PayPalPayment($merchantSessionKey, $callbackUrl)` and nothing else;
   the PayPal order ID is returned by Opayo, not sent by you
 - **Response**: `PayPalRedirect` (`getRedirectUrl()`, `getOrderId()`, `isRedirect()`);
   `TransactionStatus::REDIRECT` is not a final state
 - **Timing**: the merchant session key expires after 400 s; the shopper must be
   redirected to PayPal within 20 minutes
 - **Callback**: Opayo appends the Opayo `transactionId` to `callbackUrl`; nothing
-  about the outcome is in the URL — fetch the transaction. Until PayPal has
+  about the outcome is in the URL, so fetch the transaction. Until PayPal has
   reported back, `GET /transactions/{id}` answers `404 Transaction not found`
   (1012); the transaction becomes fetchable when the shopper finishes at PayPal
 - **Refunds**: PayPal transactions are refunded via the API, not MyOpayo

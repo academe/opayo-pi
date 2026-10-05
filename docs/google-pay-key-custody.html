@@ -385,25 +385,25 @@
   <header class="masthead">
     <p class="kicker">Opayo Pi · Google Pay</p>
     <h1>Who Holds the Key</h1>
-    <p class="standfirst">Why Elavon has no Google Pay certificate to give you, why your server never sees a card number, and why a TEST token can never be charged — whatever credentials you obtain.</p>
-    <p class="provenance">Written against opayo-pi demo/googlepay.php<br>Sandbox behaviour probed live, 2 September 2026</p>
+    <p class="standfirst">Why Elavon has no Google Pay certificate to give you, why your server never sees a card number, and why a TEST token can never be charged, whatever credentials you obtain.</p>
+    <p class="provenance">Written against opayo-pi demo/methods/googlepay.php<br>Sandbox behaviour measured 2 September to 4 October 2026</p>
   </header>
 
   <section>
     <div class="eyebrow"><span class="num">01</span><span class="field">the question</span></div>
-    <h2>The thing that feels like it's missing</h2>
+    <h2>Why there is no Google Pay certificate</h2>
     <div class="col">
-      <p>Every other secured integration you've wired up works the same way: the provider issues you something — a key, a certificate, a shared secret — and you keep it safe on your server. Apple Pay works exactly like that, and Opayo does issue certificates for it.</p>
-      <p>So when Google Pay hands you nothing but a <code>gatewayMerchantId</code> that you paste into client-side JavaScript in plain sight, it feels like a step is missing. It isn't. The absence is the design, and once you see where the key actually lives, the <code>6203</code> you keep hitting stops being mysterious and becomes the only possible outcome.</p>
+      <p>Most secured integrations work the same way: the provider issues you a key, a certificate or a shared secret, and you keep it safe on your server. Apple Pay works like that, and Opayo does issue certificates for it.</p>
+      <p>Google Pay gives you only a <code>gatewayMerchantId</code>, which you paste into client-side JavaScript where anyone can read it. Nothing is missing. The key is held by Elavon, and that also explains the <code>6203</code> error the sandbox returns.</p>
     </div>
   </section>
 
   <section>
     <div class="eyebrow"><span class="num">02</span><span class="field">the custody chain</span></div>
-    <h2>You are a courier, not a recipient</h2>
+    <h2>You carry the token; you cannot open it</h2>
     <div class="col">
-      <p>Google holds the shopper's card. Elavon needs it. You are the postal service in between — and the entire point of the design is that the postal service cannot read the mail.</p>
-      <p>Google encrypts the card data addressed to <em>Elavon</em>, using a public key Elavon registered with Google when they onboarded as a payment processor. From that moment the payload is sealed. Your browser handles it, your PHP handles it, your <code>recordWire()</code> logs it — and none of them can open it. Only the holder of the matching private key can, and that is Elavon.</p>
+      <p>Google holds the shopper's card and Elavon needs it. You pass it from one to the other, and the design ensures you cannot read it on the way.</p>
+      <p>Google encrypts the card data addressed to <em>Elavon</em>, using a public key Elavon registered with Google when they onboarded as a payment processor. The payload is sealed from then on. Your browser handles it, your PHP handles it and the demo's wire panel logs it, but none of them can open it. Only the holder of the matching private key can, and that is Elavon.</p>
     </div>
 
     <figure>
@@ -417,7 +417,7 @@
 
           <!-- sealed region -->
           <rect class="s-seal" x="272" y="104" width="456" height="132" rx="6"></rect>
-          <text class="s-lbl" x="500" y="94" text-anchor="middle">sealed — nobody here can open it</text>
+          <text class="s-lbl" x="500" y="94" text-anchor="middle">sealed: nobody here can open it</text>
 
           <!-- boxes -->
           <rect class="s-box" x="35" y="130" width="150" height="80" rx="4"></rect>
@@ -430,7 +430,7 @@
 
           <rect class="s-box" x="555" y="130" width="150" height="80" rx="4"></rect>
           <text class="s-t" x="630" y="163" text-anchor="middle">Your server</text>
-          <text class="s-lbl" x="630" y="182" text-anchor="middle">googlepay.php</text>
+          <text class="s-lbl" x="630" y="182" text-anchor="middle">pay.php</text>
 
           <rect class="s-box-key" x="815" y="130" width="150" height="80" rx="4"></rect>
           <text class="s-t" x="890" y="163" text-anchor="middle">Opayo / Elavon</text>
@@ -457,7 +457,7 @@
           <text class="s-acc" x="890" y="270" text-anchor="middle">then authorises</text>
         </svg>
       </div>
-      <figcaption><b>Figure 1</b>The card data is encrypted once, at Google, addressed to Elavon. Everything between them — including your PHP — moves an opaque string. There is no point in that chain where a key would be useful to you, which is why none is issued.</figcaption>
+      <figcaption><b>Figure 1</b>The card data is encrypted once, at Google, addressed to Elavon. Everything between them, including your PHP, moves a string it cannot read. A key would be no use to you anywhere in that chain, which is why none is issued.</figcaption>
     </figure>
   </section>
 
@@ -465,12 +465,12 @@
     <div class="eyebrow"><span class="num">03</span><span class="field">tokenizationSpecification.type</span></div>
     <h2>Two modes, and only one of them has a certificate</h2>
     <div class="col">
-      <p>Google offers exactly two ways to specify who the token is encrypted for, and the choice determines whether key material exists on your side at all.</p>
-      <p><strong>PAYMENT_GATEWAY</strong> is what Opayo Pi uses — you can see it in the demo's <code>tokenizationSpecification</code>, with <code>gateway: 'opayoelavon'</code>. The gateway is the recipient. The <code>gatewayMerchantId</code> alongside it is not a credential; it is a routing label that tells Elavon which of their merchants the payment belongs to once they've decrypted it. It is safe in page source, which is exactly where the demo puts it.</p>
-      <p><strong>DIRECT</strong> is the other mode, and it is the one that matches your instinct. There you generate a NIST P-256 key pair yourself, register the public half in the Google Pay &amp; Wallet Console, and decrypt the payload on your own server. Google's cryptography guide for this mode states plainly that it is "valid for merchants only and not for payment service providers."</p>
-      <p>Opayo Pi cannot use DIRECT. <code>GooglePayPayment::$payload</code> is base64 of the gateway token, and the API expects that shape — so the mode that would give you a key is the mode the gateway doesn't accept.</p>
+      <p>Google offers two ways to say who the token is encrypted for. The choice decides whether you hold any key at all.</p>
+      <p><strong>PAYMENT_GATEWAY</strong> is what Opayo Pi uses. You can see it in the demo's <code>tokenizationSpecification</code>, with <code>gateway: 'opayoelavon'</code>. The gateway is the recipient. The <code>gatewayMerchantId</code> alongside it is not a credential. It is a label that tells Elavon which of their merchants the payment belongs to once they've decrypted it. It is safe in page source, which is where the demo puts it.</p>
+      <p><strong>DIRECT</strong> is the other mode, and the one that works the way you might expect. There you generate a NIST P-256 key pair yourself, register the public half in the Google Pay &amp; Wallet Console, and decrypt the payload on your own server. Google's cryptography guide for this mode says it is "valid for merchants only and not for payment service providers."</p>
+      <p>Opayo Pi cannot use DIRECT. <code>GooglePayPayment::$payload</code> is base64 of the gateway token, and the API expects that shape. The mode that would give you a key is the one the gateway does not accept.</p>
       <h3>Two identifiers, and neither one is a key</h3>
-      <p>Enabling the wallet involves a second ID, and it is easy to mistake it for the credential you were expecting. Opayo asks for your Google merchant ID before they will switch Google Pay on. That is them recording which Google business your vendor corresponds to — an identity check, in the opposite direction to a secret being issued to you.</p>
+      <p>Enabling the wallet involves a second ID, and it is easy to mistake it for the credential you were expecting. Opayo asks for your Google merchant ID before they will switch Google Pay on. They are recording which Google business your vendor belongs to. It is an identity check, and no secret comes back to you.</p>
     </div>
 
     <div class="tablewrap">
@@ -481,7 +481,7 @@
         <tbody>
           <tr><td>Comes from</td><td>Opayo, when the wallet is enabled</td><td>Google Pay &amp; Wallet Console</td></tr>
           <tr><td>Identifies you to</td><td>Elavon</td><td>Google</td></tr>
-          <tr><td>Where it goes</td><td>the sheet's tokenization spec</td><td>the sheet's merchant info in PRODUCTION — and to Opayo at enrolment</td></tr>
+          <tr><td>Where it goes</td><td>the sheet's tokenization spec</td><td>the sheet's merchant info in PRODUCTION, and to Opayo at enrolment</td></tr>
           <tr><td>Secret?</td><td><span class="tag-warn">no</span></td><td><span class="tag-warn">no</span></td></tr>
           <tr><td>Decrypts anything?</td><td><span class="tag-warn">no</span></td><td><span class="tag-warn">no</span></td></tr>
         </tbody>
@@ -522,7 +522,7 @@
           <text class="s-warn" x="25" y="222">nothing secret</text>
           <text class="s-lbl" x="25" y="248">you are given</text>
           <text class="s-acc" x="25" y="265">gatewayMerchantId</text>
-          <text class="s-lbl" x="25" y="282">— an identifier, not a key</text>
+          <text class="s-lbl" x="25" y="282">an identifier, not a key</text>
 
           <!-- PANEL B -->
           <text class="s-t" x="545" y="34">DIRECT</text>
@@ -548,7 +548,7 @@
           <text class="s-lbl" x="545" y="282">in the Google Pay &amp; Wallet Console</text>
         </svg>
       </div>
-      <figcaption><b>Figure 2</b>The skeleton is identical; only the position of the private key moves. Slide it left, onto your server, and a certificate appears — but that is the mode Opayo's API will not take. There is no third mode where you hold a key <em>and</em> the gateway decrypts.</figcaption>
+      <figcaption><b>Figure 2</b>The two modes differ only in who holds the private key. In DIRECT it is on your server, so you get a certificate, but Opayo's API does not accept that mode. There is no third mode where you hold a key <em>and</em> the gateway decrypts.</figcaption>
     </figure>
   </section>
 
@@ -556,11 +556,11 @@
     <div class="eyebrow"><span class="num">04</span><span class="field">paymentMethod.googlePay.payload</span></div>
     <h2>What the sealed envelope contains</h2>
     <div class="col">
-      <p>The token your JavaScript pulls out of <code>paymentData.paymentMethodData.tokenizationData.token</code> is a JSON string wrapping several layers. Your server treats it as one opaque blob and base64-encodes the whole thing — that is all <code>fromGoogleToken()</code> does — but it is worth knowing what is inside, because it explains what "invalid payload" means.</p>
-      <p>The innermost layer is the part that matters commercially, and it is not always a card number. Which of the two it is depends on <code>allowedAuthMethods</code>, the array the demo sets to both values:</p>
+      <p>The token your JavaScript pulls out of <code>paymentData.paymentMethodData.tokenizationData.token</code> is a JSON string wrapping several layers. Your server treats it as one opaque blob and base64-encodes the whole thing (that is all <code>fromGoogleToken()</code> does). Knowing what is inside explains what "invalid payload" means.</p>
+      <p>The innermost layer holds the payment details, and it is not always a card number. Which it is depends on <code>allowedAuthMethods</code>, the array the demo sets to both values:</p>
       <ul>
-        <li><code>PAN_ONLY</code> — a card saved to the Google account. The payload carries the real card number and expiry. Nothing has replaced the card, so the transaction still needs whatever authentication a keyed card would.</li>
-        <li><code>CRYPTOGRAM_3DS</code> — a card provisioned to the device. The payload carries a network token (a DPAN, a stand-in number issued by Visa or Mastercard) plus a one-shot cryptogram. The real card number never leaves the network, and the cryptogram proves the device authenticated the shopper.</li>
+        <li><code>PAN_ONLY</code>: a card saved to the Google account. The payload carries the real card number and expiry. Nothing has replaced the card, so the transaction still needs whatever authentication a keyed card would.</li>
+        <li><code>CRYPTOGRAM_3DS</code>: a card provisioned to the device. The payload carries a network token (a DPAN, a stand-in number issued by Visa or Mastercard) plus a one-shot cryptogram. The real card number never leaves the network, and the cryptogram proves the device authenticated the shopper.</li>
       </ul>
       <p>Accepting both is normal, and it means the shopper's saved cards and their device-provisioned cards all appear in the sheet.</p>
     </div>
@@ -593,7 +593,7 @@
 
           <!-- encryptedMessage -->
           <rect class="s-box-key" x="88" y="244" width="604" height="96" rx="4"></rect>
-          <text class="s-acc" x="104" y="266">encryptedMessage — opens only with Elavon's private key</text>
+          <text class="s-acc" x="104" y="266">encryptedMessage: opens only with Elavon's private key</text>
           <text class="s-t" x="104" y="292">card number + expiry</text>
           <text class="s-lbl" x="290" y="292">(PAN_ONLY)</text>
           <text class="s-t" x="104" y="317">or network token + cryptogram</text>
@@ -608,18 +608,18 @@
           <text class="s-acc" x="788" y="296">Elavon only</text>
         </svg>
       </div>
-      <figcaption><b>Figure 3</b>Layers of the token. Your server reads the outer string and nothing more. <em>Caveat:</em> this is Google's documented envelope for the mode where Google does the encrypting. Google describes the PAYMENT_GATEWAY token as gateway-issued, and I have never held a real <code>opayoelavon</code> token to confirm its exact shape.</figcaption>
+      <figcaption><b>Figure 3</b>Layers of the token. Your server reads the outer string and nothing more. This is Google's documented envelope. The outer layer of a genuine <code>opayoelavon</code> token, taken from the TEST sheet on 4 October 2026, matched it.</figcaption>
     </figure>
   </section>
 
   <section>
     <div class="eyebrow"><span class="num">05</span><span class="field">6401 / 6203</span></div>
-    <h2>Two doors, and which one you're standing at</h2>
+    <h2>Two doors: 6401 and 6203</h2>
     <div class="col">
-      <p>A Google Pay transaction has to get through two independent checks at Opayo, and the error code tells you precisely which one stopped you. This is genuinely useful diagnostic information, because the two failures mean opposite things about your setup.</p>
-      <p><strong>Door one is enrolment.</strong> Is this wallet switched on for this vendor in MyOpayo? Fail and you get <code>6401 Wallet not enabled for the vendor</code> — the payload is never even examined. Your <code>.env</code> account lands here.</p>
-      <p><strong>Door two is the payload.</strong> Can Elavon decrypt what you sent? Fail and you get <code>6203 Invalid Google Pay payload</code>. Reaching this door is good news: it means enrolment passed and the gateway actually tried to open the envelope. The public <code>sandbox</code> vendor lands here.</p>
-      <p>And here is why the demo stops: a token from Google's TEST environment is genuine but not chargeable. The TEST sheet returns a real, encrypted token, addressed to <code>gateway:opayoelavon</code> but signed with Google's <em>test</em> key, by design, so that test integrations cannot move money. Opayo's sandbox gets far enough to create a transaction for it, then refuses it with <code>6203</code>: it does not accept TEST tokens. So the demo fails door two every time, no matter which vendor, which credentials, or which certificate you might imagine obtaining.</p>
+      <p>A Google Pay transaction has to pass two separate checks at Opayo, and the error code tells you which one stopped it. The two failures mean opposite things about your setup.</p>
+      <p><strong>Door one is enrolment.</strong> Is this wallet switched on for this vendor in MyOpayo? Fail and you get <code>6401 Wallet not enabled for the vendor</code>. The payload is not examined. A vendor without the wallet enabled stops here.</p>
+      <p><strong>Door two is the payload.</strong> Can Elavon decrypt what you sent? Fail and you get <code>6203 Invalid Google Pay payload</code>. Reaching this door means enrolment passed and the gateway tried to read the token. The public <code>sandbox</code> vendor stops here.</p>
+      <p>The demo stops here because a token from Google's TEST environment is genuine but not chargeable. The TEST sheet returns a real, encrypted token, addressed to <code>gateway:opayoelavon</code> but signed with Google's <em>test</em> key, by design, so that test integrations cannot move money. Opayo's sandbox gets far enough to create a transaction for it, then refuses it with <code>6203</code>: it does not accept TEST tokens. So the demo fails at door two every time, whichever vendor or credentials you use.</p>
     </div>
 
     <figure>
@@ -681,7 +681,7 @@
           <text class="s-warn" x="712" y="221">lands here</text>
         </svg>
       </div>
-      <figcaption><b>Figure 4</b>The two doors, and where each account stops. Getting <code>6203</code> instead of <code>6401</code> is progress: it proves enrolment is correct and the gateway read your payload. The dashed path is the one the demo can never leave.</figcaption>
+      <figcaption><b>Figure 4</b>The two doors, and where each account stops. Getting <code>6203</code> instead of <code>6401</code> shows that enrolment is correct and the gateway read your payload. The demo always ends on the dashed path.</figcaption>
     </figure>
 
     <div class="tablewrap">
@@ -723,14 +723,14 @@
         </tbody>
       </table>
     </div>
-    <p class="col" style="font-size:14.5px;color:var(--ink-2)">Measured against the Opayo sandbox using the demo's own request path, 2 and 4 September 2026, and 4 October 2026 for the genuine token. <code>academe</code> and <code>academe1</code> are two vendors on the same account; the wallet was enabled on the second one only. Enrolling buys you exactly one door. The placeholder string is turned away before any transaction exists; the genuine TEST token gets further, to a transaction, and is then refused.</p>
+    <p class="col" style="font-size:14.5px;color:var(--ink-2)">Measured against the Opayo sandbox using the demo's own request path, 2 and 4 September 2026, and 4 October 2026 for the genuine token. <code>academe</code> and <code>academe1</code> are two vendors on the same account; the wallet was enabled on the second one only. Enrolling gets you past the first door only. The placeholder string is turned away before any transaction exists; the genuine TEST token gets further, to a transaction, and is then refused.</p>
   </section>
 
   <section>
     <div class="eyebrow"><span class="num">06</span><span class="field">contrast</span></div>
-    <h2>Why Apple Pay taught you to expect a certificate</h2>
+    <h2>Why Apple Pay leads you to expect a certificate</h2>
     <div class="col">
-      <p>Your instinct wasn't wrong in general — it was right about the wrong wallet. Apple's model genuinely does put key material in merchant hands, and Opayo supports both arrangements for it.</p>
+      <p>Expecting a certificate is reasonable, because Apple Pay has one. In one of Apple's arrangements the merchant handles a certificate, and Opayo supports both.</p>
     </div>
     <div class="tablewrap">
       <table>
@@ -756,7 +756,7 @@
           <tr>
             <td>In this demo</td>
             <td>reaches door two</td>
-            <td>no tab — needs Safari and a real domain</td>
+            <td>stops at merchant validation (<code>4006</code>)</td>
           </tr>
         </tbody>
       </table>
@@ -767,28 +767,28 @@
     <div class="eyebrow"><span class="num">07</span><span class="field">what would actually work</span></div>
     <h2>The only route past door two</h2>
     <div class="col">
-      <p>A <code>PRODUCTION</code> PaymentsClient is the sole way to obtain a token that decrypts. That needs two things: a Google merchant ID, and an allowlisted HTTPS origin.</p>
-      <p>If Opayo has enabled the wallet on your vendor, you already hold the first — supplying it is part of their enrolment. So the remaining blocker is the origin, and <code>127.0.0.1</code> will never qualify. You need the sheet running on a real registered domain over HTTPS.</p>
-      <p>One question then becomes worth answering, and I cannot answer it from here: whether a PRODUCTION token decrypts against Opayo's <em>test</em> endpoint. If it does, that is the ideal rig — a real token, no money moving. If it does not, verification means live credentials, a real card, and a refund.</p>
-      <p>The demo has the switch wired up so you can watch it fail honestly rather than take my word for it: the environment selector on the Google Pay tab flips the client to <code>PRODUCTION</code>, and <code>GOOGLE_PAY_MERCHANT_ID</code> in <code>.env</code> feeds the merchant ID through.</p>
+      <p>A <code>PRODUCTION</code> PaymentsClient is the only way to obtain a token that decrypts. That needs two things: a Google merchant ID, and an allowlisted HTTPS origin.</p>
+      <p>If Opayo has enabled the wallet on your vendor, you already hold the first, because supplying it is part of their enrolment. That leaves the origin, and <code>127.0.0.1</code> does not qualify. You need the sheet running on a real registered domain over HTTPS.</p>
+      <p>One question is still open: whether a PRODUCTION token decrypts against Opayo's <em>test</em> endpoint. If it does, you can test with a real token and no money moving. If it does not, verification means live credentials, a real card, and a refund.</p>
+      <p>The demo supports this: set <code>GOOGLE_PAY_ENVIRONMENT=PRODUCTION</code> and <code>GOOGLE_PAY_MERCHANT_ID</code> in <code>.env</code>.</p>
     </div>
 
     <div class="callout caveat">
-      <h3>What I checked, and what I'm taking on trust</h3>
+      <h3>What was measured, and what was not</h3>
       <ul class="verified">
         <li><span class="yes">measured</span><span>Both sandbox responses above, sent through the demo's own code path.</span></li>
-        <li><span class="yes">measured</span><span>The Google Pay sheet opens a popup, so a headless browser cannot complete it. COOP blocks the call and the promise simply never settles.</span></li>
+        <li><span class="yes">measured</span><span>The Google Pay sheet opens a popup, so a headless browser cannot complete it. COOP blocks the call and the promise never settles.</span></li>
         <li><span class="yes">measured</span><span>What a TEST sheet returns: a genuine <code>ECv2</code> token, not a placeholder. Taken from the sheet in a real browser on 4 October 2026, its intermediate key verifies against Google's published TEST root key (not the PRODUCTION one), and its signature verifies for the recipient <code>gateway:opayoelavon</code>.</span></li>
-        <li><span class="yes">measured</span><span>That Google encrypts to Opayo, not to you: the token's signed message is addressed to <code>gateway:opayoelavon</code>. Its contents stay encrypted to Elavon's key; I can't read them, and neither can you.</span></li>
+        <li><span class="yes">measured</span><span>That Google encrypts to Opayo, not to you: the token's signed message is addressed to <code>gateway:opayoelavon</code>. Its contents stay encrypted to Elavon's key; Nobody but Elavon can read them.</span></li>
         <li><span class="yes">measured</span><span>That enrolment moves a vendor from <code>6401</code> to <code>6203</code> and no further. Confirmed on a vendor Opayo had just enabled Google Pay on.</span></li>
-        <li><span class="no">untested</span><span>Whether a PRODUCTION Google token would decrypt against Opayo's <em>test</em> endpoint. I'd expect not, but I haven't tried it.</span></li>
+        <li><span class="no">untested</span><span>Whether a PRODUCTION Google token would decrypt against Opayo's <em>test</em> endpoint. Probably not, but it has not been tried.</span></li>
       </ul>
     </div>
   </section>
 
   <footer>
     <p>Sources: Google Pay API <a href="https://developers.google.com/pay/api/web/reference/response-objects">response objects</a> and <a href="https://developers.google.com/pay/api/web/guides/resources/payment-data-cryptography">payment data cryptography</a>; Elavon's <a href="https://developer.elavon.com/products/en-uk/opayo/v1/google-pay-1">Opayo Google Pay guide</a>.</p>
-    <p>Code referenced: <code>demo/googlepay.php</code>, <code>demo/index.php</code>, <code>src/Request/Model/GooglePayPayment.php</code>.</p>
+    <p>Code referenced: <code>demo/methods/googlepay.php</code>, <code>demo/pay.php</code>, <code>src/Request/Model/GooglePayPayment.php</code>.</p>
     <p>Part of the opayo-pi documentation. See <a href="payment-flows.md">payment-flows.md</a> for the full Google Pay sequence, and <a href="../demo/README.md">demo/README.md</a> for running the demo.</p>
   </footer>
 

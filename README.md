@@ -52,6 +52,9 @@ Apple Pay and PayPal payments to your application: the front-end code, the back-
 endpoints to host. [docs/CREDENTIALS-AND-SETUP.md](docs/CREDENTIALS-AND-SETUP.md) explains where each
 credential comes from. To run the demo, clone this repository: the demo is not included in Composer installs.
 
+**Using an AI coding agent?** Point it at [AGENTS.md](AGENTS.md), which tells it where to look and what
+the sandbox can and cannot do.
+
 ## Package Development
 
 The Opayo Pi payment gateway is a RESTful API run by by [Elavon](https://developer.elavon.com/products/opayo/v1/api-reference).
@@ -423,13 +426,13 @@ Two things are required by the gateway:
 1. The *original* payment must have been flagged for credential-on-file
    reuse by sending a `credentialType` of `cofUsage` `First` and
    `initiatedType` `CIT` (see [Saving and Reusing Cards](#saving-and-reusing-cards)
-   below) — use `CredentialType::createForNewReusableCard()`.
+   below). Use `CredentialType::createForNewReusableCard()`.
    A CIT `credentialType` also requires the full
    `strongCustomerAuthentication` object on that original payment, and if
    3D Secure is being bypassed (`apply3DSecure` `Disable`), a
    `threeDSExemptionIndicator` as well.
 2. The *repeat* itself must carry a `credentialType` of `cofUsage`
-   `Subsequent` and `initiatedType` `MIT` — repeats are always classed as
+   `Subsequent` and `initiatedType` `MIT`: repeats are always classed as
    Merchant Initiated Transactions, and no 3D Secure authentication is
    needed. `CredentialType::createForRepeatPayment()` builds this.
 
@@ -1064,7 +1067,7 @@ $card = new ReusableCard($merchantSessionKey, $cardIdentifier);
 Opayo Pi accepts Apple Pay, Google Pay and PayPal as the `paymentMethod` of a
 `CreatePayment`. Every wallet object needs a **merchant session key** (create one
 with `CreateSessionKey` exactly as for a card payment), and the wallet must be
-enabled on your vendor in MyOpayo (Settings → Pay Methods) — otherwise the gateway
+enabled on your vendor in MyOpayo (Settings → Pay Methods). Otherwise the gateway
 answers `6401 Wallet not enabled for the vendor` / `1030 Vendor not enrolled with
 this wallet type`. The field names below are those of the Opayo API reference and
 have been checked against the sandbox.
@@ -1115,7 +1118,7 @@ if ($result->isSuccessful()) { /* paid */ }
 The merchant session key expires after 400 seconds; the shopper must be redirected
 to PayPal within 20 minutes of registration. Note that `GET /transactions/{id}`
 answers `404 Transaction not found` for a PayPal transaction until PayPal has
-reported the outcome back to Opayo — it only becomes fetchable once the shopper
+reported the outcome back to Opayo. It only becomes fetchable once the shopper
 has finished at PayPal (which is exactly when Opayo calls your `callbackUrl`).
 
 #### Apple Pay
@@ -1124,11 +1127,11 @@ The Apple Pay token is minted by Safari on an Apple device (Apple Pay JS,
 `session.onpaymentauthorized` → `event.payment.token`) and cannot be produced
 server-side. Two certificate arrangements exist:
 
-- **Opayo manages your certificate** — register your HTTPS domain in MyOpayo; when
+- **Opayo manages your certificate**: register your HTTPS domain in MyOpayo; when
   Safari fires `onvalidatemerchant`, your server calls `CreateApplePaySession` and
   returns the merchant session to the browser, and the response's
   `sessionValidationToken` must travel with the transaction.
-- **You manage your certificate** — Apple Developer merchant ID plus the
+- **You manage your certificate**: Apple Developer merchant ID plus the
   Opayo-issued CSR/certificate; no session call, no `sessionValidationToken`.
 
 ```php

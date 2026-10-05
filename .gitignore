@@ -48,6 +48,7 @@ composer.lock
 /.phpunit.cache
 .gstack/
 .idea/
+.superpowers/
 
 # Vendor documentation pulled by scripts/fetch-opayo-docs.php
 /docs/vendor/

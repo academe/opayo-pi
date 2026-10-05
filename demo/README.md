@@ -35,7 +35,7 @@ hostname), and the demo redirects you accordingly.
 Apple Pay needs the demo served from a real HTTPS domain with no port in it, so
 `127.0.0.1:8000` will not do. An [ngrok](https://ngrok.com) tunnel solves this:
 it carries a public HTTPS URL down to your local PHP server. Two processes do
-two jobs — `php -S` *is* the site, ngrok *carries* it to the outside world:
+two jobs: `php -S` serves the site and ngrok carries it to the outside world:
 
 ```text
 Safari  →  https://<your-domain>  (ngrok cloud)  →  tunnel  →  127.0.0.1:8000  →  PHP
@@ -50,7 +50,7 @@ One-time setup (any OS):
 2. Reserve a free static domain in your ngrok dashboard (Domains), e.g.
    `something.ngrok-free.dev`. A *static* domain never changes, so you only
    register it with Opayo once.
-3. Put it in `.env` as `OPAYO_APPLE_PAY_DOMAIN` — the one place the domain is
+3. Put it in `.env` as `OPAYO_APPLE_PAY_DOMAIN`. That is the only place the domain is
    defined. The launch scripts read it from there.
 4. Register that same domain in MyOpayo → Settings → Pay Methods → Apple Pay.
 
@@ -66,8 +66,8 @@ version, and stops both on `Ctrl-C`:
 .\demo\serve-public.ps1     # Windows (PowerShell)
 ```
 
-Or run the two pieces by hand — the commands are identical on every OS, in two
-terminals:
+Or run the two pieces by hand, in two terminals. The commands are the same on
+every OS:
 
 ```bash
 php -S 127.0.0.1:8000 -t demo              # terminal 1: the site itself
@@ -81,7 +81,7 @@ return) as `https://` from the `X-Forwarded-Proto` header.
 Gotchas:
 
 - Only one tunnel can hold the domain at a time. `ERR_NGROK_334 ... already
-  online` means a previous ngrok is still running — stop it (`pkill ngrok` on
+  online` means a previous ngrok is still running. Stop it (`pkill ngrok` on
   macOS/Linux, `Get-Process ngrok | Stop-Process` on Windows) and re-run.
 - Older ngrok builds call the flag `--domain <host>` instead of
   `--url https://<host>`; run `ngrok http --help` to see which yours has. The

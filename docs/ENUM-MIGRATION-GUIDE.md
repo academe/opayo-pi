@@ -15,17 +15,17 @@ This guide demonstrates how to introduce PHP 8.1+ enums while maintaining backwa
 ## Pattern Overview
 
 The goal is to:
-- ✅ Introduce modern PHP 8.1+ backed enums for type safety
-- ✅ Maintain 100% backwards compatibility with existing constants
-- ✅ Provide a smooth migration path for library consumers
-- ✅ Make constants reference enums (single source of truth)
+- Introduce modern PHP 8.1+ backed enums for type safety
+- Maintain 100% backwards compatibility with existing constants
+- Provide a migration path for library consumers
+- Make constants reference enums (single source of truth)
 
 ### Key Principles
 
 1. **Enums as Source of Truth**: Enum cases define the actual values
 2. **Constants for BC**: Class constants use string literals (PHP 8.1) or enum values (PHP 8.2+)
 3. **Flexible Type Hints**: Accept both enum and string in methods
-4. **Smart Conversion**: Helper methods convert between enum/string seamlessly
+4. **Smart Conversion**: Helper methods convert between enum and string
 5. **Internal Enum Usage**: Internally prefer enums, externally support both
 
 ### PHP 8.1 vs 8.2 Difference

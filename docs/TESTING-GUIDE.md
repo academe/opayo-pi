@@ -93,12 +93,12 @@ Unit tests are fast, isolated tests that don't require external services.
 
 ### Characteristics
 
-- ✅ No API calls or network requests
-- ✅ No database connections
-- ✅ Use mocks/stubs for dependencies
-- ✅ Fast execution (milliseconds)
-- ✅ Deterministic results
-- ✅ Run in CI/CD without setup
+- No API calls or network requests
+- No database connections
+- Use mocks/stubs for dependencies
+- Fast execution (milliseconds)
+- Deterministic results
+- Run in CI/CD without setup
 
 ### Example Unit Test
 
@@ -178,14 +178,14 @@ vendor/bin/phpunit --testsuite=integration
 
 Integration tests verify:
 
-- ✅ Session key creation (`SessionKeyTest`)
-- ✅ Card tokenization and identifier creation (`CardIdentifierTest`)
-- ✅ Payment transaction processing (`PaymentTest`)
-- ✅ Multiple currencies (GBP, USD)
-- ✅ Shipping address handling
-- ✅ 3D Secure flows
-- ✅ Error handling with invalid data
-- ✅ API response parsing
+- Session key creation (`SessionKeyTest`)
+- Card tokenization and identifier creation (`CardIdentifierTest`)
+- Payment transaction processing (`PaymentTest`)
+- Multiple currencies (GBP, USD)
+- Shipping address handling
+- 3D Secure flows
+- Error handling with invalid data
+- API response parsing
 
 ### Opayo Test Cards
 
@@ -475,24 +475,24 @@ script:
 
 ### DO
 
-- ✅ Write unit tests for all public methods
-- ✅ Use integration tests sparingly (slow, flaky)
-- ✅ Keep tests fast and focused
-- ✅ Use descriptive test names
-- ✅ Test edge cases and error conditions
-- ✅ Use data providers for multiple inputs
-- ✅ Clean up after integration tests
-- ✅ Run unit tests before every commit
+- Write unit tests for all public methods
+- Use integration tests sparingly (slow, flaky)
+- Keep tests fast and focused
+- Use descriptive test names
+- Test edge cases and error conditions
+- Use data providers for multiple inputs
+- Clean up after integration tests
+- Run unit tests before every commit
 
 ### DON'T
 
-- ❌ Commit `.env` file (credentials!)
-- ❌ Write integration tests for simple logic
-- ❌ Test private methods directly
-- ❌ Share state between tests
-- ❌ Hard-code test credentials
-- ❌ Ignore failed tests
-- ❌ Skip writing tests for bug fixes
+- Commit `.env` file (credentials!)
+- Write integration tests for simple logic
+- Test private methods directly
+- Share state between tests
+- Hard-code test credentials
+- Ignore failed tests
+- Skip writing tests for bug fixes
 
 ---
 

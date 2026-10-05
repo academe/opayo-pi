@@ -11,7 +11,7 @@ applied; the code samples below are taken from it, trimmed where noted.
 | Method | What the shopper sees | Endpoints you host | Sandbox | Live |
 | ------ | --------------------- | ------------------ | ------- | ---- |
 | Card | Opayo's hosted card fields in your page | pay, 3D Secure notification | Completes | Completes |
-| Google Pay | Google's button and sheet | pay, 3D Secure notification | Stops at `6203` (Google's TEST token cannot be decrypted) | Completes |
+| Google Pay | Google's button and sheet | pay, 3D Secure notification | Stops at `6203` (the sandbox does not accept Google's TEST tokens) | Completes |
 | Apple Pay | Apple's button and sheet (Safari) | Apple merchant validation, pay | Stops at `4006` (Opayo-managed certificate not offered on test) | Completes |
 | PayPal | A redirect to PayPal and back | pay, PayPal return | Completes | Completes |
 

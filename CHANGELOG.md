@@ -3,7 +3,7 @@
 All notable changes to this package are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased] — feature/demo
+## [Unreleased] - feature/demo
 
 ### Wallet payment methods now match the Opayo Pi API (breaking for wallet users)
 
@@ -36,7 +36,7 @@ without a major version bump; if you referenced these classes, update the calls.
 
 ### Added
 
-- `CreateApplePaySession` / `Response\ApplePaySession` — `POST /applepay/sessions`
+- `CreateApplePaySession` / `Response\ApplePaySession`: `POST /applepay/sessions`
   for the Opayo-managed certificate flow (the gateway requires `domainName`,
   although the published spec says `domain`).
 - `Response\PayPalRedirect` (status `Redirect`, statusCode 2023) with
@@ -57,6 +57,10 @@ without a major version bump; if you referenced these classes, update the calls.
   with `AmountInterface`).
 - `Amount::withMajorUnit()` rejected integer-like strings such as `"10"` and
   accepted a bare `"."` as zero.
+- `Amount::withMajorUnit()` rejected about 1 in 22 ordinary prices, such as
+  `19.99`, `4.35` and `0.29`, with "Amount has too many decimal places",
+  because of floating-point rounding. Strings are now converted exactly, and
+  floats are rounded to the nearest minor unit.
 - `ResponseFactory::fromData()` fell off the end (TypeError) for unrecognised
   data; it now throws `UnexpectedValueException` with the offending body.
 - `StrongCustomerAuthentication::withBrowserColorDepth()` accepted strings such
@@ -68,7 +72,7 @@ without a major version bump; if you referenced these classes, update the calls.
 - `TransactionStatus::isSuccess()` returns true for `REGISTERED` and
   `AUTHENTICATED` (Authenticate-type outcomes). `REGISTERED` means the card
   details were secured but 3D Secure failed or was not performed (no liability
-  shift) — its `severity()` is `warning`. If you gate fulfilment on
+  shift), and its `severity()` is `warning`. If you gate fulfilment on
   `isSuccessful()`, check `getStatusEnum()` explicitly for Authenticate flows.
 - `Response\Model\Card` defaults a missing `reusable` flag to `false` (the
   Repeat response omits it); treat `false` as "not stated" in that context.

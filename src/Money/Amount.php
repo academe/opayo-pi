@@ -42,26 +42,46 @@ class Amount implements AmountInterface
      */
     public function withMajorUnit(float|string|int $amount): self
     {
-        // Accept integers, floats, and decimal strings with or without a fractional
-        // part ("10", "10.", "10.50", ".50") - but not a bare ".".
-        if (
-            is_int($amount)
-            || is_float($amount)
-            || (is_string($amount) && preg_match('/^([0-9]+(\.[0-9]*)?|\.[0-9]+)$/', $amount))
-        ) {
-            $calculatedAmount = (float)$amount * pow(10, $this->currency->getMinorUnits());
+        $minorUnits = $this->currency->getMinorUnits();
 
-            if (floor($calculatedAmount) != round($calculatedAmount, 6)) {
-                // Too many decimal digits for the currency.
+        if (is_int($amount)) {
+            return $this->withMinorUnit($amount * 10 ** $minorUnits);
+        }
+
+        // Decimal strings with or without a fractional part ("10", "10.",
+        // "10.50", ".50") - but not a bare ".". The digits are moved, with no
+        // arithmetic, so the result is exact.
+        if (is_string($amount) && preg_match('/^([0-9]+(\.[0-9]*)?|\.[0-9]+)$/', $amount)) {
+            [$whole, $fraction] = array_pad(explode('.', $amount, 2), 2, '');
+
+            if (trim(substr($fraction, $minorUnits), '0') !== '') {
+                throw new UnexpectedValueException(sprintf(
+                    'Amount has too many decimal places. %s has more than the %d the currency allows.',
+                    $amount,
+                    $minorUnits
+                ));
+            }
+
+            $digits = $whole . str_pad(substr($fraction, 0, $minorUnits), $minorUnits, '0');
+
+            return $this->withMinorUnit($digits === '' ? 0 : $digits);
+        }
+
+        if (is_float($amount)) {
+            // Most decimal fractions are not exact as floats: 19.99 * 100 is
+            // 1998.9999999999998. So round to the nearest minor unit, and only
+            // reject the amount if it was not within a millionth of one.
+            $calculatedAmount = $amount * 10 ** $minorUnits;
+            $rounded = round($calculatedAmount);
+
+            if (abs($calculatedAmount - $rounded) > 0.000001) {
                 throw new UnexpectedValueException(sprintf(
                     'Amount has too many decimal places. Calculated minor unit %f should be an integer.',
                     $calculatedAmount
                 ));
             }
 
-            $clone = clone $this;
-            $clone->setMinorUnit((int)$calculatedAmount);
-            return $clone;
+            return $this->withMinorUnit((int) $rounded);
         }
 
         throw new UnexpectedValueException('Major Unit must be a number.');
