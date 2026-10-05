@@ -26,6 +26,16 @@ if (! $endpoint->isTesting()) {
 }
 
 $names = ['CHALLENGE', 'SUCCESSFUL', 'NOTAUTH', 'PROOFATTEMPT', 'NOTENROLLED', 'REJECT', 'TECHDIFFICULTIES', 'ERROR'];
+// From Elavon's "Test in Sandbox" page. All use CVV 123 (American Express: 1234).
+$cards = [
+    '4929000000006' => 'Visa',
+    '4462000000000003' => 'Visa Debit',
+    '5186150660000009' => 'MasterCard',
+    '5185690060000001' => 'Debit MasterCard',
+    '374200000000004' => 'American Express',
+    '4929602110085639' => 'Visa, declined by the bank',
+    '5403814948608092' => 'MasterCard, declined by the bank',
+];
 $expiry = date('my', strtotime('+2 years'));
 $order = ['amount' => '9.99', 'description' => 'Test card purchase', 'firstName' => 'Sam', 'lastName' => 'Jones', 'email' => 'sam.jones@example.com'];
 
@@ -71,7 +81,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <?php foreach ($names as $name): ?><option><?= h($name) ?></option><?php endforeach; ?>
                 </select>
             </label>
-            <label class="block">Card number <input name="cardNumber" value="4929000000006" class="mt-1 w-full rounded border-slate-300"></label>
+            <label class="block">Card number
+                <select name="cardNumber" class="mt-1 w-full rounded border-slate-300">
+                    <?php foreach ($cards as $number => $label): ?>
+                        <?php // PHP turns numeric array keys into integers. ?>
+                        <option value="<?= h((string) $number) ?>"><?= h($number . ' - ' . $label) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <p class="text-xs text-slate-500">The two "declined by the bank" cards are refused at authorisation, which comes
+                after 3D Secure. Pick <code>SUCCESSFUL</code> as the name to get there without a challenge.</p>
             <div class="grid grid-cols-2 gap-3">
                 <label class="block">Expiry (MMYY) <input name="cardExpiry" value="<?= h($expiry) ?>" class="mt-1 w-full rounded border-slate-300"></label>
                 <label class="block">CVV <input name="cardCvv" value="123" class="mt-1 w-full rounded border-slate-300"></label>

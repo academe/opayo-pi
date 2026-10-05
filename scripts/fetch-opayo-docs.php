@@ -9,6 +9,13 @@
  * served HTML, and the navigation ships with it. So a plain HTTP request gets
  * the lot - no login, no browser, no scraping of rendered DOM.
  *
+ * The API reference pages are different: they are rendered from an OpenAPI
+ * description embedded in the page as JSON, and the only markdown on the page
+ * is its introduction. For those the whole description is saved as
+ * <page>.openapi.json, and <page>.md is built from it: the introduction, then
+ * every section (error codes, change log, sandbox accounts...) and a list of
+ * the endpoints.
+ *
  * Usage:
  *
  *   php scripts/fetch-opayo-docs.php --list
@@ -152,6 +159,91 @@ function extractMarkdown(string $html): ?string
 }
 
 /**
+ * The JSON object that starts at this offset, found by matching braces
+ * outside of strings. Returns null if it never closes.
+ */
+function extractJsonObject(string $html, int $start): ?string
+{
+    $depth = 0;
+    $inString = false;
+    $length = strlen($html);
+
+    for ($i = $start; $i < $length; $i++) {
+        $char = $html[$i];
+
+        if ($inString) {
+            if ($char === '\\') {
+                $i++;
+            } elseif ($char === '"') {
+                $inString = false;
+            }
+
+            continue;
+        }
+
+        if ($char === '"') {
+            $inString = true;
+        } elseif ($char === '{') {
+            $depth++;
+        } elseif ($char === '}' && --$depth === 0) {
+            return substr($html, $start, $i - $start + 1);
+        }
+    }
+
+    return null;
+}
+
+/**
+ * The OpenAPI description an API reference page is rendered from, or null
+ * for an ordinary page.
+ */
+function extractOpenApi(string $html): ?array
+{
+    $marker = '"specData":';
+    $position = strpos($html, $marker . '{');
+
+    if ($position === false) {
+        return null;
+    }
+
+    $json = extractJsonObject($html, $position + strlen($marker));
+    $spec = $json === null ? null : json_decode($json, true);
+
+    return is_array($spec) && isset($spec['openapi'], $spec['paths']) ? $spec : null;
+}
+
+/**
+ * The readable parts of an OpenAPI description as one markdown document:
+ * the introduction, each section, and the endpoints.
+ */
+function openApiToMarkdown(array $spec): string
+{
+    $info = $spec['info'] ?? [];
+
+    $markdown = '# ' . ($info['title'] ?? 'API reference')
+        . ' (OpenAPI description version ' . ($info['version'] ?? 'unknown') . ")\n\n"
+        . trim($info['description'] ?? '') . "\n";
+
+    foreach ($spec['tags'] ?? [] as $tag) {
+        if (trim($tag['description'] ?? '') !== '') {
+            $markdown .= "\n# " . $tag['name'] . "\n\n" . trim($tag['description']) . "\n";
+        }
+    }
+
+    $markdown .= "\n# Endpoints\n\nThe fields of each are in the .openapi.json file saved next to this one.\n\n";
+
+    foreach ($spec['paths'] as $path => $operations) {
+        foreach ($operations as $method => $operation) {
+            if (is_array($operation) && isset($operation['responses'])) {
+                $markdown .= '- `' . strtoupper($method) . ' ' . $path . '` ' . ($operation['summary'] ?? '') . "\n";
+            }
+        }
+    }
+
+    return $markdown;
+}
+
+/**
  * Page slugs from the navigation, which every page carries.
  */
 function extractSlugs(string $html, string $pathPrefix): array
@@ -217,7 +309,16 @@ foreach ($slugs as $i => $slug) {
         continue;
     }
 
-    $markdown = extractMarkdown($html);
+    $openApi = extractOpenApi($html);
+
+    if ($openApi !== null) {
+        file_put_contents(
+            "$outDir/$slug.openapi.json",
+            json_encode($openApi, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n"
+        );
+    }
+
+    $markdown = $openApi !== null ? openApiToMarkdown($openApi) : extractMarkdown($html);
 
     // Some slugs in the navigation are section headings rather than documents:
     // they carry no markdown, and render blank in a real browser too. Not an
@@ -234,7 +335,12 @@ foreach ($slugs as $i => $slug) {
 
     file_put_contents("$outDir/$slug.md", $header . $markdown . "\n");
 
-    printf("  %-46s %6d bytes\n", $slug, strlen($markdown));
+    printf(
+        "  %-46s %6d bytes%s\n",
+        $slug,
+        strlen($markdown),
+        $openApi !== null ? " + $slug.openapi.json" : ''
+    );
     $written++;
 }
 

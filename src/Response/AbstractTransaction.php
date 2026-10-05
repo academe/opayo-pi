@@ -67,6 +67,10 @@ abstract class AbstractTransaction extends AbstractResponse
 
     protected ?Model\AvsCvcCheck $avsCvcCheck = null;
 
+    protected ?Model\AdditionalDeclineDetail $additionalDeclineDetail = null;
+
+    protected ?string $settlementReferenceText = null;
+
     /**
      * @param mixed $data
      * @return self
@@ -105,6 +109,16 @@ abstract class AbstractTransaction extends AbstractResponse
         if ($avsCvcCheck = Helper::dataGet($data, 'avsCvcCheck')) {
             $this->setAvsCvcCheck($avsCvcCheck);
         }
+
+        // Returned with a declined card transaction.
+
+        if ($additionalDeclineDetail = Helper::dataGet($data, 'additionalDeclineDetail')) {
+            $this->additionalDeclineDetail = Model\AdditionalDeclineDetail::fromData($additionalDeclineDetail);
+        }
+
+        // Echoed back when it was sent with the transaction.
+
+        $this->settlementReferenceText = Helper::dataGet($data, 'settlementReferenceText', null);
 
         return $this;
     }
@@ -437,6 +451,26 @@ abstract class AbstractTransaction extends AbstractResponse
     }
 
     /**
+     * The card scheme's extended decline detail, returned with a declined
+     * card transaction. Says whether the payment can be retried.
+     * @return Model\AdditionalDeclineDetail|null
+     */
+    public function getAdditionalDeclineDetail(): ?Model\AdditionalDeclineDetail
+    {
+        return $this->additionalDeclineDetail;
+    }
+
+    /**
+     * The reference for the acquirer's settlement report, if one was sent
+     * with the transaction.
+     * @return string|null
+     */
+    public function getSettlementReferenceText(): ?string
+    {
+        return $this->settlementReferenceText;
+    }
+
+    /**
      * Convenient serialisation for logging and debugging.
      * Each response message would extend this where appropriate.
      *
@@ -492,6 +526,14 @@ abstract class AbstractTransaction extends AbstractResponse
         if ($avsCvcCheck = $this->getAvsCvcCheck()) {
             // Merge in the "AVS CVC Check object" at the top level.
             $return = array_merge($return, $avsCvcCheck->getData());
+        }
+
+        if ($additionalDeclineDetail = $this->getAdditionalDeclineDetail()) {
+            $return = array_merge($return, $additionalDeclineDetail->getData());
+        }
+
+        if (($settlementReferenceText = $this->getSettlementReferenceText()) !== null) {
+            $return['settlementReferenceText'] = $settlementReferenceText;
         }
 
         return $return;

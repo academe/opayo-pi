@@ -49,6 +49,15 @@ without a major version bump; if you referenced these classes, update the calls.
 - Request constructors (`CreatePayment`, `CreateDeferred`, `CreateRepeatPayment`,
   `CreateRefund`, `CreateRelease`) accept a `Money\Money` directly as the amount;
   `Amount::toMoney()` and `MoneyAmount::fromAmount()` convert the other way.
+- `settlementReferenceText` on `CreatePayment` and `CreateDeferred`
+  (`withSettlementReferenceText()`, or the `settlementReferenceText` option):
+  a reference for your acquirer's settlement report. At most 30 characters;
+  the gateway accepts letters and digits only. Transaction responses return
+  it through `getSettlementReferenceText()`.
+- `Response\Model\AdditionalDeclineDetail` and
+  `AbstractTransaction::getAdditionalDeclineDetail()`: the card scheme's
+  extended decline code, description and category, returned with a declined
+  card transaction. The category says whether the payment may be retried.
 - Demo: PayPal tab (`demo/paypal.php`, `demo/paypal-return.php`).
 
 ### Fixed

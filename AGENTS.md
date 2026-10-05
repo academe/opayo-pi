@@ -59,6 +59,11 @@ php scripts/fetch-opayo-docs.php api-reference google-pay-1
 php scripts/fetch-opayo-docs.php --all
 ```
 
+For `api-reference` it also saves `api-reference.openapi.json`, Elavon's full
+OpenAPI description. That file is the authority on field names, required
+fields and allowed values, and the markdown beside it has the error code
+tables and the API change log.
+
 ## Rules that save time
 
 - **Follow the five steps of the pay endpoint** in `docs/INTEGRATION.md`. Every

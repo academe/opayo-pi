@@ -47,6 +47,7 @@ class CreatePayment extends AbstractRequest
     protected ?AddressInterface $shippingAddress = null;
     protected ?PersonInterface $shippingRecipient = null;
     protected string $referrerId = '3F7A4119-8671-464F-A091-9E59EB47B80C';
+    protected ?string $settlementReferenceText = null;
 
     /**
      * The prefix is added to the name fields of the customer.
@@ -297,6 +298,32 @@ class CreatePayment extends AbstractRequest
         return $copy->setReferrerId($referrerId);
     }
 
+    /**
+     * A reference to show on your acquirer's settlement report. Not enabled
+     * for all acquirers.
+     *
+     * At most 30 characters. The gateway accepts letters and digits only
+     * (no spaces or punctuation), and rejects anything else with error 1005.
+     */
+    protected function setSettlementReferenceText(string $settlementReferenceText): static
+    {
+        if (strlen($settlementReferenceText) > 30) {
+            throw new UnexpectedValueException(sprintf(
+                'settlementReferenceText "%s" is longer than the 30 characters allowed',
+                $settlementReferenceText
+            ));
+        }
+
+        $this->settlementReferenceText = $settlementReferenceText;
+        return $this;
+    }
+
+    public function withSettlementReferenceText(string $settlementReferenceText): static
+    {
+        $copy = clone $this;
+        return $copy->setSettlementReferenceText($settlementReferenceText);
+    }
+
     public function setCredentialType(CredentialType $credentialType): static
     {
         $this->credentialType = $credentialType;
@@ -369,6 +396,10 @@ class CreatePayment extends AbstractRequest
 
         if (! empty($this->referrerId)) {
             $result['referrerId'] = $this->referrerId;
+        }
+
+        if (! empty($this->settlementReferenceText)) {
+            $result['settlementReferenceText'] = $this->settlementReferenceText;
         }
 
         if (! empty($this->strongCustomerAuthentication)) {

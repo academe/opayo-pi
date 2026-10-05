@@ -106,6 +106,45 @@ class CreatePaymentTest extends TestCase
         $this->assertSame('TelephoneOrder', $request->jsonSerialize()['entryMethod']);
     }
 
+    public function testSettlementReferenceTextOmittedByDefault()
+    {
+        $this->assertArrayNotHasKey('settlementReferenceText', $this->createRequest()->jsonSerialize());
+    }
+
+    public function testSettlementReferenceTextSerialized()
+    {
+        $original = $this->createRequest();
+        $request = $original->withSettlementReferenceText('Order12345');
+
+        $this->assertSame('Order12345', $request->jsonSerialize()['settlementReferenceText']);
+        $this->assertArrayNotHasKey('settlementReferenceText', $original->jsonSerialize());
+    }
+
+    public function testSettlementReferenceTextAcceptedAsOption()
+    {
+        $request = $this->createRequest()->withOptions(['settlementReferenceText' => 'Order12345']);
+
+        $this->assertSame('Order12345', $request->jsonSerialize()['settlementReferenceText']);
+    }
+
+    public function testSettlementReferenceTextAllowsThirtyCharacters()
+    {
+        $reference = str_repeat('A', 30);
+
+        $this->assertSame(
+            $reference,
+            $this->createRequest()->withSettlementReferenceText($reference)->jsonSerialize()['settlementReferenceText']
+        );
+    }
+
+    public function testSettlementReferenceTextRejectsMoreThanThirtyCharacters()
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessageMatches('/settlementReferenceText/');
+
+        $this->createRequest()->withSettlementReferenceText(str_repeat('A', 31));
+    }
+
     public function testShippingDetailsOmittedWhenNoneSet()
     {
         $this->assertArrayNotHasKey('shippingDetails', $this->createRequest()->jsonSerialize());
