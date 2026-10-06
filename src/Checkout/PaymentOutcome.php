@@ -155,11 +155,26 @@ final class PaymentOutcome
      * A plain array of the outcome, safe for any kind: suitable for a session,
      * a log line or a result page.
      *
-     * @return array{kind: string, successful: bool, transactionId: ?string, status: ?string, statusDetail: ?string, errors: list<array>}
+     * settlementReferenceText is the reference you sent for the acquirer's
+     * settlement report, if any. declineDetail is the card scheme's extra
+     * detail for a declined card; its category says whether a retry is allowed
+     * (see Response\Model\AdditionalDeclineDetail). Both are null when absent.
+     *
+     * @return array{
+     *     kind: string,
+     *     successful: bool,
+     *     transactionId: ?string,
+     *     status: ?string,
+     *     statusDetail: ?string,
+     *     errors: list<array>,
+     *     settlementReferenceText: ?string,
+     *     declineDetail: ?array{code: ?string, description: ?string, category: ?string}
+     * }
      */
     public function summary(): array
     {
         $rejected = $this->kind === OutcomeKind::Rejected;
+        $declineDetail = $rejected ? null : $this->response->getAdditionalDeclineDetail();
 
         return [
             'kind' => $this->kind->value,
@@ -168,6 +183,12 @@ final class PaymentOutcome
             'status' => $rejected ? null : $this->response->getStatus(),
             'statusDetail' => $rejected ? null : $this->response->getStatusDetail(),
             'errors' => $rejected ? $this->errors() : [],
+            'settlementReferenceText' => $rejected ? null : $this->response->getSettlementReferenceText(),
+            'declineDetail' => $declineDetail === null ? null : [
+                'code' => $declineDetail->getCode(),
+                'description' => $declineDetail->getDescription(),
+                'category' => $declineDetail->getCategory(),
+            ],
         ];
     }
 

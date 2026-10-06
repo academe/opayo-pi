@@ -23,6 +23,13 @@ use InvalidArgumentException;
  *   displayName             optional  from paymentMethod.displayName, e.g. "Visa 1234"
  *   paymentMethodType       optional  from paymentMethod.type, e.g. "debit"
  *
+ * The shape of paymentData was checked on the sandbox in October 2026 with
+ * dummy payloads. The gateway decodes the base64 and looks for a top-level
+ * "paymentData" key: with one it goes on to decryption (6138 "Invalid payload
+ * encryption" for a dummy), and without one it answers 6151 "Payment data not
+ * supplied". That includes a payload wrapped in a "token" object, which
+ * Elavon's error table suggests for code 6149; do not wrap it.
+ *
  * The Apple Pay token comes from the Apple Pay JS API (session.onpaymentauthorized,
  * event.payment.token) in Safari on an Apple device; it cannot be fabricated
  * server-side, so this class only transports it.

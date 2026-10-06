@@ -112,6 +112,22 @@ class ResponseFactory
             }
         }
 
+        // An Authenticate: the cardholder was checked and no funds were taken.
+
+        if (Helper::dataGet($data, 'transactionId')) {
+            if (Helper::dataGet($data, 'transactionType') == AbstractRequest::TRANSACTION_TYPE_AUTHENTICATE) {
+                return Response\Authenticate::fromData($data, $httpCode);
+            }
+        }
+
+        // An Authorise against an earlier Authenticate.
+
+        if (Helper::dataGet($data, 'transactionId')) {
+            if (Helper::dataGet($data, 'transactionType') == AbstractRequest::TRANSACTION_TYPE_AUTHORISE) {
+                return Response\Authorise::fromData($data, $httpCode);
+            }
+        }
+
         // A failed payment.
         // This isn't documented, but it is a payment with no transactionType.
         // It is returned, for example, when 3DS v2 fails user authentication.
@@ -172,6 +188,12 @@ class ResponseFactory
 
         if (Helper::dataGet($data, 'instructionType') == AbstractRequest::INSTRUCTION_TYPE_RELEASE) {
             return Response\Release::fromData($data, $httpCode);
+        }
+
+        // A cancel instruction.
+
+        if (Helper::dataGet($data, 'instructionType') == AbstractRequest::INSTRUCTION_TYPE_CANCEL) {
+            return Response\Cancel::fromData($data, $httpCode);
         }
 
         // A list of instructions.

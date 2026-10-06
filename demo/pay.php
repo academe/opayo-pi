@@ -94,6 +94,10 @@ if ($method === 'card') {
 // Your own order reference; it must be unique per attempt.
 $vendorTxCode = 'DEMO-' . bin2hex(random_bytes(8));
 
+// Optional: a reference for your acquirer's settlement report. Letters and
+// digits only, 30 at most. Opayo returns it with the transaction.
+$options['settlementReferenceText'] = preg_replace('/[^A-Za-z0-9]/', '', $vendorTxCode);
+
 $request = new CreatePayment(
     $endpoint,
     $auth,

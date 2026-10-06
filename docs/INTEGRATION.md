@@ -59,7 +59,7 @@ $config = [
         ?? GooglePayEnvironment::Test,
     // The domain registered in MyOpayo > Settings > Pay Methods > Apple Pay.
     'applePayDomain' => applePayDomain($_ENV, $_SERVER),
-    // Card payments only: UseMSPSetting, Force, Disable or ForceIgnoringRules.
+    // Card payments only: UseMSPSetting, Force or Disable.
     'apply3DSecure' => ($_ENV['OPAYO_APPLY_3D_SECURE'] ?? '') ?: 'UseMSPSetting',
 ];
 ```
@@ -235,6 +235,17 @@ arrive whatever the method, so this code is written once.
 Calling a getter on the wrong kind throws `LogicException`. `summary()` works
 for every kind and returns a plain array you can store or log, and
 `response()` returns the original response object.
+
+As well as the status and any errors, the summary has two optional values,
+each `null` when absent:
+
+- `settlementReferenceText`: the reference you sent for your acquirer's
+  settlement report (`withSettlementReferenceText()`, letters and digits only,
+  30 at most).
+- `declineDetail`: for a declined card, the card scheme's `code`,
+  `description` and `category`. The category says whether the payment may be
+  tried again; `Response\Model\AdditionalDeclineDetail` has a constant for
+  each one.
 
 ```php
 if ($outcome->kind === OutcomeKind::Challenge) {
@@ -496,8 +507,13 @@ if ($response instanceof ApplePaySession && $response->getMerchantSession()) {
 
 Opayo's sandbox does not offer the Opayo-managed certificate mode this uses,
 so merchant validation stops at `4006` there. It can only be completed on a
-live account. Before that, `6125` means the domain carries a port and `6118`
-means it is not registered. See
+live account. Before that, `6125` means the domain carries a port or a scheme
+(send `www.example.com`, not `https://www.example.com`) and `6118` means it is
+not registered.
+
+Elavon's API reference is wrong about this request: it names the field
+`domain` and shows a value with `https://`. The gateway requires `domainName`
+with a bare host name, which is what `CreateApplePaySession` sends. See
 [Apple Pay](CREDENTIALS-AND-SETUP.md#apple-pay) and
 [Apple Pay: which certificate mode?](CREDENTIALS-AND-SETUP.md#apple-pay-which-certificate-mode).
 

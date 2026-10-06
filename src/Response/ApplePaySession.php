@@ -44,6 +44,8 @@ class ApplePaySession extends AbstractResponse
     protected ?string $merchantSessionIdentifier = null;
     protected ?string $nonce = null;
     protected ?string $merchantIdentifier = null;
+    // "domainName" here matches Elavon's OpenAPI description. The request does
+    // not: see the note on Request\CreateApplePaySession.
     protected ?string $domainName = null;
     protected ?string $displayName = null;
     protected ?string $signature = null;

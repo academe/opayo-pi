@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 require __DIR__ . '/bootstrap.php';
 
+use Academe\Opayo\Pi\Response\Model\AdditionalDeclineDetail;
+
 $outcome = $_SESSION['outcome'] ?? null;
 unset($_SESSION['outcome'], $_SESSION['transactionId'], $_SESSION['paymentMethod']);
 
@@ -42,6 +44,23 @@ pageTop('Result');
             <dt class="text-slate-500">Status</dt><dd class="font-mono"><?= h($outcome['status']) ?></dd>
             <dt class="text-slate-500">Detail</dt><dd class="font-mono"><?= h($outcome['statusDetail']) ?></dd>
             <dt class="text-slate-500">Transaction ID</dt><dd class="font-mono"><?= h($outcome['transactionId']) ?></dd>
+            <?php if (($outcome['settlementReferenceText'] ?? null) !== null): ?>
+                <dt class="text-slate-500">Settlement reference</dt><dd class="font-mono"><?= h($outcome['settlementReferenceText']) ?></dd>
+            <?php endif; ?>
+            <?php if (($outcome['declineDetail'] ?? null) !== null): ?>
+                <dt class="text-slate-500">Decline code</dt>
+                <dd class="font-mono"><?= h($outcome['declineDetail']['code']) ?>
+                    <?= h($outcome['declineDetail']['description']) ?></dd>
+                <dt class="text-slate-500">Decline category</dt>
+                <dd class="font-mono"><?= h($outcome['declineDetail']['category']) ?>
+                    <span class="font-sans text-slate-500"><?= h(match ($outcome['declineDetail']['category']) {
+                        AdditionalDeclineDetail::CATEGORY_DO_NOT_RETRY => 'do not try again within 30 days',
+                        AdditionalDeclineDetail::CATEGORY_RETRY_LATER => 'the issuer cannot approve now; try again later',
+                        AdditionalDeclineDetail::CATEGORY_CORRECT_DATA => 'correct the card details before trying again',
+                        AdditionalDeclineDetail::CATEGORY_RETRY => 'trying again is permitted',
+                        default => '',
+                    }) ?></span></dd>
+            <?php endif; ?>
         </dl>
     <?php endif; ?>
 
