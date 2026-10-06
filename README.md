@@ -478,6 +478,111 @@ Check with your acquirer which MIT types they support; `Unscheduled` and
 All other options remain the same as for the original transaction
 (though it does appear that giftAid can now be set in the API).
 
+### Authenticate Now, Authorise Later
+
+An Authenticate transaction checks the card and the cardholder (3D Secure)
+without reserving or taking any money. You then take the money with one or
+more Authorise transactions, for example as parts of an order ship. Opayo
+suggests this when you cannot fulfil within six days, or do not know the final
+amount when the order is placed.
+
+`CreateAuthenticate` is built exactly like `CreatePayment`, with the same
+options:
+
+```php
+use Academe\Opayo\Pi\Request\CreateAuthenticate;
+use Academe\Opayo\Pi\Request\CreateAuthorise;
+use Academe\Opayo\Pi\Request\CreateCancel;
+use Academe\Opayo\Pi\Response\Authenticate;
+
+$response = ResponseFactory::fromHttpResponse($client->sendRequest(
+    new CreateAuthenticate(
+        $endpoint,
+        $auth,
+        $card,
+        'MyVendorTxCode-' . rand(10000000, 99999999),
+        $amount,
+        'Order 12345',
+        $billingAddress,
+        $customer,
+        options: ['strongCustomerAuthentication' => $strongCustomerAuthentication]
+    )
+));
+
+if ($response instanceof Authenticate) {
+    // isAuthenticated(): the cardholder passed 3D Secure.
+    // isRegistered(): the card is stored, but 3D Secure failed or was not
+    // performed, so there is no liability shift.
+    // isSuccessful() is true for both, since either can be authorised.
+    $authenticateId = $response->getTransactionId();
+}
+```
+
+A 3D Secure challenge comes back as a `Secure3Dv2Redirect`, and is handled as
+for a payment. `PaymentOutcome` sorts these responses in the usual way.
+
+To take money, send an Authorise against the Authenticate transaction. The
+currency is that of the Authenticate:
+
+```php
+$authorised = ResponseFactory::fromHttpResponse($client->sendRequest(
+    new CreateAuthorise(
+        $endpoint,
+        $auth,
+        $authenticateId,
+        'MyVendorTxCode-' . rand(10000000, 99999999),
+        Amount::GBP(1000),
+        'Order 12345, first parcel'
+    )
+));
+
+if ($authorised->isSuccessful()) { /* 10.00 taken */ }
+```
+
+`CreateAuthorise` takes two optional settings, as options or through
+`withApplyAvsCvcCheck()` and `withCv2()`.
+
+You can authorise several times; Opayo allows up to 115% of the authenticated
+amount in total. Once the Authenticate is used up, the gateway refuses with
+error `1017`, "This Authenticate transaction cannot be authorised. It has
+expired, or has been fully authorised."
+
+If the order will not go ahead, cancel the Authenticate so it can no longer be
+authorised. Opayo's guide says to authorise or cancel within 90 days:
+
+```php
+$cancelled = ResponseFactory::fromHttpResponse($client->sendRequest(
+    new CreateCancel($endpoint, $auth, $authenticateId)
+));
+// A Response\Cancel, with getInstructionType() "cancel" and getDate().
+```
+
+An Authenticate is cancelled, not aborted or voided: the sandbox answers an
+`abort` instruction with error `1014`, "Transaction status not applicable".
+
+### Settlement Reference and Decline Detail
+
+Two optional extras on card transactions:
+
+```php
+// A reference for your acquirer's settlement report. At most 30 characters;
+// the gateway accepts letters and digits only. Not enabled for all acquirers.
+$request = $request->withSettlementReferenceText('Order12345');
+
+// Opayo returns it with the transaction.
+$response->getSettlementReferenceText();
+
+// When a card is declined, the card scheme's extra detail.
+if ($detail = $response->getAdditionalDeclineDetail()) {
+    $detail->getCode();        // e.g. "03"
+    $detail->getDescription(); // e.g. "DECLINED"
+    $detail->getCategory();    // "01" to "04": whether a retry is allowed
+}
+```
+
+The categories are constants on `Response\Model\AdditionalDeclineDetail`.
+Both values are also in `PaymentOutcome::summary()`.
+
 ### Using 3D Secure
 
 Now, if you want to use 3D Secure (and you really should, and will be forced to in 2022).
@@ -1107,8 +1212,9 @@ if ($response instanceof PayPalRedirect) {
 }
 
 // 3. At /paypal-return: Opayo appends the transactionId to the callback URL.
+//    Use the ID you stored, not the one in the URL: anyone can change the URL.
 //    Fetch the transaction to learn the outcome (Ok / NotAuthed / ...).
-$transactionId = $_GET['transactionId'] ?? $_SESSION['transactionId'];
+$transactionId = $_SESSION['transactionId'];
 $result = ResponseFactory::fromHttpResponse(
     $client->sendRequest(new FetchTransaction($endpoint, $auth, $transactionId))
 );
@@ -1120,6 +1226,15 @@ to PayPal within 20 minutes of registration. Note that `GET /transactions/{id}`
 answers `404 Transaction not found` for a PayPal transaction until PayPal has
 reported the outcome back to Opayo. It only becomes fetchable once the shopper
 has finished at PayPal (which is exactly when Opayo calls your `callbackUrl`).
+
+The fetched transaction carries PayPal's own references:
+
+```php
+$paypal = $result->getPayPal();
+$paypal->getOrderId();   // the PayPal order
+$paypal->getPayerId();   // the shopper who paid
+$paypal->getCaptureId(); // the capture of funds, as shown in PayPal's reports
+```
 
 #### Apple Pay
 

@@ -148,7 +148,7 @@ All read from `.env` in the repository root; see `.env.example`.
 | --- | ------- |
 | `OPAYO_VENDOR_NAME`, `OPAYO_INTEGRATION_KEY`, `OPAYO_INTEGRATION_PASSWORD` | Your Opayo credentials |
 | `OPAYO_ENVIRONMENT` | `test` (default) or `live` |
-| `OPAYO_APPLY_3D_SECURE` | Card 3D Secure: `UseMSPSetting` (default), `Force`, `Disable`, `ForceIgnoringRules` |
+| `OPAYO_APPLY_3D_SECURE` | Card 3D Secure: `UseMSPSetting` (default), `Force`, `Disable` |
 | `OPAYO_GOOGLE_PAY_MERCHANT_ID` | Google Pay gatewayMerchantId from MyOpayo; defaults to the vendor name |
 | `GOOGLE_PAY_ENVIRONMENT` | `TEST` (default) or `PRODUCTION` |
 | `GOOGLE_PAY_MERCHANT_ID` | Google merchant ID; needed in `PRODUCTION` |

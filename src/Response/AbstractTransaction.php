@@ -71,6 +71,9 @@ abstract class AbstractTransaction extends AbstractResponse
 
     protected ?string $settlementReferenceText = null;
 
+    protected ?string $acsTransId = null;
+    protected ?string $dsTransId = null;
+
     /**
      * @param mixed $data
      * @return self
@@ -119,6 +122,11 @@ abstract class AbstractTransaction extends AbstractResponse
         // Echoed back when it was sent with the transaction.
 
         $this->settlementReferenceText = Helper::dataGet($data, 'settlementReferenceText', null);
+
+        // The 3D Secure v2 transaction IDs, when authentication took place.
+
+        $this->acsTransId = Helper::dataGet($data, 'acsTransId', null);
+        $this->dsTransId = Helper::dataGet($data, 'dsTransId', null);
 
         return $this;
     }
@@ -471,6 +479,25 @@ abstract class AbstractTransaction extends AbstractResponse
     }
 
     /**
+     * The card issuer's (ACS) transaction ID for the 3D Secure v2 authentication.
+     * @return string|null
+     */
+    public function getAcsTransId(): ?string
+    {
+        return $this->acsTransId;
+    }
+
+    /**
+     * The card scheme's (directory server) transaction ID for the 3D Secure v2
+     * authentication.
+     * @return string|null
+     */
+    public function getDsTransId(): ?string
+    {
+        return $this->dsTransId;
+    }
+
+    /**
      * Convenient serialisation for logging and debugging.
      * Each response message would extend this where appropriate.
      *
@@ -534,6 +561,14 @@ abstract class AbstractTransaction extends AbstractResponse
 
         if (($settlementReferenceText = $this->getSettlementReferenceText()) !== null) {
             $return['settlementReferenceText'] = $settlementReferenceText;
+        }
+
+        if (($acsTransId = $this->getAcsTransId()) !== null) {
+            $return['acsTransId'] = $acsTransId;
+        }
+
+        if (($dsTransId = $this->getDsTransId()) !== null) {
+            $return['dsTransId'] = $dsTransId;
         }
 
         return $return;

@@ -20,6 +20,20 @@ use Academe\Opayo\Pi\Model\Endpoint;
  * The domain must first be registered against the vendor in MyOpayo
  * (Settings > Pay Methods > Apple Pay > Configure). Authentication is the same
  * Basic auth as for merchant session keys.
+ *
+ * This request differs from Elavon's published OpenAPI description (version
+ * 1.1.0), which names the field "domain" and gives "https://www.example.com"
+ * as its example. The gateway does neither. Measured on the sandbox,
+ * October 2026:
+ *
+ *   - "domain" is ignored. With or without it, a request that has no
+ *     "domainName" is refused with 1003 "Missing mandatory field", property
+ *     "domainName".
+ *   - "domainName" must be a bare host name. A scheme ("https://...") or a
+ *     port is refused with 6125 "Invalid domainName field".
+ *   - A well-formed host that is not registered gets 6118 "Domain not registered".
+ *
+ * The response does use "domainName", as the description says.
  */
 
 class CreateApplePaySession extends AbstractRequest
@@ -30,8 +44,8 @@ class CreateApplePaySession extends AbstractRequest
      * @param Endpoint $endpoint
      * @param Auth $auth
      * @param string $domainName The domain the payment request originates from, as registered with
-     *                           Opayo, e.g. "www.example.com". (The published OpenAPI spec calls this
-     *                           field "domain", but the gateway requires "domainName".)
+     *                           Opayo: a bare host name such as "www.example.com", with no scheme
+     *                           and no port. Sent as "domainName"; see the class note.
      */
     public function __construct(
         Endpoint $endpoint,

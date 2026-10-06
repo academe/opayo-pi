@@ -25,11 +25,14 @@ abstract class AbstractRequest extends AbstractMessage implements JsonSerializab
     public const TRANSACTION_TYPE_REPEAT   = 'Repeat';
     public const TRANSACTION_TYPE_REFUND   = 'Refund';
     public const TRANSACTION_TYPE_DEFERRED = 'Deferred';
+    public const TRANSACTION_TYPE_AUTHENTICATE = 'Authenticate';
+    public const TRANSACTION_TYPE_AUTHORISE = 'Authorise';
 
     // Instruction types.
     public const INSTRUCTION_TYPE_VOID     = 'void';
     public const INSTRUCTION_TYPE_ABORT    = 'abort';
     public const INSTRUCTION_TYPE_RELEASE  = 'release';
+    public const INSTRUCTION_TYPE_CANCEL   = 'cancel';
 
     protected ?Endpoint $endpoint = null;
     protected ?Auth $auth = null;

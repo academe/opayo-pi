@@ -71,7 +71,7 @@ $config = [
         ?? GooglePayEnvironment::Test,
     // The domain registered in MyOpayo > Settings > Pay Methods > Apple Pay.
     'applePayDomain' => applePayDomain($_ENV, $_SERVER),
-    // Card payments only: UseMSPSetting, Force, Disable or ForceIgnoringRules.
+    // Card payments only: UseMSPSetting, Force or Disable.
     'apply3DSecure' => ($_ENV['OPAYO_APPLY_3D_SECURE'] ?? '') ?: 'UseMSPSetting',
 ];
 

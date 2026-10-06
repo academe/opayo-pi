@@ -207,6 +207,8 @@ class PaymentOutcomeTest extends TestCase
             'status' => 'Ok',
             'statusDetail' => 'The Authorisation was Successful.',
             'errors' => [],
+            'settlementReferenceText' => null,
+            'declineDetail' => null,
         ], PaymentOutcome::fromResponse($this->authorised())->summary());
 
         $this->assertSame([
@@ -216,6 +218,8 @@ class PaymentOutcomeTest extends TestCase
             'status' => 'Redirect',
             'statusDetail' => 'Transaction registered, redirect client to wallet server.',
             'errors' => [],
+            'settlementReferenceText' => null,
+            'declineDetail' => null,
         ], PaymentOutcome::fromResponse($this->payPal())->summary());
 
         $rejected = PaymentOutcome::fromResponse($this->errors())->summary();
@@ -223,5 +227,57 @@ class PaymentOutcomeTest extends TestCase
         $this->assertFalse($rejected['successful']);
         $this->assertNull($rejected['transactionId']);
         $this->assertCount(2, $rejected['errors']);
+        $this->assertNull($rejected['settlementReferenceText']);
+        $this->assertNull($rejected['declineDetail']);
+    }
+
+    public function testSummaryCarriesTheSettlementReference()
+    {
+        $response = ResponseFactory::fromData([
+            'transactionId' => 'T-OK',
+            'transactionType' => 'Payment',
+            'status' => 'Ok',
+            'statusCode' => '0000',
+            'statusDetail' => 'The Authorisation was Successful.',
+            'settlementReferenceText' => 'Order12345',
+        ], 201);
+
+        $summary = PaymentOutcome::fromResponse($response)->summary();
+
+        $this->assertSame('Order12345', $summary['settlementReferenceText']);
+        $this->assertNull($summary['declineDetail']);
+    }
+
+    public function testSummaryCarriesTheDeclineDetail()
+    {
+        // As returned by the sandbox for the "declined by the bank" test card.
+        $response = ResponseFactory::fromData([
+            'transactionId' => 'T-NO',
+            'transactionType' => 'Payment',
+            'status' => 'NotAuthed',
+            'statusCode' => '2000',
+            'statusDetail' => 'The Authorisation was Declined by the bank.',
+            'additionalDeclineDetail' => [
+                'additionalDeclineCode' => '03',
+                'additionalDeclineCodeDescription' => 'DECLINED',
+                'additionalDeclineCodeCategory' => '03',
+            ],
+        ], 201);
+
+        $summary = PaymentOutcome::fromResponse($response)->summary();
+
+        $this->assertFalse($summary['successful']);
+        $this->assertSame(
+            ['code' => '03', 'description' => 'DECLINED', 'category' => '03'],
+            $summary['declineDetail']
+        );
+    }
+
+    public function testSummarySurvivesJsonAndSessionStorage()
+    {
+        $summary = PaymentOutcome::fromResponse($this->declined())->summary();
+
+        $this->assertSame($summary, json_decode(json_encode($summary), true));
+        $this->assertSame($summary, unserialize(serialize($summary)));
     }
 }

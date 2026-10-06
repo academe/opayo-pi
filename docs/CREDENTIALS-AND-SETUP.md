@@ -76,7 +76,7 @@ decryption key. `docs/google-pay-key-custody.html` explains this in detail.
 | `OPAYO_VENDOR_NAME` | You (assigned at onboarding) | MyOpayo / welcome email | `.env` | No | `3000` malformed / auth errors |
 | `OPAYO_INTEGRATION_KEY` | Opayo | MyOpayo → Settings → API keys | `.env` | **Yes** | `1000 Unauthenticated` |
 | `OPAYO_INTEGRATION_PASSWORD` | Opayo | MyOpayo → Settings → API keys (shown once) | `.env` | **Yes** | `1000 Unauthenticated` |
-| Public sandbox creds (`sandbox`, `sandboxEC`) | Elavon (published) | `docs/vendor/opayo/test-in-sandbox.md`; also in `demo/debug/accounts.php` | Selected by the account switcher in the demo's debug panel | No (public) | |
+| Public sandbox creds (`sandbox`, `sandboxEC`) | Elavon (published) | Elavon's "Test in Sandbox" page (saved to `docs/vendor/opayo/test-in-sandbox.md` by `scripts/fetch-opayo-docs.php`); also in `demo/debug/accounts.php` | Selected by the account switcher in the demo's debug panel | No (public) | |
 | `gatewayMerchantId` (Google Pay) | Opayo (issued when the wallet is enabled) | MyOpayo → Settings → Pay Methods → Google Pay | `OPAYO_GOOGLE_PAY_MERCHANT_ID` in `.env`, then the page's `tokenizationSpecification` | No (an identifier) | `6401` if wallet not enabled; a decline if wrong |
 | Gateway name `opayoelavon` | Opayo (fixed, same for everyone) | Constant in the library (`GooglePay\Configuration::GATEWAY`) | The page's `tokenizationSpecification` | No | Google sheet returns an unchargeable token |
 | Google merchant ID | Google | Google Pay & Wallet Console | `GOOGLE_PAY_MERCHANT_ID` in `.env`; only read in `PRODUCTION` | No (an identifier) | `PRODUCTION` sheet fails to load |
@@ -250,7 +250,12 @@ stays on that domain for the whole flow. `demo/README.md` has the commands.
 | `1030` | Vendor not enrolled with this wallet type | PayPal not enabled on the vendor | Use the public sandbox, or ask Opayo to enable PayPal |
 | `4006` | TxType not supported on this account | Apple Pay not enabled on the vendor, **or** you are trying the Opayo-managed flow on test (test supports merchant-managed only) | Ask Opayo to enable Apple Pay; on test use merchant-managed |
 | `6118` | Domain not registered | Apple Pay domain not registered in MyOpayo | Register the domain under Pay Methods → Apple Pay |
-| `6125` | Invalid domainName field | The domain carries a port, e.g. `127.0.0.1:8000` | Serve from a real domain / tunnel; set `OPAYO_APPLE_PAY_DOMAIN` |
+| `6125` | Invalid domainName field | The domain carries a port (`127.0.0.1:8000`) or a scheme (`https://...`) | Serve from a real domain / tunnel; set `OPAYO_APPLE_PAY_DOMAIN` to the bare host name |
+| `1003` | Missing mandatory field, property `domainName` | The Apple Pay session request used `domain`, as Elavon's API reference says, instead of `domainName` | Use `CreateApplePaySession`, which sends `domainName` |
+| `6111` | Body payload with invalid base64 format | The Apple Pay `paymentData` is not base64 | Build it with `ApplePayPayment::fromAppleToken()` |
+| `6146` | Invalid JSON supplied within the Payload | The Apple Pay `paymentData` decodes to something that is not JSON, often because it was encoded twice | Pass Apple's token to `fromAppleToken()` as it arrived |
+| `6151` | Payment data not supplied | The decoded Apple Pay payload has no top-level `paymentData` key (bare contents, or a `token` wrapper) | Send `{"paymentData": {...}}`; `fromAppleToken()` does this |
+| `6138` | Invalid payload encryption | Opayo read the Apple Pay payload but could not decrypt it | The request is well formed; the token is not one Opayo can open |
 | `6203` | Invalid Google Pay payload | The sandbox does not accept tokens from Google's TEST environment | Expected in sandbox; needs a `PRODUCTION` sheet + real card |
 | `6401` | Wallet not enabled for the vendor | Google/Apple Pay not enabled on the vendor | Ask Opayo to enable the wallet |
 | 3DS | `3D-Authentication failed` before the challenge | Personal test vendor (no 3DS sim), or non-magic cardholder name | Use the public sandbox; set cardholder name to `CHALLENGE` |

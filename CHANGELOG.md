@@ -37,13 +37,15 @@ without a major version bump; if you referenced these classes, update the calls.
 ### Added
 
 - `CreateApplePaySession` / `Response\ApplePaySession`: `POST /applepay/sessions`
-  for the Opayo-managed certificate flow (the gateway requires `domainName`,
-  although the published spec says `domain`).
+  for the Opayo-managed certificate flow (the gateway requires `domainName`
+  as a bare host name, although the published spec says `domain` and shows a
+  value with `https://`; confirmed on the sandbox).
 - `Response\PayPalRedirect` (status `Redirect`, statusCode 2023) with
   `getRedirectUrl()` / `getOrderId()`; `TransactionStatus::REDIRECT` and
   `AbstractTransaction::STATUS_REDIRECT`.
 - `Response\Model\PayPal` and `AbstractTransaction::getPayPal()`: transactions paid
-  with PayPal expose `paymentMethod.paypal` (orderId) instead of silently dropping it.
+  with PayPal expose `paymentMethod.paypal` instead of silently dropping it:
+  `getOrderId()`, and on a completed payment `getPayerId()` and `getCaptureId()`.
 - `ApplePayPayment::fromAppleToken()` and `GooglePayPayment::fromGoogleToken()`
   helpers that do the base64 encoding the gateway expects.
 - Request constructors (`CreatePayment`, `CreateDeferred`, `CreateRepeatPayment`,
@@ -58,6 +60,20 @@ without a major version bump; if you referenced these classes, update the calls.
   `AbstractTransaction::getAdditionalDeclineDetail()`: the card scheme's
   extended decline code, description and category, returned with a declined
   card transaction. The category says whether the payment may be retried.
+- Authenticate and Authorise transactions, and the cancel instruction:
+  `CreateAuthenticate` (built like `CreatePayment`; verifies the cardholder
+  and takes nothing), `CreateAuthorise` (takes funds against an Authenticate,
+  with optional `applyAvsCvcCheck` and `cv2`) and `CreateCancel`, with the
+  responses `Response\Authenticate` (`isAuthenticated()`, `isRegistered()`),
+  `Response\Authorise` and `Response\Cancel`. Before this, the response to
+  an Authenticate or Authorise transaction, including one fetched with
+  `FetchTransaction`, could not be parsed and threw
+  `UnexpectedValueException`. Checked end to end on the sandbox.
+- `AbstractTransaction::getAcsTransId()` and `getDsTransId()`: the 3D Secure
+  v2 transaction IDs, returned when authentication took place.
+- `PaymentOutcome::summary()` has two more keys, `settlementReferenceText`
+  and `declineDetail` (`code`, `description`, `category`), each `null` when
+  absent. The demo sends a settlement reference and its result page shows both.
 - Demo: PayPal tab (`demo/paypal.php`, `demo/paypal-return.php`).
 
 ### Fixed
