@@ -1,5 +1,6 @@
-[![Build Status](https://travis-ci.org/academe/opayo-pi.svg?branch=PSR-7)](https://travis-ci.org/academe/opayo-pi)
-[![Latest Stable Version](http://poser.pugx.org/academe/opayo-pi/v)](https://packagist.org/packages/academe/opayo-pi) [![Total Downloads](http://poser.pugx.org/academe/opayo-pi/downloads)](https://packagist.org/packages/academe/opayo-pi) [![Latest Unstable Version](http://poser.pugx.org/academe/opayo-pi/v/unstable)](https://packagist.org/packages/academe/opayo-pi) [![License](http://poser.pugx.org/academe/opayo-pi/license)](https://packagist.org/packages/academe/opayo-pi)
+[![Latest Stable Version](https://poser.pugx.org/academe/opayo-pi/v)](https://packagist.org/packages/academe/opayo-pi)
+[![Total Downloads](https://poser.pugx.org/academe/opayo-pi/downloads)](https://packagist.org/packages/academe/opayo-pi)
+[![License](https://poser.pugx.org/academe/opayo-pi/license)](https://packagist.org/packages/academe/opayo-pi)
 
 <!-- TOC -->
 
@@ -114,7 +115,8 @@ This library does provide support for the front end though, and this is noted wh
 ### Installation
 
 **Requirements:**
-- PHP 8.1 or higher
+- PHP 8.1, 8.2, 8.3, 8.4 or 8.5. The unit tests are run on each of these.
+  Each new PHP version is added once the tests pass on it.
 
 Get the latest release:
 

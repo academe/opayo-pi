@@ -405,7 +405,7 @@ jobs:
 
     strategy:
       matrix:
-        php: ['8.1', '8.2', '8.3']
+        php: ['8.1', '8.2', '8.3', '8.4', '8.5']
 
     steps:
       - uses: actions/checkout@v3
@@ -571,7 +571,7 @@ vendor/bin/phpunit --testsuite=all
 
 **Last Updated:** 2025-11
 **PHPUnit Version:** 10.5+
-**PHP Version:** 8.1+
+**PHP Versions:** 8.1, 8.2, 8.3, 8.4 and 8.5
 
 ## Wallets (Apple Pay, Google Pay, PayPal)
 

@@ -5,6 +5,13 @@ All notable changes to this package are documented here. The format follows
 
 ## [Unreleased] - feature/demo
 
+### Supported PHP versions are now listed explicitly
+
+`composer.json` requires `8.1.* || 8.2.* || 8.3.* || 8.4.* || 8.5.*` instead of
+`^8.1`, so Packagist shows exactly which versions are supported. The unit tests
+pass on each. A new PHP version is added in a release once the tests pass on
+it; until then Composer will not install this package on it.
+
 ### Wallet payment methods now match the Opayo Pi API (breaking for wallet users)
 
 The Apple Pay, Google Pay and PayPal request models in earlier releases did not
