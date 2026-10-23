@@ -68,15 +68,13 @@ class LinkSecurityCode extends AbstractRequest
     }
 
     /**
-     * Get the message header data as an array.
-     * TODO: Move the details of this to the abstract, as it is used in several places,
-     * and remove it from the Response\SessionKey class as it has nothing to do with responses.
-     * @return array<string, string>
+     * Authorised by the merchant session key, like creating the card
+     * identifier. The JSON content type comes from the shared headers.
      */
-    public function getHeaders(): array
+    public function getAuthHeaders(): array
     {
         return [
-            'Authorization' => 'Bearer ' . $this->sessionKey,
+            'Authorization' => ['Bearer ' . $this->sessionKey],
         ];
     }
 }

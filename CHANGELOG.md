@@ -85,6 +85,11 @@ without a major version bump; if you referenced these classes, update the calls.
 
 ### Fixed
 
+- `LinkSecurityCode` replaced all of its headers with a bare `Authorization`
+  string, so it sent no `Content-Type` and the gateway refused it with
+  415 Unsupported Media Type. Paying with a saved card and a re-entered
+  security code could not work. It now authorises with the session key like
+  `CreateCardIdentifier`, and keeps the JSON content type.
 - `MoneyAmount` could not be loaded at all (`getAmount()` return type mismatch
   with `AmountInterface`).
 - `Amount::withMajorUnit()` rejected integer-like strings such as `"10"` and
